@@ -1,0 +1,13 @@
+node_modules
+dist
+.vscode
+.vite
+.idea
+.DS_Store
+.env
+.env.local
+.env.*.local
+.git
+maket/
+README.md
+docker-compose.yml

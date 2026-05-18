@@ -1,0 +1,317 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { IconArrowRight, IconChevronLeft, IconSparkles } from "../components/icons.jsx";
+import LikeButton from "../components/LikeButton.jsx";
+import MarqueeTags from "../components/MarqueeTags.jsx";
+import ProductVisuals from "../components/ProductVisuals.jsx";
+import RankingList from "../components/RankingList.jsx";
+import StepSlider from "../components/StepSlider.jsx";
+import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
+import { useTasting } from "../hooks/useTasting.js";
+
+function gradeFor(criteria) {
+  const grade = Array.isArray(criteria?.grade) ? criteria.grade : [];
+  return grade
+    .map((item) => ({ value: Number(item.value), label: String(item.label ?? item.value) }))
+    .filter((s) => Number.isFinite(s.value));
+}
+
+export default function DetailPage() {
+  const { id, productId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const readOnly = searchParams.get("from") === "result";
+
+  const { products: siblingProducts } = useTasting(id, { autoJoin: false });
+  const currentIdx = siblingProducts.findIndex((p) => String(p.id) === String(productId));
+  const isLast = currentIdx >= 0 && currentIdx === siblingProducts.length - 1;
+  const nextProduct = !isLast && currentIdx >= 0 ? siblingProducts[currentIdx + 1] : null;
+
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // local edits that we'll send to backend
+  const [marks, setMarks] = useState({});         // { [criteria_id]: value }
+  const [tagIds, setTagIds] = useState(new Set()); // selected taste_tags ids
+  const [composition, setComposition] = useState([]); // user ranking
+  const [comment, setComment] = useState("");
+
+  const sendTimer = useRef(null);
+  const scrollRef = useRef(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const p = await getTastingProduct(id, productId);
+      setProduct(p);
+      const m = {};
+      (p.taste_criteria || []).forEach((c) => {
+        if (c.user_grade_review != null) m[c.id] = Number(c.user_grade_review);
+      });
+      setMarks(m);
+      const ids = new Set();
+      (p.taste_tags || []).forEach((t) => { if (t.marked) ids.add(t.id); });
+      setTagIds(ids);
+      setComposition(
+        p.user_composition && p.user_composition.length
+          ? p.user_composition
+          : (p.composition || [])
+      );
+      setComment(p.global_comment || "");
+    } catch (e) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, productId]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0, behavior: "auto" }); }, [productId]);
+
+  const flushReview = useCallback(async (patch) => {
+    try {
+      const updated = await reviewProduct(productId, patch);
+      setProduct(updated);
+    } catch (_) { /* ignore */ }
+  }, [productId]);
+
+  const scheduleSend = useCallback((patch) => {
+    if (readOnly) return;
+    if (sendTimer.current) clearTimeout(sendTimer.current);
+    sendTimer.current = setTimeout(() => flushReview(patch), 450);
+  }, [flushReview, readOnly]);
+
+  useEffect(() => () => sendTimer.current && clearTimeout(sendTimer.current), []);
+
+  const setMark = (cid, value) => {
+    const next = { ...marks, [cid]: value };
+    setMarks(next);
+    scheduleSend({ criteria_marks: next });
+  };
+  const toggleTag = (tid) => {
+    const next = new Set(tagIds);
+    if (next.has(tid)) next.delete(tid); else next.add(tid);
+    setTagIds(next);
+    scheduleSend({ taste_tags: Array.from(next) });
+  };
+  const onRanking = (next) => {
+    setComposition(next);
+    scheduleSend({ composition: next });
+  };
+  const onCommentChange = (v) => {
+    setComment(v);
+    scheduleSend({ global_comment: v });
+  };
+  const onToggleLike = async () => {
+    if (readOnly || !product) return;
+    const nextVal = !product.is_nominated;
+    setProduct({ ...product, is_nominated: nextVal });
+    try { await nominate(id, productId, nextVal); }
+    catch (_) { setProduct({ ...product, is_nominated: !nextVal }); }
+  };
+
+  const criteriaSplit = useMemo(() => {
+    if (!product) return { flavor: [], pairing: [] };
+    const flavor = [];
+    const pairing = [];
+    (product.taste_criteria || []).forEach((c) => {
+      (c.for_tea_combination ? pairing : flavor).push(c);
+    });
+    return { flavor, pairing };
+  }, [product]);
+
+  const pairedTea = (product?.tea_flavor_combination || [])[0] || null;
+  const matchCriteria = criteriaSplit.pairing[0] || null;
+
+  if (loading) return <div className="fullscreen-center">Загружаем…</div>;
+  if (error || !product) return <div className="fullscreen-center">Не удалось загрузить продукт.</div>;
+
+  return (
+    <div ref={scrollRef} className={`detail-scroll ${readOnly ? "detail--readonly" : ""}`}>
+      <div className="topbar">
+        <div className="topbar__row">
+          <button className="icon-btn icon-btn--leading" onClick={() => navigate(`/tasting/${id}`)}>
+            <IconChevronLeft size={20} />
+            <span>Назад</span>
+          </button>
+          <div className="topbar__count tabnum">
+            {product.number != null ? `№${product.number}` : ""}
+          </div>
+          <span className="topbar__spacer" aria-hidden="true" />
+        </div>
+      </div>
+
+      <div className="detail-body">
+        {product.category && (
+          <div className="detail-eyebrow">{product.category}</div>
+        )}
+
+        <div className="detail-title-row">
+          <h1 className="title-lg detail-title">{product.name}</h1>
+          {product.number != null && (
+            <span className="detail-num">
+              <span className="detail-num__label">Рецепт</span>
+              <span className="detail-num__val tabnum">№{product.number}</span>
+            </span>
+          )}
+        </div>
+
+        {product.line && (
+          <div className="detail-line">
+            <span className="detail-line__rule" />
+            <span className="detail-line__text">
+              Линия: <em>{product.line.toLowerCase()}</em>
+            </span>
+          </div>
+        )}
+
+        <ProductVisuals product={product} />
+
+        {composition.length > 0 && (
+          <div className="ingredients">
+            {composition.map((ing) => (
+              <span key={ing} className="ingredient">{ing}</span>
+            ))}
+          </div>
+        )}
+
+        {product.description && (
+          <p className="detail-desc">{product.description}</p>
+        )}
+
+        {product.interesting_fact && (
+          <div className="trivia">
+            <div className="trivia__head">
+              <span className="trivia__icon" aria-hidden="true">
+                <IconSparkles size={14} stroke={1.6} />
+              </span>
+              <span className="trivia__label">Интересно будет знать о&nbsp;сорте</span>
+            </div>
+            <p className="trivia__body">{product.interesting_fact}</p>
+          </div>
+        )}
+      </div>
+
+      {criteriaSplit.flavor.length > 0 && (
+        <div className="detail-body section">
+          <div className="section__label">Оценка вкуса</div>
+          <div className="step-sliders">
+            {criteriaSplit.flavor.map((c) => (
+              <StepSlider
+                key={c.id}
+                label={c.name}
+                info={c.description}
+                steps={gradeFor(c)}
+                value={marks[c.id] ?? null}
+                onChange={(v) => setMark(c.id, v)}
+                readOnly={readOnly}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {composition.length > 0 && (
+        <div className="detail-body section">
+          <div className="section__label">Расположите ингредиенты по&nbsp;яркости вкуса</div>
+          <div className="section__hint">
+            Потяните карточки, чтобы выстроить рейтинг ингредиентов по&nbsp;яркости вкуса.
+          </div>
+          <RankingList items={composition} onChange={onRanking} readOnly={readOnly} />
+        </div>
+      )}
+
+      {(product.taste_tags || []).length > 0 && (
+        <div className="detail-body section">
+          <div className="section__label">Общее впечатление</div>
+          <div className="section__hint">Выберите всё, что откликается.</div>
+          <MarqueeTags
+            tags={product.taste_tags}
+            selectedIds={tagIds}
+            onToggle={toggleTag}
+            readOnly={readOnly}
+          />
+        </div>
+      )}
+
+      {(pairedTea || matchCriteria) && (
+        <div className="detail-body section">
+          <div className="section__label">С чем сочетал</div>
+          <div className="pairing-card">
+            {pairedTea && (
+              <div className="paired-tea">
+                <span className="paired-tea__icon">
+                  {pairedTea.logo ? (
+                    <img
+                      src={pairedTea.logo}
+                      alt=""
+                      style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }}
+                    />
+                  ) : null}
+                </span>
+                <div className="paired-tea__body">
+                  <span className="paired-tea__label">Подобранный чай</span>
+                  <span className="paired-tea__name">{pairedTea.name}</span>
+                </div>
+              </div>
+            )}
+            {pairedTea && matchCriteria && <div className="pairing-card__divider" />}
+            {matchCriteria && (
+              <div className="step-sliders step-sliders--single">
+                <StepSlider
+                  label={matchCriteria.name}
+                  info={matchCriteria.description}
+                  steps={gradeFor(matchCriteria)}
+                  value={marks[matchCriteria.id] ?? null}
+                  onChange={(v) => setMark(matchCriteria.id, v)}
+                  readOnly={readOnly}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="detail-body section">
+        <div className="section__label">Комментарий</div>
+        <textarea
+          className="comment"
+          value={comment}
+          onChange={(e) => onCommentChange(e.target.value)}
+          rows={4}
+          readOnly={readOnly}
+          placeholder="Поделитесь своим мнением…"
+        />
+      </div>
+
+      {readOnly ? (
+        <div className="detail-body footer--detail">
+          <div className="footer__row">
+            <button className="btn btn--primary footer__next" onClick={() => navigate(-1)}>
+              <IconChevronLeft size={18} stroke={2} />
+              <span>Назад к&nbsp;результатам</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="detail-body footer--detail">
+          <div className="footer__row">
+            <LikeButton liked={!!product.is_nominated} onToggle={onToggleLike} />
+            <button
+              className="btn btn--primary footer__next"
+              onClick={() => {
+                if (nextProduct) navigate(`/tasting/${id}/product/${nextProduct.id}`);
+                else navigate(`/tasting/${id}`);
+              }}
+            >
+              <span>{isLast ? "Завершить" : "Продолжить"}</span>
+              <IconArrowRight size={18} stroke={2} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -882,11 +882,11 @@ input, textarea { font: inherit; color: inherit; }
 .step-slider__labels--top { margin-bottom: 0; }
 .step-slider__labels--bot { margin-top: 0; }
 .step-slider__label {
-  position: absolute; display: inline-block; max-width: 78px;
+  position: absolute; display: inline-block; max-width: 84px;
   padding: 2px 2px; margin: 0; background: none; border: 0;
-  font-family: inherit; font-size: 10px; line-height: 1.2; letter-spacing: 0;
-  color: var(--stone-400); text-wrap: balance; cursor: pointer;
-  white-space: normal; font-weight: 300; transition: color 160ms;
+  font-family: inherit; font-size: 11.5px; line-height: 1.25; letter-spacing: 0;
+  color: var(--stone-600); text-wrap: balance; cursor: pointer;
+  white-space: normal; font-weight: 400; transition: color 160ms;
 }
 .step-slider__labels--top .step-slider__label { bottom: 2px; }
 .step-slider__labels--bot .step-slider__label { top: 2px; }

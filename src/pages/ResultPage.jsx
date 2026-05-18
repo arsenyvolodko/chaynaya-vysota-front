@@ -77,6 +77,63 @@ function AuthReminder({ onSubmit }) {
   );
 }
 
+function capitalize(s) {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function IceCreamStats({ stats }) {
+  if (!stats) return null;
+  const sortAsc = (a, b) => (a[1].amount || 0) - (b[1].amount || 0);
+  const iceCreamEntries = stats.ice_cream
+    ? Object.entries(stats.ice_cream).sort(sortAsc)
+    : [];
+  const teaEntries = stats.tea
+    ? Object.entries(stats.tea).sort(sortAsc)
+    : [];
+  if (iceCreamEntries.length === 0 && teaEntries.length === 0) return null;
+  const total = iceCreamEntries.reduce((acc, [, v]) => acc + (v.amount || 0), 0);
+
+  const renderRow = ([name, v]) => (
+    <div key={name} className="stats-row">
+      <span className="stats-row__amount tabnum">{v.amount}</span>
+      {v.image ? (
+        <img className="stats-row__icon" src={v.image} alt="" aria-hidden="true" />
+      ) : (
+        <span className="stats-row__icon stats-row__icon--empty" aria-hidden="true" />
+      )}
+      <span className="stats-row__name">{capitalize(name)}</span>
+    </div>
+  );
+
+  const Column = ({ title, entries }) => (
+    <div className="stats-col">
+      <div className="stats-col__heading">{title}</div>
+      <div className="stats-col__subhead">
+        <span className="stats-col__subhead-amount">Попроб.</span>
+        <span className="stats-col__subhead-name">Сорт</span>
+      </div>
+      <div className="stats-col__list">{entries.map(renderRow)}</div>
+    </div>
+  );
+
+  return (
+    <section className="stats-section">
+      <p className="stats-section__lede">
+        Сегодня вы&nbsp;попробовали {total}&nbsp;сортов. В&nbsp;вашем сете встретились:
+      </p>
+      <div className="stats-grid">
+        {iceCreamEntries.length > 0 && (
+          <Column title="Тип мороженого" entries={iceCreamEntries} />
+        )}
+        {teaEntries.length > 0 && (
+          <Column title="Основа мороженого" entries={teaEntries} />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
   const range = maxTotal - minTotal;
   const pct = range > 0
@@ -166,12 +223,10 @@ export default function ResultPage() {
         </div>
         <div className="result-head__thanks">Спасибо, что были с&nbsp;нами</div>
         <h1 className="result-head__title">Дегустация завершена</h1>
-        {tasting?.result_description && (
-          <p className="result-head__sub result-head__sub--justify">
-            {tasting.result_description}
-          </p>
-        )}
       </div>
+
+      <IceCreamStats stats={result?.ice_cream_stats} />
+
 
       <div className="aura-section" aria-hidden="true">
         <Aura color={auraColor} />

@@ -941,7 +941,7 @@ function SelectTopScreen({ go, tastings, onConfirm }) {
       <div className="footer">
         <div className="footer__hint">
           {liked.length === 0
-            ? "Сначала отметьте лайком хотя бы один вкус."
+            ? "Сначала добавьте в кандидаты хотя бы один сорт."
             : ready
               ? maxPick === 3
                 ? "Готово — три фаворита выбраны."

@@ -19,10 +19,10 @@ export default function NominateToggle({ isNominated, onToggle, disabled }) {
       </span>
       <div className="nominate__body">
         <div className="nominate__title">
-          {isNominated ? "В списке финалистов" : "Взять в финал"}
+          {isNominated ? "Добавить в кандидаты" : "В кандидатах"}
         </div>
         <div className="nominate__subtitle">
-          Отметьте сорт, чтобы в&nbsp;конце дегустации выбрать из&nbsp;финалистов свой Топ-3.
+          Добавьте сорт в кандидаты, чтобы в&nbsp;конце дегустации выбрать из&nbsp;них свой Топ-3.
         </div>
       </div>
     </button>

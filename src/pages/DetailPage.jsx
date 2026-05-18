@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
 import { IconArrowRight, IconChevronLeft, IconSparkles } from "../components/icons.jsx";
 import MarqueeTags from "../components/MarqueeTags.jsx";
 import NominateToggle from "../components/NominateToggle.jsx";
@@ -151,18 +152,14 @@ export default function DetailPage() {
 
   return (
     <div ref={scrollRef} className={`detail-scroll ${readOnly ? "detail--readonly" : ""}`}>
-      <div className="topbar">
-        <div className="topbar__row">
+      <PageHeader
+        back={
           <button className="icon-btn icon-btn--leading" onClick={() => navigate(`/tasting/${id}`)}>
             <IconChevronLeft size={20} />
             <span>Назад</span>
           </button>
-          <div className="topbar__count tabnum">
-            {product.number != null ? `№${product.number}` : ""}
-          </div>
-          <span className="topbar__spacer" aria-hidden="true" />
-        </div>
-      </div>
+        }
+      />
 
       <div className="detail-body">
         {product.category && (

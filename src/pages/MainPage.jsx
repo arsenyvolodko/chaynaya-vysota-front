@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Logomark from "../components/Logomark.jsx";
+import PageHeader from "../components/PageHeader.jsx";
 import { IconArrowRight, IconCheck, IconChevronRight, IconMedal } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
@@ -41,12 +41,14 @@ export default function MainPage() {
   return (
     <>
     <div className="main-scroll">
-      <div className="app-header">
-        <Logomark label={formatTastingDate(tasting.date) || "Сегодня"} />
-        <button className="avatar" onClick={() => navigate("/profile")}>
-          {initialsOf(user?.name)}
-        </button>
-      </div>
+      <PageHeader
+        right={
+          <button className="avatar" onClick={() => navigate("/profile")}>
+            {initialsOf(user?.name)}
+          </button>
+        }
+      />
+      <div className="hero__date">{formatTastingDate(tasting.date) || "Сегодня"}</div>
 
       <div className="hero">
         <h1 className="title-xl hero__title">{tasting.title}</h1>

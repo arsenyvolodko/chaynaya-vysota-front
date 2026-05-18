@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyTastings } from "../api/catalog.js";
 import { useAuth } from "../auth/AuthContext.jsx";
+import PageHeader from "../components/PageHeader.jsx";
 import {
   IconCheck,
   IconChevronLeft,
@@ -227,16 +228,14 @@ export default function ProfilePage() {
 
   return (
     <div className="result-scroll" style={{ background: "white" }}>
-      <div className="topbar topbar--clean">
-        <div className="topbar__row">
+      <PageHeader
+        back={
           <button className="icon-btn icon-btn--leading" onClick={() => navigate(-1)}>
             <IconChevronLeft size={20} />
             <span>Назад</span>
           </button>
-          <div className="topbar__count">Личный кабинет</div>
-          <span className="topbar__spacer" />
-        </div>
-      </div>
+        }
+      />
 
       <div className="profile-hero">
         <div className="profile-hero__avatar">{initialsOf(user?.name)}</div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
 import { IconMedal, IconSparkles } from "../components/icons.jsx";
 import { getResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
@@ -92,7 +93,6 @@ function IceCreamStats({ stats }) {
     ? Object.entries(stats.tea).sort(sortAsc)
     : [];
   if (iceCreamEntries.length === 0 && teaEntries.length === 0) return null;
-  const total = iceCreamEntries.reduce((acc, [, v]) => acc + (v.amount || 0), 0);
 
   const renderRow = ([name, v]) => (
     <div key={name} className="stats-row">
@@ -119,9 +119,6 @@ function IceCreamStats({ stats }) {
 
   return (
     <section className="stats-section">
-      <p className="stats-section__lede">
-        Сегодня вы&nbsp;попробовали {total}&nbsp;сортов. В&nbsp;вашем сете встретились:
-      </p>
       <div className="stats-grid">
         {iceCreamEntries.length > 0 && (
           <Column title="Тип мороженого" entries={iceCreamEntries} />
@@ -155,7 +152,7 @@ export default function ResultPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { wasSkipped, updateProfile, user } = useAuth();
-  const { tasting, productById, products } = useTasting(id, { autoJoin: false });
+  const { productById, products } = useTasting(id, { autoJoin: false });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -172,10 +169,23 @@ export default function ResultPage() {
   }, [id]);
 
   const podium = result?.podium || [];
-  const favorites = result?.favorites || [];
   const criteriaBreakdown = result?.criteria_breakdown || [];
   const topTags = result?.top_tags || [];
   const teaMatches = result?.tea_matches || [];
+
+  // Все продукты-кандидаты на пьедестал (is_nominated=true), отсортированы
+  // по баллам от большего к меньшему. Подиум — подсписок этого.
+  const allCandidates = useMemo(() => {
+    return products
+      .filter((p) => p.is_nominated)
+      .map((p) => ({ product: p, score: p.total_score ?? 0 }))
+      .sort((a, b) => b.score - a.score);
+  }, [products]);
+
+  const ratedCount = useMemo(
+    () => products.filter((p) => p.is_reviewed).length,
+    [products]
+  );
 
   const podiumProducts = useMemo(
     () => podium.map((row) => ({ row, p: productById(row.id) || null })),
@@ -217,6 +227,8 @@ export default function ResultPage() {
 
   return (
     <div className="result-scroll" style={scrollStyle}>
+      <PageHeader transparent />
+
       <div className="result-head">
         <div className="result-head__icon">
           <IconSparkles size={26} stroke={1.5} />
@@ -224,9 +236,6 @@ export default function ResultPage() {
         <div className="result-head__thanks">Спасибо, что были с&nbsp;нами</div>
         <h1 className="result-head__title">Дегустация завершена</h1>
       </div>
-
-      <IceCreamStats stats={result?.ice_cream_stats} />
-
 
       <div className="aura-section" aria-hidden="true">
         <Aura color={auraColor} />
@@ -240,81 +249,90 @@ export default function ResultPage() {
         </p>
       )}
 
-      {podium.length > 0 && (
-        <div className="podium-section">
-          <div className="tier-head">
-            <div className="profile-card-head__eyebrow tier-head__title">Топ-3 вкусов</div>
-            <span className="tier-head__col">Баллы</span>
+      <div className="result-section">
+        <p className="result-intro">
+          Вы&nbsp;оценили <strong>{ratedCount}</strong>&nbsp;сортов, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
+        </p>
+        {allCandidates.length > 0 ? (
+          <>
+            <div className="tier-head">
+              <span className="tier-head__spacer" />
+              <span className="tier-head__col">Баллы</span>
+            </div>
+            <ol className="candidate-list">
+            {allCandidates.map(({ product, score }) => (
+              <li
+                key={product.id}
+                className="candidate-row"
+                onClick={() => navigate(`/tasting/${id}/product/${product.id}?from=result`)}
+                role="button"
+                tabIndex={0}
+              >
+                <span className="candidate-row__medal" aria-hidden="true">
+                  <IconMedal size={14} filled stroke={1.8} />
+                </span>
+                <div className="candidate-row__body">
+                  <span className="candidate-row__title">{product.name}</span>
+                </div>
+                <span className="candidate-row__score tabnum">{score}</span>
+              </li>
+            ))}
+            </ol>
+          </>
+        ) : (
+          <div className="candidate-list__empty">
+            Вы не&nbsp;отметили ни&nbsp;одного сорта в&nbsp;кандидаты.
           </div>
-          <ol className="tier-card tier-card--stacked">
-            {podium.map((row, i) => {
-              const rowStyle = {
-                "--row-bg": topPalette.bg,
-                "--row-bg-end": topPalette.bgEnd,
-                "--row-border": topPalette.border,
-                "--row-text": topPalette.text,
-                "--row-glow": topPalette.glow,
-              };
-              return (
-                <li
-                  key={row.id}
-                  style={rowStyle}
-                  className={`tier-row tier-row--colored ${i === 0 ? "tier-row--winner" : ""} tier-row--clickable`}
-                  onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="tier-row__rank tabnum">{row.place}</span>
-                  <div className="tier-row__body">
-                    <div className="tier-row__title-row">
-                      <span className="tier-row__title">{row.name}</span>
-                      {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+        )}
+      </div>
+
+      {podium.length > 0 && (
+        <div className="result-section">
+          <p className="result-intro">
+            В&nbsp;итоге лидерами вашего личного рейтинга стали:
+          </p>
+          <div className="podium-section">
+            <div className="tier-head">
+              <div className="profile-card-head__eyebrow tier-head__title">Топ-3 вкусов</div>
+              <span className="tier-head__col">Баллы</span>
+            </div>
+            <ol className="tier-card tier-card--stacked">
+              {podium.map((row, i) => {
+                const rowStyle = {
+                  "--row-bg": topPalette.bg,
+                  "--row-bg-end": topPalette.bgEnd,
+                  "--row-border": topPalette.border,
+                  "--row-text": topPalette.text,
+                  "--row-glow": topPalette.glow,
+                };
+                return (
+                  <li
+                    key={row.id}
+                    style={rowStyle}
+                    className={`tier-row tier-row--colored ${i === 0 ? "tier-row--winner" : ""} tier-row--clickable`}
+                    onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="tier-row__rank tabnum">{row.place}</span>
+                    <div className="tier-row__body">
+                      <div className="tier-row__title-row">
+                        <span className="tier-row__title">{row.name}</span>
+                        {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+                      </div>
                     </div>
-                  </div>
-                  <span className="tier-row__score tabnum">
-                    {row.total_score != null ? row.total_score : "—"}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+                    <span className="tier-row__score tabnum">
+                      {row.total_score != null ? row.total_score : "—"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         </div>
       )}
 
-      {favorites.length > 0 && (
-        <div className="favs-section">
-          <div className="tier-head">
-            <div className="profile-card-head__eyebrow tier-head__title">Также вы&nbsp;оценили</div>
-          </div>
-          <ol className="tier-card">
-            {favorites.map((row) => {
-              const product = productById(row.id);
-              const score = product?.total_score;
-              return (
-                <li
-                  key={row.id}
-                  className="tier-row tier-row--clickable"
-                  onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="tier-row__finalist" aria-label="Финалист">
-                    <IconMedal size={14} filled stroke={1.8} />
-                  </span>
-                  <div className="tier-row__body">
-                    <div className="tier-row__title-row">
-                      <span className="tier-row__title">{row.name}</span>
-                    </div>
-                  </div>
-                  <span className="tier-row__score tabnum">
-                    {score != null ? score : "—"}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      )}
+      <IceCreamStats stats={result?.ice_cream_stats} />
 
       {criteriaBreakdown.length > 0 && (
         <div className="portrait-section">

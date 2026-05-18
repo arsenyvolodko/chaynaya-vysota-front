@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
 import {
   IconArrowRight,
   IconChevronLeft,
@@ -214,16 +215,14 @@ export default function SelectTopPage() {
   return (
     <>
       <div className="main-scroll">
-        <div className="topbar topbar--clean">
-          <div className="topbar__row">
+        <PageHeader
+          back={
             <button className="icon-btn icon-btn--leading" onClick={() => navigate(-1)}>
               <IconChevronLeft size={20} />
               <span>Назад</span>
             </button>
-            <span className="topbar__spacer" />
-            <span className="topbar__spacer" />
-          </div>
-        </div>
+          }
+        />
 
         <div className="hero">
           <div className="hero__eyebrow">Финальный шаг</div>

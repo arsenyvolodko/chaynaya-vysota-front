@@ -271,7 +271,25 @@ input, textarea { font: inherit; color: inherit; }
   transition: color 140ms;
 }
 .page-header__contacts:hover { color: var(--green-800); }
+.page-header__contacts:visited { color: var(--stone-500); }
 .page-header__right { flex-shrink: 0; }
+
+/* Слот по центру шапки (например, «Шаг N» на детальной).
+   Абсолютное позиционирование, чтобы не зависеть от ширины back/brand. */
+.page-header__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone-500);
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums lining-nums;
+}
 
 /* Дата на главной — раньше была частью app-header label, теперь под шапкой */
 .hero__date {
@@ -366,66 +384,6 @@ input, textarea { font: inherit; color: inherit; }
   font-weight: 300;
 }
 
-/* Contacts page */
-.contacts-scroll {
-  position: absolute; inset: 0;
-  overflow-y: auto;
-  background: white;
-  padding-bottom: 32px;
-}
-.contacts-body { padding: 22px 24px 16px; }
-.contacts-lede {
-  margin: 0 0 24px;
-  font-size: 13.5px;
-  color: var(--stone-500);
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-.contact-block {
-  padding: 14px 0;
-  border-top: 1px solid var(--stone-100);
-}
-.contact-block:first-of-type { border-top: 0; padding-top: 4px; }
-.contact-block__label {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--stone-500);
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-.contact-block__body {
-  display: flex; flex-direction: column; gap: 6px;
-}
-.contact-block__link {
-  font-size: 15px;
-  color: var(--green-700);
-  text-decoration: none;
-  font-weight: 500;
-  word-break: break-word;
-}
-.contact-block__link:hover { color: var(--green-800); text-decoration: underline; }
-.contact-block__group {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 8px 0;
-}
-.contact-block__group + .contact-block__group {
-  border-top: 1px dashed rgba(0, 0, 0, 0.06);
-  margin-top: 4px;
-}
-.contact-block__sub {
-  font-size: 13px;
-  color: var(--stone-700);
-  margin-bottom: 4px;
-}
-.contact-block__phone {
-  font-size: 16px;
-  color: var(--stone-900);
-  text-decoration: none;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-.contact-block__phone:hover { color: var(--green-800); }
 .hero { padding: 12px 24px 28px; }
 .hero__title { text-wrap: balance; }
 .hero__title-flourish {
@@ -1362,10 +1320,18 @@ input, textarea { font: inherit; color: inherit; }
   background: linear-gradient(to bottom, #f7f5ef 0%, white 220px);
 }
 /* Шапка на странице результата — растягиваем на всю ширину скролл-контейнера
-   (компенсируем горизонтальный padding 22px родителя) и делаем компактнее. */
+   (компенсируем горизонтальный padding 22px родителя), делаем компактнее
+   и снимаем sticky-поведение: лого остаётся вверху и уходит при скролле.
+   Прозрачный фон без бордера — чтобы цвет шапки совпадал с кремовым
+   градиентом результата. */
 .result-scroll .page-header {
+  position: static;
   margin: 0 -22px;
   padding: 10px 22px 8px;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 0;
 }
 .result-head, .aura-section, .evening-line, .podium-section, .favs-section,
 .impressions-section, .portrait-section, .matches-section, .auth-cta, .result-bottom {
@@ -1451,14 +1417,24 @@ input, textarea { font: inherit; color: inherit; }
   margin: 6px 0 0; font-family: var(--serif); font-size: 24px;
   font-weight: 400; letter-spacing: -0.012em; color: var(--stone-900);
 }
+/* Хедер списков (топ-3, кандидаты): сетка совпадает с геометрией
+   ряда — title слева, «Баллы» центрируется над колонкой баллов
+   за счёт min-width/padding, повторяющих tier-row__score. */
 .tier-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 16px; padding: 0; margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  margin-top: 6px;
+  padding: 0 16px 0 0;
 }
 .tier-head__title { margin: 0; }
 .tier-head__col {
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--stone-400); font-weight: 500; padding-right: 26px; flex-shrink: 0;
+  color: var(--stone-400); font-weight: 500;
+  min-width: 48px;
+  padding: 0 14px;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .result-head { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 36px 8px 12px; }
@@ -1505,14 +1481,22 @@ input, textarea { font: inherit; color: inherit; }
 @media (min-width: 520px) {
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
 }
+/* Карточка-инфографика. Колонки задаём на уровне карточки и через subgrid
+   делим их между subhead и списком — это гарантирует, что «Сорт» сидит
+   ровно над колонкой логотипов, а названия в колонке 4 выравниваются по
+   единой левой линии (ширина = max-content самого длинного имени). */
 .stats-col {
   background: white;
   border: 1px solid var(--stone-200);
   border-radius: 18px;
-  padding: 14px 16px 10px;
+  padding: 14px 28px 10px 16px;
   box-shadow: 0 6px 18px -16px rgba(20, 28, 24, 0.22);
+  display: grid;
+  grid-template-columns: 36px 1fr auto max-content;
+  column-gap: 10px;
 }
 .stats-col__heading {
+  grid-column: 1 / -1;
   font-family: var(--serif);
   font-size: 15.5px;
   font-weight: 500;
@@ -1525,9 +1509,10 @@ input, textarea { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--stone-100);
 }
 .stats-col__subhead {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 36px 1fr auto auto;
-  gap: 10px;
+  grid-template-columns: subgrid;
+  row-gap: 4px;
   padding: 6px 0 4px;
 }
 .stats-col__subhead-amount,
@@ -1538,22 +1523,35 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--stone-400);
   font-weight: 500;
   line-height: 1;
+  white-space: nowrap;
 }
-.stats-col__subhead-amount { grid-column: 1; text-align: right; }
-.stats-col__subhead-name { grid-column: 4; text-align: right; }
+.stats-col__subhead-amount {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  text-align: left;
+}
+.stats-col__subhead-name {
+  grid-column: 3;
+  grid-row: 2;
+  text-align: center;
+}
 .stats-col__list {
-  display: flex;
-  flex-direction: column;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: 0;
 }
 .stats-row {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 36px 1fr auto auto;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 10px;
   padding: 7px 0;
   border-top: 1px dashed rgba(0, 0, 0, 0.06);
 }
-.stats-row:first-child { border-top: 0; }
+.stats-col__list > .stats-row:first-child {
+  border-top: 0;
+}
 .stats-row__amount {
   grid-column: 1;
   font-family: var(--serif);
@@ -1569,6 +1567,7 @@ input, textarea { font: inherit; color: inherit; }
   width: 36px;
   height: 36px;
   object-fit: contain;
+  justify-self: center;
   flex-shrink: 0;
 }
 .stats-row__icon--empty {
@@ -1582,8 +1581,7 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--stone-800);
   line-height: 1.3;
   letter-spacing: -0.003em;
-  text-wrap: balance;
-  text-align: right;
+  text-align: left;
 }
 
 .podium-section { margin-top: 10px; padding: 0 2px; }

@@ -1,5 +1,7 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Logomark from "./Logomark.jsx";
+
+const CONTACTS_URL = "https://www.чайная.москва/contact_page";
 
 /**
  * Шапка, общая для всех внутренних страниц.
@@ -8,13 +10,14 @@ import Logomark from "./Logomark.jsx";
  *  • без `back`: лого+«Контакты» слева, `right`-слот (аватар и т.п.) справа;
  *  • с `back`:   кнопка «Назад» слева, лого+«Контакты» справа.
  *
+ * `center` — опциональный слот, абсолютно центрируется по ширине шапки
+ * (например, индикатор «Шаг N» на странице сорта).
+ *
  * Sticky top:0 внутри своего scroll-контейнера со шторкой-blur, чтобы шапка
  * оставалась видимой при длинном скролле.
  */
-export default function PageHeader({ right, back, transparent }) {
+export default function PageHeader({ right, back, center, transparent }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const onContacts = location.pathname === "/contacts";
 
   const reversed = !!back;
 
@@ -36,16 +39,18 @@ export default function PageHeader({ right, back, transparent }) {
         >
           <Logomark />
         </button>
-        {!onContacts && (
-          <button
-            type="button"
-            className="page-header__contacts"
-            onClick={() => navigate("/contacts")}
-          >
-            Контакты
-          </button>
-        )}
+        <a
+          className="page-header__contacts"
+          href={CONTACTS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Контакты
+        </a>
       </div>
+      {center != null && center !== false && (
+        <div className="page-header__center">{center}</div>
+      )}
       {right && !reversed && <div className="page-header__right">{right}</div>}
     </div>
   );

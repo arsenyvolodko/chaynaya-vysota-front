@@ -408,7 +408,7 @@ function ResultScreen({ go, tastings, user, setUser, reset, reviewIceCream, pinn
           <div className="result-head__thanks">Спасибо, что были с&nbsp;нами</div>
           <h1 className="result-head__title">Дегустация завершена</h1>
           <p className="result-head__sub">
-            Вы оценили {ICE_CREAMS.length}&nbsp;вкусов сегодняшнего сета.
+            Вы попробовали и оценили {ICE_CREAMS.length}&nbsp;вкусов сегодняшнего сета.
           </p>
         </div>
 

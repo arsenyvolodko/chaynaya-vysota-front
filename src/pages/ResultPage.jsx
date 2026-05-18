@@ -110,8 +110,8 @@ function IceCreamStats({ stats }) {
     <div className="stats-col">
       <div className="stats-col__heading">{title}</div>
       <div className="stats-col__subhead">
-        <span className="stats-col__subhead-amount">Попроб.</span>
-        <span className="stats-col__subhead-name">Сорт</span>
+        <span className="stats-col__subhead-amount">Кол-во шариков</span>
+        <span className="stats-col__subhead-name">сорт</span>
       </div>
       <div className="stats-col__list">{entries.map(renderRow)}</div>
     </div>
@@ -227,7 +227,7 @@ export default function ResultPage() {
 
   return (
     <div className="result-scroll" style={scrollStyle}>
-      <PageHeader transparent />
+      <PageHeader />
 
       <div className="result-head">
         <div className="result-head__icon">
@@ -251,7 +251,7 @@ export default function ResultPage() {
 
       <div className="result-section">
         <p className="result-intro">
-          Вы&nbsp;оценили <strong>{ratedCount}</strong>&nbsp;сортов, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
+          Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;сортов, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
         </p>
         {allCandidates.length > 0 ? (
           <>

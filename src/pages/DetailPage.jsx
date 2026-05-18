@@ -153,6 +153,7 @@ export default function DetailPage() {
   return (
     <div ref={scrollRef} className={`detail-scroll ${readOnly ? "detail--readonly" : ""}`}>
       <PageHeader
+        center={currentIdx >= 0 ? `Шаг ${currentIdx + 1}` : null}
         back={
           <button className="icon-btn icon-btn--leading" onClick={() => navigate(`/tasting/${id}`)}>
             <IconChevronLeft size={20} />

@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import RequireAuth from "./auth/RequireAuth.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
-import ContactsPage from "./pages/ContactsPage.jsx";
 import EntryPage from "./pages/EntryPage.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import DetailPage from "./pages/DetailPage.jsx";
@@ -23,7 +22,6 @@ export default function App() {
       <div className="phone">
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/" element={<RequireAuth><EntryPage /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="/tasting/:id" element={<RequireAuth><MainPage /></RequireAuth>} />

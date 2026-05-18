@@ -3,7 +3,7 @@ export default function Logomark({ size = "md", label }) {
   return (
     <div className="logomark">
       <img
-        src="/maket-assets/logo.png"
+        src="/logo_cropped.svg"
         alt="Логотип"
         className="logomark__img"
         style={{ width: px, height: px }}

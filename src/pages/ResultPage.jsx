@@ -255,8 +255,7 @@ export default function ResultPage() {
         </p>
         {allCandidates.length > 0 ? (
           <>
-            <div className="tier-head">
-              <span className="tier-head__spacer" />
+            <div className="tier-head tier-head--candidates">
               <span className="tier-head__col">Баллы</span>
             </div>
             <ol className="candidate-list">

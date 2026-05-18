@@ -1,13 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { IconArrowRight, IconChevronLeft, IconSparkles } from "../components/icons.jsx";
-import LikeButton from "../components/LikeButton.jsx";
 import MarqueeTags from "../components/MarqueeTags.jsx";
+import NominateToggle from "../components/NominateToggle.jsx";
 import ProductVisuals from "../components/ProductVisuals.jsx";
 import RankingList from "../components/RankingList.jsx";
 import StepSlider from "../components/StepSlider.jsx";
 import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
+
+// Раскладываем продукты в порядок «категория-за-категорией», где порядок
+// категорий — это порядок первого появления каждой category в исходном списке
+// (он уже отсортирован бэком по ProductTasting.order). Это страхует случай,
+// когда admin задал order перекрывающимися значениями внутри разных категорий —
+// иначе «Дальше» прыгало бы из категории в категорию.
+function flatProductsByCategory(products) {
+  const groups = new Map();
+  for (const p of products) {
+    const key = p.category || "";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  }
+  return Array.from(groups.values()).flat();
+}
 
 function gradeFor(criteria) {
   const grade = Array.isArray(criteria?.grade) ? criteria.grade : [];
@@ -23,9 +38,10 @@ export default function DetailPage() {
   const readOnly = searchParams.get("from") === "result";
 
   const { products: siblingProducts } = useTasting(id, { autoJoin: false });
-  const currentIdx = siblingProducts.findIndex((p) => String(p.id) === String(productId));
-  const isLast = currentIdx >= 0 && currentIdx === siblingProducts.length - 1;
-  const nextProduct = !isLast && currentIdx >= 0 ? siblingProducts[currentIdx + 1] : null;
+  const orderedSiblings = useMemo(() => flatProductsByCategory(siblingProducts), [siblingProducts]);
+  const currentIdx = orderedSiblings.findIndex((p) => String(p.id) === String(productId));
+  const isLast = currentIdx >= 0 && currentIdx === orderedSiblings.length - 1;
+  const nextProduct = !isLast && currentIdx >= 0 ? orderedSiblings[currentIdx + 1] : null;
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +89,12 @@ export default function DetailPage() {
   const flushReview = useCallback(async (patch) => {
     try {
       const updated = await reviewProduct(productId, patch);
-      setProduct(updated);
+      // Бек на /review/ возвращает ProductSerializer (без tea_flavor_combination,
+      // category, is_nominated, podium_place), а мы изначально грузим
+      // ProductInTastingSerializer. Полная замена стейта стирала бы tea-связку
+      // и слайдер «Силы мэтча» из блока «С чем сочетал». Мерджим, сохраняя
+      // tasting-context-поля.
+      setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
     } catch (_) { /* ignore */ }
   }, [productId]);
 
@@ -297,8 +318,12 @@ export default function DetailPage() {
         </div>
       ) : (
         <div className="detail-body footer--detail">
-          <div className="footer__row">
-            <LikeButton liked={!!product.is_nominated} onToggle={onToggleLike} />
+          <NominateToggle
+            isNominated={!!product.is_nominated}
+            onToggle={onToggleLike}
+            disabled={readOnly}
+          />
+          <div className="footer__row" style={{ marginTop: 12 }}>
             <button
               className="btn btn--primary footer__next"
               onClick={() => {

@@ -117,3 +117,10 @@ export const IconX = (p) => (
     <line x1="6" y1="6" x2="18" y2="18" />
   </Icon>
 );
+
+export const IconMedal = ({ filled, ...p }) => (
+  <Icon {...p}>
+    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+    <circle cx="12" cy="8" r="6" fill={filled ? "currentColor" : "none"} />
+  </Icon>
+);

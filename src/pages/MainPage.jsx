@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Logomark from "../components/Logomark.jsx";
-import { IconArrowRight, IconCheck, IconChevronRight, IconHeart } from "../components/icons.jsx";
+import { IconArrowRight, IconCheck, IconChevronRight, IconMedal } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
 import { formatTastingDate } from "../utils/date.js";
@@ -101,8 +101,8 @@ export default function MainPage() {
                     </div>
                     <div className="card__rating-slot">
                       {p.is_nominated ? (
-                        <span className="card__like">
-                          <IconHeart size={16} filled stroke={2} />
+                        <span className="card__finalist">
+                          <IconMedal size={16} filled stroke={1.8} />
                         </span>
                       ) : (
                         <span className="card__chev">

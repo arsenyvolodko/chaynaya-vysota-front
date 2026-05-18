@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { IconChevronLeft, IconHeart, IconSparkles } from "../components/icons.jsx";
+import { IconMedal, IconSparkles } from "../components/icons.jsx";
 import { getResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
+import { productPalette } from "../utils/color.js";
 import { formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.js";
 
 function vibrant(hex) {
@@ -89,10 +90,6 @@ function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
         <span className="portrait-axis__center" aria-hidden="true" />
         <span className="portrait-axis__star" style={{ left: `${pct}%` }} aria-hidden="true">✦</span>
       </div>
-      <div className="portrait-axis__ends">
-        <span>min ({minTotal})</span>
-        <span>max ({maxTotal})</span>
-      </div>
     </div>
   );
 }
@@ -145,24 +142,24 @@ export default function ResultPage() {
     return top?.color || "#FFB987";
   }, [podiumProducts]);
 
+  // Все три строки топ-3 окрашиваются цветом продукта на 1-м месте.
+  const topPalette = useMemo(() => productPalette(auraColor), [auraColor]);
+
   const showAuthReminder = wasSkipped && !user?.phone && !reminderHidden;
 
   if (loading) return <div className="fullscreen-center">Считаем результат…</div>;
   if (error || !result) return <div className="fullscreen-center">Не удалось загрузить результат.</div>;
 
-  return (
-    <div className="result-scroll">
-      <div className="topbar">
-        <div className="topbar__row">
-          <button className="icon-btn icon-btn--leading" onClick={() => navigate(`/tasting/${id}`)}>
-            <IconChevronLeft size={20} />
-            <span>Назад</span>
-          </button>
-          <span className="topbar__spacer" />
-          <span className="topbar__spacer" />
-        </div>
-      </div>
+  const scrollStyle = {
+    "--row-bg": topPalette.bg,
+    "--row-bg-end": topPalette.bgEnd,
+    "--row-border": topPalette.border,
+    "--row-text": topPalette.text,
+    "--row-glow": topPalette.glow,
+  };
 
+  return (
+    <div className="result-scroll" style={scrollStyle}>
       <div className="result-head">
         <div className="result-head__icon">
           <IconSparkles size={26} stroke={1.5} />
@@ -195,26 +192,36 @@ export default function ResultPage() {
             <span className="tier-head__col">Баллы</span>
           </div>
           <ol className="tier-card">
-            {podium.map((row, i) => (
-              <li
-                key={row.id}
-                className={`tier-row tier-row--accent ${i === 0 ? "tier-row--winner" : ""} tier-row--clickable`}
-                onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
-                role="button"
-                tabIndex={0}
-              >
-                <span className="tier-row__rank tabnum">{row.place}</span>
-                <div className="tier-row__body">
-                  <div className="tier-row__title-row">
-                    <span className="tier-row__title">{row.name}</span>
-                    {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+            {podium.map((row, i) => {
+              const rowStyle = {
+                "--row-bg": topPalette.bg,
+                "--row-bg-end": topPalette.bgEnd,
+                "--row-border": topPalette.border,
+                "--row-text": topPalette.text,
+                "--row-glow": topPalette.glow,
+              };
+              return (
+                <li
+                  key={row.id}
+                  style={rowStyle}
+                  className={`tier-row tier-row--colored ${i === 0 ? "tier-row--winner" : ""} tier-row--clickable`}
+                  onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="tier-row__rank tabnum">{row.place}</span>
+                  <div className="tier-row__body">
+                    <div className="tier-row__title-row">
+                      <span className="tier-row__title">{row.name}</span>
+                      {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+                    </div>
                   </div>
-                </div>
-                <span className="tier-row__score tabnum">
-                  {row.total_score != null ? row.total_score : "—"}
-                </span>
-              </li>
-            ))}
+                  <span className="tier-row__score tabnum">
+                    {row.total_score != null ? row.total_score : "—"}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}
@@ -233,8 +240,8 @@ export default function ResultPage() {
                 role="button"
                 tabIndex={0}
               >
-                <span className="tier-row__heart" aria-label="Понравилось">
-                  <IconHeart size={14} filled stroke={2} />
+                <span className="tier-row__finalist" aria-label="Финалист">
+                  <IconMedal size={14} filled stroke={1.8} />
                 </span>
                 <div className="tier-row__body">
                   <div className="tier-row__title-row">

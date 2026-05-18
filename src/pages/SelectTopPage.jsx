@@ -1,52 +1,204 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { IconArrowRight, IconChevronLeft, IconHeart } from "../components/icons.jsx";
+import {
+  IconArrowRight,
+  IconChevronLeft,
+  IconGrip,
+  IconMedal,
+} from "../components/icons.jsx";
 import { setPodium } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
 
+// Цвета медалей по позиции: золото, серебро, бронза.
+const MEDAL_PALETTE = [
+  { bg: "#fff5d4", border: "#e3bb45", text: "#9c7926" }, // 1 — gold
+  { bg: "#f0f1f4", border: "#b8bcc4", text: "#73767e" }, // 2 — silver
+  { bg: "#fae0c6", border: "#cf8744", text: "#88491b" }, // 3 — bronze
+];
+
+const medalStyle = (i) => {
+  const c = MEDAL_PALETTE[i] || MEDAL_PALETTE[0];
+  return {
+    "--medal-bg": c.bg,
+    "--medal-border": c.border,
+    "--medal-text": c.text,
+  };
+};
+
+/**
+ * Кандидаты-на-пьедестал: пользователь перетягивает финалистов (карточки из
+ * пула снизу) на 3 слота подиума сверху. Пока 3 слота не заняты, переход
+ * дальше заблокирован.
+ *
+ * Drag-логика на Pointer Events: pointer captured на source-элементе, ghost-
+ * клон следует за пальцем через transform-ref (без re-render каждый кадр).
+ * На pointerup hit-test по getBoundingClientRect слотов и пула.
+ */
 export default function SelectTopPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { products, loading } = useTasting(id, { autoJoin: false });
 
-  const liked = useMemo(() => products.filter((p) => p.is_nominated && !p.podium_place), [products]);
-  const alreadyPodium = useMemo(() => {
-    const out = { 1: null, 2: null, 3: null };
-    products.forEach((p) => {
-      if (p.podium_place && out[p.podium_place] == null) out[p.podium_place] = p.id;
-    });
-    return out;
-  }, [products]);
-
-  const maxPick = Math.min(3, liked.length + Object.values(alreadyPodium).filter(Boolean).length);
-  const [picks, setPicks] = useState(() =>
-    Object.values(alreadyPodium).filter(Boolean).slice(0, maxPick)
-  );
+  const [pool, setPool] = useState([]);
+  const [top3, setTop3] = useState([null, null, null]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const toggle = (pid) => {
-    setPicks((prev) => {
-      if (prev.includes(pid)) return prev.filter((x) => x !== pid);
-      if (prev.length >= 3) return [...prev.slice(1), pid];
-      return [...prev, pid];
+  // Заполняем при первой загрузке продуктов.
+  const initedRef = useRef(false);
+  useEffect(() => {
+    if (loading || initedRef.current) return;
+    if (!products.length) return;
+    const slots = [null, null, null];
+    const rest = [];
+    products.forEach((p) => {
+      if (!p.is_nominated) return;
+      if (p.podium_place && p.podium_place >= 1 && p.podium_place <= 3 && !slots[p.podium_place - 1]) {
+        slots[p.podium_place - 1] = p;
+      } else {
+        rest.push(p);
+      }
     });
+    setTop3(slots);
+    setPool(rest);
+    initedRef.current = true;
+  }, [loading, products]);
+
+  // --- Drag state ---
+  const slotRefs = useRef([null, null, null]);
+  const poolRef = useRef(null);
+  const ghostRef = useRef(null);
+  const dragRef = useRef(null);
+  const [drag, setDrag] = useState(null); // только для рендера ghost
+  const [hoverSlot, setHoverSlot] = useState(null);
+
+  const updateGhost = (clientX, clientY) => {
+    const s = dragRef.current;
+    const el = ghostRef.current;
+    if (!s || !el) return;
+    el.style.transform = `translate3d(${clientX - s.offsetX}px, ${clientY - s.offsetY}px, 0)`;
   };
 
-  const ready = picks.length === maxPick && picks.length > 0;
+  const detectHoverSlot = (clientX, clientY) => {
+    for (let i = 0; i < 3; i++) {
+      const slotEl = slotRefs.current[i];
+      if (!slotEl) continue;
+      const r = slotEl.getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  const detectPool = (clientX, clientY) => {
+    const el = poolRef.current;
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+  };
+
+  const startDrag = (product, fromZone, fromIdx) => (e) => {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    const target = e.currentTarget;
+    try { target.setPointerCapture(e.pointerId); } catch (_) {}
+    const rect = target.getBoundingClientRect();
+    dragRef.current = {
+      product,
+      fromZone,
+      fromIdx,
+      pointerId: e.pointerId,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+    setDrag({ product });
+    // Ghost rendered via state — позиционируем сразу после монтирования.
+    requestAnimationFrame(() => updateGhost(e.clientX, e.clientY));
+  };
+
+  const moveDrag = (e) => {
+    const s = dragRef.current;
+    if (!s || s.pointerId !== e.pointerId) return;
+    updateGhost(e.clientX, e.clientY);
+    setHoverSlot(detectHoverSlot(e.clientX, e.clientY));
+  };
+
+  const endDrag = (e) => {
+    const s = dragRef.current;
+    if (!s || s.pointerId !== e.pointerId) return;
+    const target = e.currentTarget;
+    try { target.releasePointerCapture(e.pointerId); } catch (_) {}
+
+    const droppedIdx = detectHoverSlot(e.clientX, e.clientY);
+    const droppedToPool = droppedIdx == null && detectPool(e.clientX, e.clientY);
+
+    if (droppedIdx != null) {
+      // Помещаем в слот droppedIdx.
+      setTop3((prev) => {
+        const next = [...prev];
+        const occupant = next[droppedIdx];
+        if (s.fromZone === "top3") {
+          next[s.fromIdx] = occupant && occupant.id !== s.product.id ? occupant : null;
+        }
+        next[droppedIdx] = s.product;
+        return next;
+      });
+      setPool((prev) => {
+        let next = prev;
+        if (s.fromZone === "pool") {
+          next = next.filter((p) => p.id !== s.product.id);
+        }
+        if (s.fromZone === "top3") {
+          // Если в целевом слоте был кто-то — он улетит в пул только если мы
+          // не возвращаем его в src-слот через top3-логику выше. Логика выше
+          // уже положила occupant обратно в src-слот, ничего в пул не уходит.
+        } else {
+          // fromZone === "pool": если в droppedIdx что-то было — пушим в пул.
+          // top3 setter уже перетёр слот, нужно отдельно знать occupant.
+        }
+        // Сделаем чисто: пересоберём pool через текущий top3 = переустановим
+        // ниже отдельным эффектом? — проще обработать occupant явно тут.
+        return next;
+      });
+      // Если перетянули из пула — добавим вытесненного в пул отдельным проходом.
+      if (s.fromZone === "pool") {
+        const occupant = top3[droppedIdx];
+        if (occupant && occupant.id !== s.product.id) {
+          setPool((prev) => [...prev, occupant]);
+        }
+      }
+    } else if (droppedToPool && s.fromZone === "top3") {
+      // Вернули из топ-3 обратно в пул.
+      setTop3((prev) => {
+        const next = [...prev];
+        next[s.fromIdx] = null;
+        return next;
+      });
+      setPool((prev) => [...prev, s.product]);
+    }
+    // else — отпустили вне зон → no-op, элемент остаётся на своём месте.
+
+    dragRef.current = null;
+    setDrag(null);
+    setHoverSlot(null);
+  };
+
+  const ready = top3.every(Boolean);
+  const remaining = 3 - top3.filter(Boolean).length;
 
   const confirm = async () => {
     if (!ready || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
-      const body = { first: null, second: null, third: null };
-      picks.forEach((pid, idx) => {
-        if (idx === 0) body.first = pid;
-        else if (idx === 1) body.second = pid;
-        else if (idx === 2) body.third = pid;
+      await setPodium(id, {
+        first: top3[0]?.id ?? null,
+        second: top3[1]?.id ?? null,
+        third: top3[2]?.id ?? null,
       });
-      await setPodium(id, body);
       navigate(`/tasting/${id}/result`);
     } catch (err) {
       setError(err.response?.data?.detail || "Не удалось сохранить выбор.");
@@ -55,97 +207,158 @@ export default function SelectTopPage() {
     }
   };
 
-  if (loading) return <div className="fullscreen-center">Загружаем…</div>;
-
-  const candidates = [
-    ...products.filter((p) => p.podium_place),
-    ...liked,
-  ];
+  if (loading) {
+    return <div className="fullscreen-center">Загружаем…</div>;
+  }
 
   return (
     <>
-    <div className="main-scroll">
-      <div className="topbar topbar--clean">
-        <div className="topbar__row">
-          <button className="icon-btn icon-btn--leading" onClick={() => navigate(-1)}>
-            <IconChevronLeft size={20} />
-            <span>Назад</span>
-          </button>
-          <span className="topbar__spacer" />
-          <span className="topbar__spacer" />
-        </div>
-      </div>
-
-      <div className="hero">
-        <div className="hero__eyebrow">Финальный шаг</div>
-        <h1 className="title-xl">Кандидаты на&nbsp;пьедестал</h1>
-        <p className="hero__lede">
-          Вы&nbsp;отметили эти вкусы лайком во&nbsp;время дегустации.
-          Теперь выберите из&nbsp;них три самых любимых.
-        </p>
-      </div>
-
-      <div className="candidates">
-        {candidates.length === 0 ? (
-          <div className="candidates__empty">
-            Вы&nbsp;не&nbsp;отметили ни&nbsp;одного вкуса лайком. Вернитесь к&nbsp;карточкам и&nbsp;поставьте сердечко тем, что вам понравились.
+      <div className="main-scroll">
+        <div className="topbar topbar--clean">
+          <div className="topbar__row">
+            <button className="icon-btn icon-btn--leading" onClick={() => navigate(-1)}>
+              <IconChevronLeft size={20} />
+              <span>Назад</span>
+            </button>
+            <span className="topbar__spacer" />
+            <span className="topbar__spacer" />
           </div>
-        ) : (
-          candidates.map((p) => {
-            const idx = picks.indexOf(p.id);
-            const on = idx >= 0;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className={`candidate ${on ? "candidate--on" : ""}`}
-                onClick={() => toggle(p.id)}
-                aria-pressed={on}
-              >
-                <span className={`candidate__mark ${on ? "candidate__mark--on" : ""}`}>
-                  {on ? (
-                    <span className="candidate__rank tabnum">{idx + 1}</span>
-                  ) : (
-                    <IconHeart size={14} filled stroke={2} />
-                  )}
-                </span>
-                <div className="candidate__body">
-                  <div className="candidate__title-row">
-                    <span className="candidate__title">{p.name}</span>
-                    {p.number != null && <span className="candidate__num tabnum">№{p.number}</span>}
+        </div>
+
+        <div className="hero">
+          <div className="hero__eyebrow">Финальный шаг</div>
+          <h1 className="title-xl">Кандидаты на&nbsp;пьедестал</h1>
+          <p className="hero__lede">
+            Перетащите трёх кандидатов из&nbsp;списка ниже на&nbsp;пьедестал.
+            Карточки победителей можно менять местами и&nbsp;возвращать обратно в&nbsp;общий список.
+          </p>
+        </div>
+
+        <div className="podium-slots">
+          {top3.map((p, i) => (
+            <div
+              key={i}
+              ref={(el) => { slotRefs.current[i] = el; }}
+              style={medalStyle(i)}
+              className={[
+                "podium-slot",
+                `podium-slot--rank-${i + 1}`,
+                p ? "podium-slot--filled" : "podium-slot--empty",
+                hoverSlot === i ? "podium-slot--hover" : "",
+              ].filter(Boolean).join(" ")}
+            >
+              <span className="podium-slot__rank tabnum">{i + 1}</span>
+              {p ? (
+                <div
+                  className="podium-slot__item"
+                  onPointerDown={startDrag(p, "top3", i)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  style={dragRef.current?.product?.id === p.id ? { opacity: 0.3 } : undefined}
+                >
+                  <span className="podium-slot__icon">
+                    <IconMedal size={14} filled stroke={1.8} />
+                  </span>
+                  <div className="podium-slot__body">
+                    <div className="podium-slot__title-row">
+                      <span className="podium-slot__title">{p.name}</span>
+                      {p.number != null && (
+                        <span className="podium-slot__num tabnum">№{p.number}</span>
+                      )}
+                    </div>
                   </div>
-                  {p.description && (
-                    <div className="candidate__line">{p.description}</div>
-                  )}
+                  <span className="podium-slot__grip">
+                    <IconGrip size={16} />
+                  </span>
                 </div>
-              </button>
-            );
-          })
-        )}
+              ) : (
+                <div className="podium-slot__placeholder">
+                  <span className="podium-slot__placeholder-icon" aria-hidden="true">
+                    <IconMedal size={14} stroke={1.5} />
+                  </span>
+                  <span>Перетащите сюда</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="pool-section" ref={poolRef}>
+          <div className="profile-card-head__eyebrow pool-section__heading">
+            Финалисты
+          </div>
+          {pool.length === 0 ? (
+            <div className="pool__empty">Все ваши финалисты — на&nbsp;пьедестале.</div>
+          ) : (
+            <ul className="pool-list">
+              {pool.map((p, i) => (
+                <li
+                  key={p.id}
+                  className="pool-item"
+                  onPointerDown={startDrag(p, "pool", i)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  style={dragRef.current?.product?.id === p.id ? { opacity: 0.3 } : undefined}
+                >
+                  <span className="pool-item__icon">
+                    <IconMedal size={14} filled stroke={1.8} />
+                  </span>
+                  <div className="pool-item__body">
+                    <div className="pool-item__title-row">
+                      <span className="pool-item__title">{p.name}</span>
+                      {p.number != null && (
+                        <span className="pool-item__num tabnum">№{p.number}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="pool-item__grip">
+                    <IconGrip size={16} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {error && <div className="error-banner">{error}</div>}
+        <div className="main-footer-spacer" />
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
-
-      <div className="main-footer-spacer" />
-    </div>
-
-    <div className="footer">
-      <div className="footer__hint">
-        {candidates.length === 0
-          ? "Сначала отметьте лайком хотя бы один вкус."
-          : ready
-            ? maxPick === 3 ? "Готово — три фаворита выбраны." : `Готово — выбрано ${maxPick} из ${maxPick}.`
-            : `Выбрано ${picks.length} из ${maxPick}`}
+      <div className="footer">
+        <div className="footer__hint">
+          {ready
+            ? "Готово — три фаворита на пьедестале."
+            : remaining > 0
+              ? `Перетащите ещё ${remaining} в свой Топ-3`
+              : "Выберите хотя бы один фаворит на странице дегустации."}
+        </div>
+        <button
+          className="btn btn--primary"
+          disabled={!ready || submitting}
+          onClick={confirm}
+        >
+          <span>{submitting ? "Сохраняем…" : "Узнать результат"}</span>
+          {ready && !submitting && <IconArrowRight size={18} stroke={2} />}
+        </button>
       </div>
-      <button
-        className="btn btn--primary"
-        disabled={!ready || submitting}
-        onClick={confirm}
-      >
-        <span>{submitting ? "Сохраняем…" : "Узнать результат"}</span>
-        {ready && !submitting && <IconArrowRight size={18} stroke={2} />}
-      </button>
-    </div>
+
+      {drag && drag.product && (
+        <div
+          ref={ghostRef}
+          className="drag-ghost"
+          style={{ width: dragRef.current?.width ?? "auto" }}
+        >
+          <span className="drag-ghost__icon">
+            <IconMedal size={14} filled stroke={1.8} />
+          </span>
+          <span className="drag-ghost__title">{drag.product.name}</span>
+          {drag.product.number != null && (
+            <span className="drag-ghost__num tabnum">№{drag.product.number}</span>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -191,7 +191,7 @@ export default function ResultPage() {
             <div className="profile-card-head__eyebrow tier-head__title">Топ-3 вкусов</div>
             <span className="tier-head__col">Баллы</span>
           </div>
-          <ol className="tier-card">
+          <ol className="tier-card tier-card--stacked">
             {podium.map((row, i) => {
               const rowStyle = {
                 "--row-bg": topPalette.bg,
@@ -232,25 +232,31 @@ export default function ResultPage() {
             <div className="profile-card-head__eyebrow tier-head__title">Также вы&nbsp;оценили</div>
           </div>
           <ol className="tier-card">
-            {favorites.map((row) => (
-              <li
-                key={row.id}
-                className="tier-row tier-row--clickable"
-                onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
-                role="button"
-                tabIndex={0}
-              >
-                <span className="tier-row__finalist" aria-label="Финалист">
-                  <IconMedal size={14} filled stroke={1.8} />
-                </span>
-                <div className="tier-row__body">
-                  <div className="tier-row__title-row">
-                    <span className="tier-row__title">{row.name}</span>
-                    {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+            {favorites.map((row) => {
+              const product = productById(row.id);
+              const score = product?.total_score;
+              return (
+                <li
+                  key={row.id}
+                  className="tier-row tier-row--clickable"
+                  onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="tier-row__finalist" aria-label="Финалист">
+                    <IconMedal size={14} filled stroke={1.8} />
+                  </span>
+                  <div className="tier-row__body">
+                    <div className="tier-row__title-row">
+                      <span className="tier-row__title">{row.name}</span>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                  <span className="tier-row__score tabnum">
+                    {score != null ? score : "—"}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}

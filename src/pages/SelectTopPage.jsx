@@ -323,7 +323,7 @@ export default function SelectTopPage() {
         </div>
 
         {error && <div className="error-banner">{error}</div>}
-        <div className="main-footer-spacer" />
+        <div className="main-footer-spacer main-footer-spacer--tall" />
       </div>
 
       <div className="footer">
@@ -331,7 +331,7 @@ export default function SelectTopPage() {
           {ready
             ? "Готово — три фаворита на пьедестале."
             : remaining > 0
-              ? `Перетащите ещё ${remaining} в свой Топ-3`
+              ? `Перетащите ещё ${remaining} на пьедестал`
               : "Выберите хотя бы один фаворит на странице дегустации."}
         </div>
         <button

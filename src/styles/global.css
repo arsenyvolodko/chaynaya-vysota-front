@@ -991,6 +991,7 @@ input, textarea { font: inherit; color: inherit; }
 .footer__hint { text-align: center; font-size: 12px; letter-spacing: 0.04em; color: var(--stone-500); margin-bottom: 8px; }
 .main-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
 .main-footer-spacer { height: 96px; }
+.main-footer-spacer--tall { height: 160px; }
 
 .profile-hero { display: flex; align-items: flex-start; gap: 14px; padding: 24px 22px 10px; }
 .profile-hero__avatar {
@@ -1285,6 +1286,25 @@ input, textarea { font: inherit; color: inherit; }
   border-radius: 16px; overflow: visible;
   box-shadow: 0 6px 18px -14px rgba(0, 0, 0, 0.18);
 }
+/* Подиум на странице результата: три отдельных «карточки» с одинаковыми
+   скруглениями. Топ-1 поверх получает свечение, но геометрия рамки совпадает
+   с 2-м и 3-м местами. */
+.tier-card--stacked {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tier-card--stacked .tier-row {
+  border: 1px solid var(--row-border, var(--stone-200));
+  border-radius: 16px;
+}
+.tier-card--stacked .tier-row:first-child,
+.tier-card--stacked .tier-row--winner + .tier-row {
+  border-top: 1px solid var(--row-border, var(--stone-200));
+}
 .tier-row {
   display: grid; grid-template-columns: 30px 1fr auto;
   align-items: center; gap: 12px; padding: 13px 16px;
@@ -1336,8 +1356,11 @@ input, textarea { font: inherit; color: inherit; }
     0 0 0 4px color-mix(in srgb, var(--row-glow, var(--green-500)) 20%, transparent),
     0 10px 24px -8px color-mix(in srgb, var(--row-glow, var(--green-500)) 60%, transparent);
 }
-.result-scroll .tier-row--clickable.tier-row--colored:hover {
-  filter: brightness(0.97);
+.result-scroll .tier-row--clickable.tier-row--colored:hover,
+.tier-row--clickable.tier-row--colored:hover {
+  /* Окрашиваем hover в палитру продукта вместо зелёного. */
+  background: linear-gradient(90deg, var(--row-border, var(--green-200)) 0%, var(--row-bg, var(--green-50)) 100%);
+  filter: saturate(0.9);
 }
 
 .tier-row--winner {

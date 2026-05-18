@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Logomark from "../components/Logomark.jsx";
 import { IconPhone } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
@@ -7,11 +7,11 @@ import { formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.j
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const fromLocation = location.state?.from;
-  const returnTo = fromLocation
-    ? `${fromLocation.pathname || ""}${fromLocation.search || ""}${fromLocation.hash || ""}` || "/"
-    : "/";
+  const [searchParams] = useSearchParams();
+  // `?return=` берём из URL (а не router-state), чтобы переход через ссылку
+  // из Telegram → внешний браузер сохранял оригинальный URL.
+  const rawReturn = searchParams.get("return") || "/";
+  const returnTo = rawReturn.startsWith("/") && !rawReturn.startsWith("//") ? rawReturn : "/";
   const { login, loginSkip } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

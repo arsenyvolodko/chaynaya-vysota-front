@@ -473,7 +473,7 @@ export default function ResultPage({ shared = false }) {
 
       {shared && (
         <div className="shared-cta">
-          <div className="shared-cta__eyebrow">Хотите свою такую же страницу?</div>
+          <div className="shared-cta__eyebrow">Хотите себе такую же страницу?</div>
           <a
             className="btn btn--primary shared-cta__btn shared-cta__btn--primary"
             href="https://teatix.com/product-category/certificate/tickets"

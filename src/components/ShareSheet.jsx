@@ -26,14 +26,11 @@ export default function ShareSheet({ open, onClose, url, title, eveningLine }) {
   const intro = `Я был на дегустации «${title}» в Чайной Высоте.`;
   const cta = "Давай в следующий раз вместе?";
 
-  // Для TG/VK собираем читаемое сообщение; копирование — только url, без интро/CTA.
-  // Формат: intro \n\n phrase \n Посмотреть: url \n\n cta.
-  const phraseBlock = [phrase, `Посмотреть: ${url}`].filter(Boolean).join("\n");
-  const bodyText = [intro, phraseBlock, cta].filter(Boolean).join("\n\n");
+  // Текст без URL — иначе в TG/VK ссылка дублируется (один раз в превью-карточке
+  // из `url=` и второй раз в теле сообщения). Тут — только текстовая часть;
+  // ссылку платформа подцепляет сама через `url=`.
+  const bodyText = [intro, phrase, cta].filter(Boolean).join("\n\n");
 
-  // url в t.me/share/url нужен формально — TG также рендерит preview-карточку
-  // того, что в url. Чтобы preview совпадал со ссылкой из текста, отдаём ту же
-  // ссылку. text — наш полный текст с встроенной "Посмотреть: ...".
   const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(bodyText)}`;
   const vkUrl = `https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(intro)}&comment=${encodeURIComponent(bodyText)}`;
 

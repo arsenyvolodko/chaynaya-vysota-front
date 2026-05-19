@@ -322,25 +322,24 @@ export default function SelectTopPage() {
         </div>
 
         {error && <div className="error-banner">{error}</div>}
-        <div className="main-footer-spacer main-footer-spacer--tall" />
-      </div>
 
-      <div className="footer">
-        <div className="footer__hint">
-          {ready
-            ? "Готово — три фаворита на пьедестале."
-            : remaining > 0
-              ? `Перетащите ещё ${remaining} на пьедестал`
-              : "Выберите хотя бы один фаворит на странице дегустации."}
+        <div className="select-top-actions">
+          <div className="select-top-actions__hint">
+            {ready
+              ? "Готово — три фаворита на пьедестале."
+              : remaining > 0
+                ? `Перетащите ещё ${remaining} на пьедестал`
+                : "Выберите хотя бы один фаворит на странице дегустации."}
+          </div>
+          <button
+            className="btn btn--primary"
+            disabled={!ready || submitting}
+            onClick={confirm}
+          >
+            <span>{submitting ? "Сохраняем…" : "Узнать результат"}</span>
+            {ready && !submitting && <IconArrowRight size={18} stroke={2} />}
+          </button>
         </div>
-        <button
-          className="btn btn--primary"
-          disabled={!ready || submitting}
-          onClick={confirm}
-        >
-          <span>{submitting ? "Сохраняем…" : "Узнать результат"}</span>
-          {ready && !submitting && <IconArrowRight size={18} stroke={2} />}
-        </button>
       </div>
 
       {drag && drag.product && (

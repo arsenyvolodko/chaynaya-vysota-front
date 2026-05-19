@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
-import { IconArrowRight, IconChevronLeft, IconSparkles } from "../components/icons.jsx";
+import { IconArrowRight, IconChevronLeft, IconChevronRight, IconSparkles } from "../components/icons.jsx";
 import MarqueeTags from "../components/MarqueeTags.jsx";
 import NominateToggle from "../components/NominateToggle.jsx";
 import ProductVisuals from "../components/ProductVisuals.jsx";
@@ -245,13 +245,21 @@ export default function DetailPage() {
       {(product.taste_tags || []).length > 0 && (
         <div className="detail-body section">
           <div className="section__label">Общее впечатление</div>
-          <div className="section__hint">Выберите всё, что откликается.</div>
           <MarqueeTags
             tags={product.taste_tags}
             selectedIds={tagIds}
             onToggle={toggleTag}
             readOnly={readOnly}
           />
+          <div className="section__hint section__hint--swipe section__hint--below">
+            <span className="section__hint-swipe section__hint-swipe--left" aria-hidden="true">
+              <IconChevronLeft size={11} stroke={2.2} />
+            </span>
+            <span>Листайте теги и&nbsp;выбирайте всё, что откликается</span>
+            <span className="section__hint-swipe section__hint-swipe--right" aria-hidden="true">
+              <IconChevronRight size={11} stroke={2.2} />
+            </span>
+          </div>
         </div>
       )}
 

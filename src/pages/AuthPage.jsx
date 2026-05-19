@@ -11,7 +11,11 @@ export default function AuthPage() {
   // `?return=` берём из URL (а не router-state), чтобы переход через ссылку
   // из Telegram → внешний браузер сохранял оригинальный URL.
   const rawReturn = searchParams.get("return") || "/";
-  const returnTo = rawReturn.startsWith("/") && !rawReturn.startsWith("//") ? rawReturn : "/";
+  const safeReturn = rawReturn.startsWith("/") && !rawReturn.startsWith("//") ? rawReturn : "/";
+  // Если пользователь пришёл на базовый URL без tasting в адресе — после авторизации
+  // ведём в личный кабинет, а не в EntryPage, которая на пустом списке дегустаций
+  // показывает заглушку.
+  const returnTo = safeReturn === "/" ? "/profile" : safeReturn;
   const { login, loginSkip } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

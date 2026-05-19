@@ -13,6 +13,15 @@ function vibrant(hex) {
   return hex;
 }
 
+function pluralRu(n, forms) {
+  const abs = Math.abs(n) % 100;
+  const n1 = abs % 10;
+  if (abs > 10 && abs < 20) return forms[2];
+  if (n1 > 1 && n1 < 5) return forms[1];
+  if (n1 === 1) return forms[0];
+  return forms[2];
+}
+
 function Aura({ color }) {
   const style = { "--c1": vibrant(color), "--aura-glow": (vibrant(color) || "#ffb987") + "66" };
   return (
@@ -119,6 +128,10 @@ function IceCreamStats({ stats }) {
 
   return (
     <section className="stats-section">
+      <div className="profile-card-head__eyebrow">Попробовали и оценили</div>
+      <p className="stats-section__intro">
+        Инфографика&nbsp;— сколько шариков мороженого каждого типа и&nbsp;основы вы&nbsp;попробовали и&nbsp;оценили за&nbsp;вечер.
+      </p>
       <div className="stats-grid">
         {iceCreamEntries.length > 0 && (
           <Column title="Тип мороженого" entries={iceCreamEntries} />
@@ -209,10 +222,10 @@ export default function ResultPage() {
       .filter(Boolean);
     if (!phrases.length) return null;
     const PREFIX = "Сегодняшний вечер для вас — это история про";
-    if (phrases.length === 1) return `${PREFIX} ${phrases[0]}.`;
+    if (phrases.length === 1) return `${PREFIX} ${phrases[0]}.`;
     const head = phrases.slice(0, -1).join(", ");
     const tail = phrases[phrases.length - 1];
-    return `${PREFIX} ${head} и ${tail}.`;
+    return `${PREFIX} ${head} и ${tail}.`;
   }, [podiumProducts]);
 
   const auraColor = useMemo(() => {
@@ -262,7 +275,7 @@ export default function ResultPage() {
 
       <div className="result-section">
         <p className="result-intro">
-          Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;сортов, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
+          Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;{pluralRu(ratedCount, ["сорт", "сорта", "сортов"])}, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
         </p>
         {allCandidates.length > 0 ? (
           <>
@@ -385,11 +398,13 @@ export default function ResultPage() {
             {teaMatches.map((m) => (
               <article key={m.tea_id} className="pair-card">
                 <div className="pair-card__head">
-                  {m.tea_logo && (
-                    <img className="pair-card__tea-logo" src={m.tea_logo} alt="" />
-                  )}
                   <span className="pair-card__eyebrow">в&nbsp;паре с&nbsp;чаем</span>
-                  <span className="pair-card__tea">{m.tea_name}</span>
+                  <div className="pair-card__tea-row">
+                    {m.tea_logo && (
+                      <img className="pair-card__tea-logo" src={m.tea_logo} alt="" />
+                    )}
+                    <span className="pair-card__tea">{m.tea_name}</span>
+                  </div>
                 </div>
                 <ul className="pair-card__list">
                   <li

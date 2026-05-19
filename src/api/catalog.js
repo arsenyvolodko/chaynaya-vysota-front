@@ -51,3 +51,13 @@ export async function getResult(tastingId) {
   const { data } = await api.get(`/api/catalog/tastings/${tastingId}/result/`);
   return data;
 }
+
+export async function getSharedResult(resultId) {
+  const { data } = await api.get(`/api/catalog/results/${resultId}/`);
+  return data;
+}
+
+export async function getConfig() {
+  const { data } = await api.get(`/api/catalog/config/`);
+  return data;
+}

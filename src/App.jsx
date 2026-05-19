@@ -28,6 +28,7 @@ export default function App() {
           <Route path="/tasting/:id/product/:productId" element={<RequireAuth><KeyedDetailPage /></RequireAuth>} />
           <Route path="/tasting/:id/select-top" element={<RequireAuth><SelectTopPage /></RequireAuth>} />
           <Route path="/tasting/:id/result" element={<RequireAuth><ResultPage /></RequireAuth>} />
+          <Route path="/r/:resultId" element={<ResultPage shared />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
-import { IconMedal, IconSparkles } from "../components/icons.jsx";
-import { getResult } from "../api/catalog";
+import ShareSheet from "../components/ShareSheet.jsx";
+import { IconMedal, IconShare, IconSparkles, IconTelegram } from "../components/icons.jsx";
+import { getResult, getSharedResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
 import { productPalette } from "../utils/color.js";
@@ -172,25 +173,31 @@ function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
   );
 }
 
-export default function ResultPage() {
-  const { id } = useParams();
+export default function ResultPage({ shared = false }) {
+  const params = useParams();
   const navigate = useNavigate();
   const { wasSkipped, updateProfile, user } = useAuth();
-  const { productById, products } = useTasting(id, { autoJoin: false });
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reminderHidden, setReminderHidden] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getResult(id)
+    const promise = shared ? getSharedResult(params.resultId) : getResult(params.id);
+    promise
       .then((r) => !cancelled && setResult(r))
       .catch((e) => !cancelled && setError(e))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [id]);
+  }, [shared, params.id, params.resultId]);
+
+  // products подгружаем по tastingId: в shared берём из payload, иначе из URL
+  const tastingId = shared ? result?.tasting_id : params.id;
+  const { productById, products } = useTasting(tastingId || null, { autoJoin: false });
 
   const podium = result?.podium || [];
   const criteriaBreakdown = result?.criteria_breakdown || [];
@@ -236,7 +243,10 @@ export default function ResultPage() {
   // Все три строки топ-3 окрашиваются цветом продукта на 1-м месте.
   const topPalette = useMemo(() => productPalette(auraColor), [auraColor]);
 
-  const showAuthReminder = wasSkipped && !user?.phone && !reminderHidden;
+  const showAuthReminder = !shared && wasSkipped && !user?.phone && !reminderHidden;
+  const shareUrl = result?.result_id
+    ? `${window.location.origin}/r/${result.result_id}`
+    : null;
 
   if (loading) return <div className="fullscreen-center">Считаем результат…</div>;
   if (error || !result) return <div className="fullscreen-center">Не удалось загрузить результат.</div>;
@@ -257,8 +267,12 @@ export default function ResultPage() {
         <div className="result-head__icon">
           <IconSparkles size={26} stroke={1.5} />
         </div>
-        <div className="result-head__thanks">Спасибо, что были с&nbsp;нами</div>
-        <h1 className="result-head__title">Дегустация завершена</h1>
+        <div className="result-head__thanks">
+          {shared ? "Чайная Высота" : "Спасибо, что были с нами"}
+        </div>
+        <h1 className="result-head__title">
+          {shared ? (result?.title || "Результаты дегустации") : "Дегустация завершена"}
+        </h1>
       </div>
 
       <div className="aura-section" aria-hidden="true">
@@ -267,52 +281,56 @@ export default function ResultPage() {
 
       {eveningLine ? (
         <p className="evening-line">{eveningLine}</p>
-      ) : (
+      ) : !shared ? (
         <p className="evening-line evening-line--empty">
           Отметьте сердечком вкусы, которые понравились — здесь появится фраза о вашем вечере.
         </p>
-      )}
+      ) : null}
 
-      <div className="result-section">
-        <p className="result-intro">
-          Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;{pluralRu(ratedCount, ["сорт", "сорта", "сортов"])}, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
-        </p>
-        {allCandidates.length > 0 ? (
-          <>
-            <div className="tier-head tier-head--candidates">
-              <span className="tier-head__col">Баллы</span>
+      {!shared && (
+        <div className="result-section">
+          <p className="result-intro">
+            Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;{pluralRu(ratedCount, ["сорт", "сорта", "сортов"])}, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
+          </p>
+          {allCandidates.length > 0 ? (
+            <>
+              <div className="tier-head tier-head--candidates">
+                <span className="tier-head__col">Баллы</span>
+              </div>
+              <ol className="candidate-list">
+              {allCandidates.map(({ product, score }) => (
+                <li
+                  key={product.id}
+                  className="candidate-row"
+                  onClick={() => navigate(`/tasting/${tastingId}/product/${product.id}?from=result`)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="candidate-row__medal" aria-hidden="true">
+                    <IconMedal size={14} filled stroke={1.8} />
+                  </span>
+                  <div className="candidate-row__body">
+                    <span className="candidate-row__title">{product.name}</span>
+                  </div>
+                  <span className="candidate-row__score tabnum">{score}</span>
+                </li>
+              ))}
+              </ol>
+            </>
+          ) : (
+            <div className="candidate-list__empty">
+              Вы не&nbsp;отметили ни&nbsp;одного сорта в&nbsp;кандидаты.
             </div>
-            <ol className="candidate-list">
-            {allCandidates.map(({ product, score }) => (
-              <li
-                key={product.id}
-                className="candidate-row"
-                onClick={() => navigate(`/tasting/${id}/product/${product.id}?from=result`)}
-                role="button"
-                tabIndex={0}
-              >
-                <span className="candidate-row__medal" aria-hidden="true">
-                  <IconMedal size={14} filled stroke={1.8} />
-                </span>
-                <div className="candidate-row__body">
-                  <span className="candidate-row__title">{product.name}</span>
-                </div>
-                <span className="candidate-row__score tabnum">{score}</span>
-              </li>
-            ))}
-            </ol>
-          </>
-        ) : (
-          <div className="candidate-list__empty">
-            Вы не&nbsp;отметили ни&nbsp;одного сорта в&nbsp;кандидаты.
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {podium.length > 0 && (
         <div className="result-section">
           <p className="result-intro">
-            В&nbsp;итоге лидерами вашего личного рейтинга стали:
+            {shared
+              ? "Лидеры личного рейтинга:"
+              : "В итоге лидерами вашего личного рейтинга стали:"}
           </p>
           <div className="podium-section">
             <div className="tier-head">
@@ -328,14 +346,15 @@ export default function ResultPage() {
                   "--row-text": topPalette.text,
                   "--row-glow": topPalette.glow,
                 };
+                const clickable = !shared;
                 return (
                   <li
                     key={row.id}
                     style={rowStyle}
-                    className={`tier-row tier-row--colored ${i === 0 ? "tier-row--winner" : ""} tier-row--clickable`}
-                    onClick={() => navigate(`/tasting/${id}/product/${row.id}?from=result`)}
-                    role="button"
-                    tabIndex={0}
+                    className={`tier-row tier-row--colored ${i === 0 ? "tier-row--winner" : ""} ${clickable ? "tier-row--clickable" : ""}`}
+                    onClick={clickable ? () => navigate(`/tasting/${tastingId}/product/${row.id}?from=result`) : undefined}
+                    role={clickable ? "button" : undefined}
+                    tabIndex={clickable ? 0 : undefined}
                   >
                     <span className="tier-row__rank tabnum">{row.place}</span>
                     <div className="tier-row__body">
@@ -361,7 +380,9 @@ export default function ResultPage() {
         <div className="portrait-section">
           <div className="profile-card-head__eyebrow">Вкусовой портрет дегустации</div>
           <p className="portrait-section__intro">
-            Звезда показывает, где ваши оценки расположились на&nbsp;шкале от&nbsp;минимально возможного к&nbsp;максимально возможному баллу по&nbsp;каждому критерию.
+            {shared
+              ? "Звезда показывает, где оценки автора расположились на шкале от минимально возможного к максимально возможному баллу по каждому критерию."
+              : "Звезда показывает, где ваши оценки расположились на шкале от минимально возможного к максимально возможному баллу по каждому критерию."}
           </p>
           <div className="portrait">
             {criteriaBreakdown.map((c) => (
@@ -408,10 +429,10 @@ export default function ResultPage() {
                 </div>
                 <ul className="pair-card__list">
                   <li
-                    className="pair-card__row pair-card__row--clickable"
-                    onClick={() => navigate(`/tasting/${id}/product/${m.product_id}?from=result`)}
-                    role="button"
-                    tabIndex={0}
+                    className={`pair-card__row ${shared ? "" : "pair-card__row--clickable"}`}
+                    onClick={shared ? undefined : () => navigate(`/tasting/${tastingId}/product/${m.product_id}?from=result`)}
+                    role={shared ? undefined : "button"}
+                    tabIndex={shared ? undefined : 0}
                   >
                     <span className="pair-card__name">{m.product_name}</span>
                     {m.product_number != null && (
@@ -434,11 +455,64 @@ export default function ResultPage() {
         />
       )}
 
+      {shareUrl && !shared && (
+        <div className="result-share">
+          <button
+            type="button"
+            className="btn btn--primary result-share__btn"
+            onClick={() => setShareOpen(true)}
+          >
+            <IconShare size={18} stroke={2} />
+            <span>Поделиться результатом</span>
+          </button>
+          <div className="result-share__caption">
+            Друзья откроют страницу только для просмотра — оценки останутся вашими.
+          </div>
+        </div>
+      )}
+
+      {shared && (
+        <div className="shared-cta">
+          <div className="shared-cta__eyebrow">Хотите свою такую же страницу?</div>
+          <a
+            className="btn btn--primary shared-cta__btn shared-cta__btn--primary"
+            href="https://teatix.com/product-category/certificate/tickets"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Купить билет
+          </a>
+          <a
+            className="btn shared-cta__btn shared-cta__btn--tg"
+            href="https://t.me/puerbezposhady"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <IconTelegram size={18} />
+            <span>Будь в&nbsp;курсе событий</span>
+          </a>
+        </div>
+      )}
+
       <div className="result-bottom">
-        <button className="text-link" onClick={() => navigate(`/tasting/${id}`)}>
-          Вернуться к&nbsp;дегустации
-        </button>
+        {shared ? (
+          <a className="text-link" href="https://www.чайная.москва/" target="_blank" rel="noopener noreferrer">
+            Чайная&nbsp;Высота
+          </a>
+        ) : (
+          <button className="text-link" onClick={() => navigate(`/tasting/${tastingId}`)}>
+            Вернуться к&nbsp;дегустации
+          </button>
+        )}
       </div>
+
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={shareUrl || ""}
+        title={result?.title || "Дегустация"}
+        eveningLine={eveningLine}
+      />
     </div>
   );
 }

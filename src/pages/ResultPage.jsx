@@ -132,10 +132,21 @@ function IceCreamStats({ stats }) {
 }
 
 function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
-  const range = maxTotal - minTotal;
-  const pct = range > 0
-    ? Math.max(2, Math.min(98, ((userTotal - minTotal) / range) * 100))
-    : 50;
+  // Кусочная шкала: 0 всегда в центре (50%). Левая половина — линейно
+  // мапит [min, 0] → [0%, 50%], правая — [0, max] → [50%, 100%].
+  // Масштаб у половин может отличаться: это сознательный приём, чтобы
+  // нейтраль визуально была по центру при смещённых оценках.
+  // Фолбэк — если одна из сторон отсутствует, обычная линейная шкала.
+  let pct;
+  if (minTotal < 0 && maxTotal > 0) {
+    pct = userTotal <= 0
+      ? (1 - userTotal / minTotal) * 50
+      : 50 + (userTotal / maxTotal) * 50;
+  } else {
+    const range = maxTotal - minTotal;
+    pct = range > 0 ? ((userTotal - minTotal) / range) * 100 : 50;
+  }
+  pct = Math.max(2, Math.min(98, pct));
   return (
     <div className="portrait-axis">
       <div className="portrait-axis__label">{name}</div>

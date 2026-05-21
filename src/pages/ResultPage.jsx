@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import ShareSheet from "../components/ShareSheet.jsx";
 import { IconChevronLeft, IconMedal, IconShare, IconSparkles, IconTelegram } from "../components/icons.jsx";
 import { getResult, getSharedResult } from "../api/catalog";
@@ -558,6 +559,8 @@ export default function ResultPage({ shared = false }) {
           </button>
         )}
       </div>
+
+      <AppFooter />
 
       <ShareSheet
         open={shareOpen}

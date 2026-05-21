@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import { IconArrowRight, IconCheck, IconChevronRight, IconMedal } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
@@ -135,6 +136,7 @@ export default function MainPage() {
         })}
       </div>
 
+      <AppFooter />
       <div className="main-footer-spacer" />
     </div>
 

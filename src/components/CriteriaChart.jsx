@@ -52,8 +52,17 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
 
   const placement = labelPlacement === "vertices" ? "vertices" : "edges";
 
-  const N = criterias.length;
-  const gradeLen = (criterias[0]?.grade || []).length;
+  // Критерии раскладываются по кругу в порядке поля `order` (фолбэк — индекс
+  // в исходном массиве). order=0 идёт первым и должен смотреть влево.
+  const orderedCriterias = useMemo(() => {
+    return (criterias || [])
+      .map((c, i) => ({ c, i, ord: Number.isFinite(Number(c?.order)) ? Number(c.order) : i }))
+      .sort((a, b) => a.ord - b.ord || a.i - b.i)
+      .map((x) => x.c);
+  }, [criterias]);
+
+  const N = orderedCriterias.length;
+  const gradeLen = (orderedCriterias[0]?.grade || []).length;
 
   const geom = useMemo(() => {
     // Единый viewBox для обоих placement — одинаковый рендер-размер шрифта
@@ -63,9 +72,15 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
     const cx = sizeX / 2;
     const cy = sizeY / 2;
     const R = 160;
-    const apothem = R * Math.cos(Math.PI / Math.max(3, N));
-    const sideAngle = (i) => -Math.PI / 2 + (2 * Math.PI * i) / N;
-    const vertexAngle = (k) => -Math.PI / 2 - Math.PI / N + (2 * Math.PI * k) / N;
+    const NN = Math.max(3, N);
+    const apothem = R * Math.cos(Math.PI / NN);
+    // Критерий с order=0 (т.е. orderedCriterias[0]) смотрит влево; далее
+    // оси идут по часовой стрелке. В SVG ось Y направлена вниз, поэтому
+    // «по часовой» = в сторону увеличения угла.
+    const isVertices = placement === "vertices";
+    const baseVertex = isVertices ? Math.PI : Math.PI - Math.PI / NN;
+    const sideAngle = (i) => baseVertex + Math.PI / NN + (2 * Math.PI * i) / NN;
+    const vertexAngle = (k) => baseVertex + (2 * Math.PI * k) / NN;
     const vertices = Array.from({ length: N }, (_, k) => ({
       x: cx + R * Math.cos(vertexAngle(k)),
       y: cy + R * Math.sin(vertexAngle(k)),
@@ -134,7 +149,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
   };
 
   const commit = (i, k) => {
-    const c = criterias[i];
+    const c = orderedCriterias[i];
     const v = Number((c.grade || [])[k]?.value);
     if (Number.isFinite(v)) onChange(c.id, v);
   };
@@ -176,7 +191,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
   const selectedPolygonPath = (() => {
     // Дефолт «ноль» — нулевая точка шкалы (k=0) у каждой оси: полигон рисуем
     // всегда; неотмеченные оси трактуем как k=0 (внутреннее innerR-кольцо).
-    const pts = criterias.map((c, i) => {
+    const pts = orderedCriterias.map((c, i) => {
       const k = idxFor(c);
       return dotPos(i, k >= 0 ? k : 0);
     });
@@ -221,7 +236,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           />
         ))}
 
-        {criterias.map((_, i) => {
+        {orderedCriterias.map((_, i) => {
           const anchor = axisAnchor(i);
           return (
             <line
@@ -238,7 +253,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           );
         })}
 
-        {criterias.map((c, i) => {
+        {orderedCriterias.map((c, i) => {
           const sel = idxFor(c);
           const effSel = sel >= 0 ? sel : 0;
           const p = dotPos(i, effSel);
@@ -256,7 +271,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           );
         })}
 
-        {criterias.map((_, i) => {
+        {orderedCriterias.map((_, i) => {
           const anchor = axisAnchor(i);
           return (
             <line
@@ -291,7 +306,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           />
         )}
 
-        {criterias.map((c, i) => {
+        {orderedCriterias.map((c, i) => {
           const sel = idxFor(c);
           // Если значение ещё не выставлено — визуально считаем «ноль» (k=0)
           // выбранным: нулевая точка светится цветом, а сам ноль является
@@ -322,7 +337,7 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           });
         })}
 
-        {criterias.map((c, i) => {
+        {orderedCriterias.map((c, i) => {
           const a = axisAngle(i);
           const cos = Math.cos(a);
           const sin = Math.sin(a);
@@ -336,7 +351,15 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
           if (cos > 0.25) textAlign = "left";
           else if (cos < -0.25) textAlign = "right";
           const sel = idxFor(c);
-          const curLabel = sel >= 0 ? (c.grade || [])[sel]?.label : null;
+          // На радаре подпись — это «выбранное/максимум»: чтобы зритель
+          // сразу видел, насколько балл близок к верхней границе шкалы.
+          const grade = c.grade || [];
+          const maxLabel = grade[grade.length - 1]?.label;
+          const selLabel = sel >= 0 ? grade[sel]?.label : null;
+          const curLabel =
+            selLabel != null && maxLabel != null
+              ? `${selLabel}/${maxLabel}`
+              : null;
           return (
             <foreignObject
               key={`label-${i}`}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Logomark from "../components/Logomark.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import { IconPhone } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.js";
@@ -130,6 +131,7 @@ export default function AuthPage() {
             Пропустить
           </button>
         </div>
+        <AppFooter />
       </form>
     </div>
   );

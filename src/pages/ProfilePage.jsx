@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getMyTastings } from "../api/catalog.js";
 import { useAuth } from "../auth/AuthContext.jsx";
 import PageHeader from "../components/PageHeader.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import {
   IconCheck,
   IconChevronLeft,
@@ -284,6 +285,8 @@ export default function ProfilePage() {
           <span>Выйти</span>
         </button>
       </div>
+
+      <AppFooter />
     </div>
   );
 }

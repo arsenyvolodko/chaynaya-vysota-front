@@ -9,6 +9,7 @@ import RankingList from "../components/RankingList.jsx";
 import StepSlider from "../components/StepSlider.jsx";
 import VerticalStepSlider from "../components/VerticalStepSlider.jsx";
 import CriteriaChart from "../components/CriteriaChart.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
 
@@ -468,6 +469,7 @@ export default function DetailPage() {
           </div>
         </div>
       )}
+      <AppFooter />
     </div>
   );
 }

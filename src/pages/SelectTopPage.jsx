@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
+import AppFooter from "../components/AppFooter.jsx";
 import {
   IconArrowRight,
   IconChevronLeft,
@@ -340,6 +341,7 @@ export default function SelectTopPage() {
             {ready && !submitting && <IconArrowRight size={18} stroke={2} />}
           </button>
         </div>
+        <AppFooter />
       </div>
 
       {drag && drag.product && (

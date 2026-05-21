@@ -1137,7 +1137,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .criteria-chart__svg {
   width: 100%; max-width: 100%; height: auto;
-  touch-action: none; user-select: none; -webkit-user-select: none;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
   overflow: visible;
 }
 

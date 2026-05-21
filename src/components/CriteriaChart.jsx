@@ -20,7 +20,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
  */
 export default function CriteriaChart({ criterias, marks, onChange, readOnly, labelPlacement, color }) {
   const svgRef = useRef(null);
-  const activeRef = useRef(null);
+  const pressRef = useRef(null);
   const labelRefs = useRef([]);
 
   // После рендера сдвигаем foreignObject-подписи внутрь экрана, если они
@@ -139,23 +139,38 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
     if (Number.isFinite(v)) onChange(c.id, v);
   };
 
+  // Tap-only: не захватываем поинтер и не отменяем нативный скролл — браузер
+  // сам отличит скролл от тапа. Коммитим значение в pointerUp, если палец/
+  // курсор почти не двинулся.
+  const TAP_SLOP_SQ = 100;
   const onSpokeDown = (i) => (e) => {
     if (readOnly) return;
-    e.preventDefault();
-    e.stopPropagation();
-    try { svgRef.current?.setPointerCapture?.(e.pointerId); } catch (_) {}
-    activeRef.current = i;
-    commit(i, snapAlongAxis(i, e.clientX, e.clientY));
+    pressRef.current = {
+      i,
+      pointerId: e.pointerId,
+      x0: e.clientX,
+      y0: e.clientY,
+      moved: false,
+    };
   };
-  const onSvgMove = (e) => {
-    if (readOnly || activeRef.current == null) return;
-    const i = activeRef.current;
-    commit(i, snapAlongAxis(i, e.clientX, e.clientY));
+  const onSpokeMove = (e) => {
+    const p = pressRef.current;
+    if (!p || e.pointerId !== p.pointerId) return;
+    const dx = e.clientX - p.x0;
+    const dy = e.clientY - p.y0;
+    if (dx * dx + dy * dy > TAP_SLOP_SQ) p.moved = true;
   };
-  const onSvgUp = (e) => {
-    if (activeRef.current == null) return;
-    activeRef.current = null;
-    try { svgRef.current?.releasePointerCapture?.(e.pointerId); } catch (_) {}
+  const onSpokeUp = (e) => {
+    const p = pressRef.current;
+    if (!p || e.pointerId !== p.pointerId) return;
+    pressRef.current = null;
+    if (p.moved) return;
+    commit(p.i, snapAlongAxis(p.i, e.clientX, e.clientY));
+  };
+  const onSpokeCancel = (e) => {
+    const p = pressRef.current;
+    if (!p || e.pointerId !== p.pointerId) return;
+    pressRef.current = null;
   };
 
   const selectedPolygonPath = (() => {
@@ -192,9 +207,6 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
         ref={svgRef}
         className={`criteria-chart__svg ${readOnly ? "is-readonly" : ""}`}
         viewBox={`0 0 ${sizeX} ${sizeY}`}
-        onPointerMove={onSvgMove}
-        onPointerUp={onSvgUp}
-        onPointerCancel={onSvgUp}
         aria-label="Радар оценок"
       >
         {Array.from({ length: gradeLen }, (_, k) => k).filter((k) => dotFraction(k) > 0).map((k) => (
@@ -228,8 +240,8 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
 
         {criterias.map((c, i) => {
           const sel = idxFor(c);
-          if (sel < 0) return null;
-          const p = dotPos(i, sel);
+          const effSel = sel >= 0 ? sel : 0;
+          const p = dotPos(i, effSel);
           return (
             <line
               key={`filled-spoke-${i}`}
@@ -257,10 +269,12 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
               strokeWidth="18"
               strokeLinecap="round"
               style={{
-                touchAction: "none",
                 cursor: readOnly ? "default" : "pointer",
               }}
               onPointerDown={onSpokeDown(i)}
+              onPointerMove={onSpokeMove}
+              onPointerUp={onSpokeUp}
+              onPointerCancel={onSpokeCancel}
             />
           );
         })}
@@ -279,11 +293,15 @@ export default function CriteriaChart({ criterias, marks, onChange, readOnly, la
 
         {criterias.map((c, i) => {
           const sel = idxFor(c);
+          // Если значение ещё не выставлено — визуально считаем «ноль» (k=0)
+          // выбранным: нулевая точка светится цветом, а сам ноль является
+          // дефолтом, по которому строится полигон.
+          const effSel = sel >= 0 ? sel : 0;
           return Array.from({ length: gradeLen }, (_, j) => {
             const k = j;
             const p = dotPos(i, k);
-            const isOn = k === sel;
-            const isPast = sel >= 0 && k < sel;
+            const isOn = k === effSel;
+            const isPast = k < effSel;
             const isMarked = isOn || isPast;
             const fill = isMarked ? accent : "white";
             const stroke = isMarked ? accent : "var(--stone-300)";

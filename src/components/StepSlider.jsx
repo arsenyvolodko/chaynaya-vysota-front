@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import InfoTip from "./InfoTip.jsx";
 
 /**
@@ -105,7 +105,60 @@ export default function StepSlider({ label, info, steps, value, onChange, readOn
     };
   };
 
-  const alternate = n >= 5;
+  // По умолчанию все подписи под рейлом. Если они перекрывают друг друга или
+  // вылезают за границы экрана — переключаемся в режим «через одну», т.е.
+  // нечётные подписи уходят над рейлом, чётные — остаются под.
+  const [alternate, setAlternate] = useState(false);
+  const railWrapRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setAlternate(false);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useLayoutEffect(() => {
+    const wrap = railWrapRef.current;
+    if (!wrap) return;
+
+    // 1. Решаем, надо ли разводить подписи на два ряда. Триггер — только
+    //    наложение СОСЕДНИХ подписей при текущем размещении (все снизу).
+    if (!alternate) {
+      const belowLabels = Array.from(
+        wrap.querySelectorAll(".step-slider__labels--bot .step-slider__label")
+      );
+      if (belowLabels.length >= 2) {
+        let overlap = false;
+        let prevRight = -Infinity;
+        for (const lab of belowLabels) {
+          const r = lab.getBoundingClientRect();
+          if (r.left < prevRight + 2) { overlap = true; break; }
+          prevRight = r.right;
+        }
+        if (overlap) {
+          setAlternate(true);
+          return; // следующий рендер сам отнаджит крайние
+        }
+      }
+    }
+
+    // 2. Если крайняя подпись чуть-чуть вылезает за край экрана — двигаем её
+    //    ровно настолько, чтобы вернулась в viewport.
+    const labels = Array.from(wrap.querySelectorAll(".step-slider__label"));
+    const vw = document.documentElement.clientWidth;
+    const BUFFER = 4;
+    for (const lab of labels) {
+      lab.style.transform = "translateX(-50%)";
+      const r = lab.getBoundingClientRect();
+      let nudge = 0;
+      if (r.left < BUFFER) nudge = BUFFER - r.left;
+      else if (r.right > vw - BUFFER) nudge = (vw - BUFFER) - r.right;
+      if (Math.abs(nudge) > 0.5) {
+        lab.style.transform = `translateX(calc(-50% + ${Math.round(nudge)}px))`;
+      }
+    }
+  });
+
   const aboveSteps = alternate
     ? steps.map((s, i) => ({ s, i })).filter(({ i }) => i % 2 === 1)
     : [];
@@ -140,7 +193,7 @@ export default function StepSlider({ label, info, steps, value, onChange, readOn
         <InfoTip text={info} />
       </div>
 
-      <div className="step-slider__rail-wrap">
+      <div className="step-slider__rail-wrap" ref={railWrapRef}>
         {alternate && (
           <div className="step-slider__labels step-slider__labels--top">
             {aboveSteps.map(renderLabel)}

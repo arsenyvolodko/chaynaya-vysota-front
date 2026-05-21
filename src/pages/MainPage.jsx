@@ -11,15 +11,17 @@ function groupByCategory(products) {
   const groups = [];
   const byKey = new Map();
   for (const p of products) {
-    const key = p.category || "—";
-    if (!byKey.has(key)) {
+    const key = p.category || null;
+    const mapKey = key ?? "__none__";
+    if (!byKey.has(mapKey)) {
       const g = { key, items: [] };
-      byKey.set(key, g);
+      byKey.set(mapKey, g);
       groups.push(g);
     }
-    byKey.get(key).items.push(p);
+    byKey.get(mapKey).items.push(p);
   }
-  return groups;
+  let catNum = 0;
+  return groups.map((g) => ({ ...g, num: g.key ? ++catNum : null }));
 }
 
 export default function MainPage() {
@@ -72,14 +74,16 @@ export default function MainPage() {
         {groups.map((g, gIdx) => {
           const done = g.items.filter((p) => p.is_reviewed).length;
           return (
-            <section key={g.key + ":" + gIdx}>
-              <div className="block__head">
-                <div className="block__head-left">
-                  <span className="block__num">0{gIdx + 1}</span>
-                  <h2 className="block__title">{g.key}</h2>
+            <section key={(g.key ?? "_") + ":" + gIdx}>
+              {g.key && (
+                <div className="block__head">
+                  <div className="block__head-left">
+                    <span className="block__num">{String(g.num).padStart(2, "0")}</span>
+                    <h2 className="block__title">{g.key}</h2>
+                  </div>
+                  <span className="block__count tabnum">{done}/{g.items.length}</span>
                 </div>
-                <span className="block__count tabnum">{done}/{g.items.length}</span>
-              </div>
+              )}
               <div className="block__list">
                 {g.items.map((p) => (
                   <button
@@ -87,7 +91,18 @@ export default function MainPage() {
                     className="card"
                     onClick={() => navigate(`/tasting/${id}/product/${p.id}`)}
                   >
-                    <div className="card__num tabnum">{p.number != null ? `№${p.number}` : ""}</div>
+                    <div className={`card__num ${p.type === "tea" && p.image ? "card__num--img" : "tabnum"}`}>
+                      {p.type === "tea" && p.image ? (
+                        <img
+                          className="card__num-img"
+                          src={p.image}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        p.number != null ? `№${p.number}` : ""
+                      )}
+                    </div>
                     <div className="card__body">
                       <div className="card__title-row">
                         <span className="card__title">{p.name}</span>

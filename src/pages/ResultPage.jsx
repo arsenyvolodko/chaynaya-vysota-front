@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import ShareSheet from "../components/ShareSheet.jsx";
-import { IconMedal, IconShare, IconSparkles, IconTelegram } from "../components/icons.jsx";
+import { IconChevronLeft, IconMedal, IconShare, IconSparkles, IconTelegram } from "../components/icons.jsx";
 import { getResult, getSharedResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
@@ -145,7 +145,7 @@ function IceCreamStats({ stats }) {
   );
 }
 
-function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
+function portraitPct(userTotal, minTotal, maxTotal) {
   // Кусочная шкала: 0 всегда в центре (50%). Левая половина — линейно
   // мапит [min, 0] → [0%, 50%], правая — [0, max] → [50%, 100%].
   // Масштаб у половин может отличаться: это сознательный приём, чтобы
@@ -160,15 +160,237 @@ function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
     const range = maxTotal - minTotal;
     pct = range > 0 ? ((userTotal - minTotal) / range) * 100 : 50;
   }
-  pct = Math.max(2, Math.min(98, pct));
+  return Math.max(2, Math.min(98, pct));
+}
+
+function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
+  const pct = portraitPct(userTotal, minTotal, maxTotal);
+  const showZeroCenter = minTotal < 0 && maxTotal > 0;
   return (
     <div className="portrait-axis">
       <div className="portrait-axis__label">{name}</div>
       <div className="portrait-axis__track">
         <span className="portrait-axis__line" />
-        <span className="portrait-axis__center" aria-hidden="true" />
+        {showZeroCenter && <span className="portrait-axis__center" aria-hidden="true" />}
         <span className="portrait-axis__star" style={{ left: `${pct}%` }} aria-hidden="true">✦</span>
       </div>
+    </div>
+  );
+}
+
+function PortraitAxisVertical({ name, userTotal, minTotal, maxTotal }) {
+  const pct = portraitPct(userTotal, minTotal, maxTotal);
+  const showZeroCenter = minTotal < 0 && maxTotal > 0;
+  return (
+    <div className="portrait-vaxis">
+      <div className="portrait-vaxis__track">
+        <span className="portrait-vaxis__line" />
+        {showZeroCenter && <span className="portrait-vaxis__center" aria-hidden="true" />}
+        <span className="portrait-vaxis__star" style={{ bottom: `${pct}%` }} aria-hidden="true">✦</span>
+      </div>
+      <div className="portrait-vaxis__label">{name}</div>
+    </div>
+  );
+}
+
+function PortraitRadar({ chart }) {
+  const svgRef = useRef(null);
+  const labelRefs = useRef([]);
+  const criterias = chart?.criterias || [];
+  const N = criterias.length;
+
+  useLayoutEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const svgRect = svg.getBoundingClientRect();
+    const vbW = svg.viewBox.baseVal.width || svgRect.width;
+    const scale = svgRect.width / vbW;
+    const vw = document.documentElement.clientWidth;
+    const BUFFER = 4;
+    if (scale <= 0) return;
+    labelRefs.current.forEach((fo) => {
+      if (!fo) return;
+      const baseX = parseFloat(fo.getAttribute("data-base-x"));
+      if (!Number.isFinite(baseX)) return;
+      fo.setAttribute("x", String(baseX));
+      const r = fo.getBoundingClientRect();
+      let dx = 0;
+      if (r.left < BUFFER) dx = BUFFER - r.left;
+      else if (r.right > vw - BUFFER) dx = (vw - BUFFER) - r.right;
+      if (Math.abs(dx) > 0.5) {
+        fo.setAttribute("x", String(baseX + dx / scale));
+      }
+    });
+  });
+
+  if (N < 3) return null;
+
+  const placement = chart?.label_placement === "vertices" ? "vertices" : "edges";
+  const color = chart?.color || null;
+
+  // Единый viewBox независимо от placement — это даёт одинаковый
+  // отображаемый размер шрифта подписей между чартами на одной странице
+  // (HTML-pixels в foreignObject интерпретируются в координатах viewBox).
+  const sizeX = 460;
+  const sizeY = 400;
+  const cx = sizeX / 2;
+  const cy = sizeY / 2;
+  const R = 118;
+  const apothem = R * Math.cos(Math.PI / N);
+  const sideAngle = (i) => -Math.PI / 2 + (2 * Math.PI * i) / N;
+  const vertexAngle = (k) => -Math.PI / 2 - Math.PI / N + (2 * Math.PI * k) / N;
+  const vertices = Array.from({ length: N }, (_, k) => ({
+    x: cx + R * Math.cos(vertexAngle(k)),
+    y: cy + R * Math.sin(vertexAngle(k)),
+  }));
+  const midpoints = Array.from({ length: N }, (_, i) => ({
+    x: cx + apothem * Math.cos(sideAngle(i)),
+    y: cy + apothem * Math.sin(sideAngle(i)),
+  }));
+  const axisAnchor = (i) => (placement === "vertices" ? vertices[i] : midpoints[i]);
+  const axisAngle = (i) => (placement === "vertices" ? vertexAngle(i) : sideAngle(i));
+  const labelBaseDist = placement === "vertices" ? R : apothem;
+
+  // Шаг между точками шкалы = innerR (от центра до «нуля»). Шкала имеет 5
+  // «делений» — выбран средний фиксированный размер, чтобы радар одного
+  // продукта выглядел как радар детальной страницы.
+  const slots = 5;
+  const outerR = 0.92;
+  const innerR = outerR / slots;
+  const frac = (c) => {
+    const range = (c.max_total ?? 0) - (c.min_total ?? 0);
+    if (range <= 0) return (innerR + outerR) / 2;
+    const f = ((c.user_total ?? 0) - (c.min_total ?? 0)) / range;
+    return innerR + Math.max(0, Math.min(1, f)) * (outerR - innerR);
+  };
+
+  const points = criterias.map((c, i) => {
+    const f = frac(c);
+    const anchor = axisAnchor(i);
+    return { x: cx + (anchor.x - cx) * f, y: cy + (anchor.y - cy) * f };
+  });
+
+  const userPath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(" ") + " Z";
+
+  const ringPolygon = (f) =>
+    vertices
+      .map((v) => {
+        const x = cx + (v.x - cx) * f;
+        const y = cy + (v.y - cy) * f;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      })
+      .join(" ");
+
+  const accent = color || "#b58fd4";
+
+  return (
+    <div className="portrait-radar">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${sizeX} ${sizeY}`}
+        className="portrait-radar__svg"
+        aria-label={chart.name || "Радар"}
+      >
+        {Array.from({ length: slots }, (_, k) => innerR + (outerR - innerR) * (k / (slots - 1))).map((f, i, arr) => (
+          <polygon
+            key={`ring-${i}`}
+            points={ringPolygon(f)}
+            fill="none"
+            stroke="var(--stone-200)"
+            strokeWidth="1"
+            strokeDasharray={i === arr.length - 1 ? "" : "2 3"}
+          />
+        ))}
+        {criterias.map((_, i) => {
+          const anchor = axisAnchor(i);
+          return (
+            <line
+              key={`spoke-${i}`}
+              x1={cx}
+              y1={cy}
+              x2={anchor.x}
+              y2={anchor.y}
+              stroke="var(--stone-200)"
+              strokeWidth="1"
+              strokeDasharray="2 3"
+            />
+          );
+        })}
+        <path
+          d={userPath}
+          fill={accent}
+          fillOpacity={0.55}
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        {points.map((p, i) => (
+          <circle
+            key={`pt-${i}`}
+            cx={p.x}
+            cy={p.y}
+            r={3.5}
+            fill={accent}
+            stroke={accent}
+            strokeWidth={1.2}
+          />
+        ))}
+        {criterias.map((c, i) => {
+          const a = axisAngle(i);
+          const cos = Math.cos(a);
+          const sin = Math.sin(a);
+          const lx = cx + (labelBaseDist + 14) * cos;
+          const ly = cy + (labelBaseDist + 14) * sin;
+          const boxW = 84;
+          const boxH = 36;
+          const fx = lx + cos * (boxW / 2) - boxW / 2;
+          const fy = ly + sin * (boxH / 2) - boxH / 2;
+          let textAlign = "center";
+          if (cos > 0.25) textAlign = "left";
+          else if (cos < -0.25) textAlign = "right";
+          return (
+            <foreignObject
+              key={`label-${i}`}
+              ref={(el) => { labelRefs.current[i] = el; }}
+              x={fx}
+              y={fy}
+              width={boxW}
+              height={boxH}
+              data-base-x={fx}
+              style={{ pointerEvents: "none", overflow: "visible" }}
+            >
+              <div
+                xmlns="http://www.w3.org/1999/xhtml"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems:
+                    textAlign === "left"
+                      ? "flex-start"
+                      : textAlign === "right"
+                      ? "flex-end"
+                      : "center",
+                  textAlign,
+                  lineHeight: 1.15,
+                  fontFamily: "inherit",
+                  color: "var(--stone-700)",
+                  fontWeight: 500,
+                  fontSize: 10.5,
+                }}
+              >
+                <div style={{ wordBreak: "normal", overflowWrap: "anywhere", hyphens: "auto" }}>
+                  {String(c.name || "").replace(/\//g, "/​")}
+                </div>
+              </div>
+            </foreignObject>
+          );
+        })}
+      </svg>
     </div>
   );
 }
@@ -176,6 +398,8 @@ function PortraitAxis({ name, userTotal, minTotal, maxTotal }) {
 export default function ResultPage({ shared = false }) {
   const params = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromProfile = searchParams.get("from") === "profile";
   const { wasSkipped, updateProfile, user } = useAuth();
 
   const [result, setResult] = useState(null);
@@ -201,8 +425,13 @@ export default function ResultPage({ shared = false }) {
 
   const podium = result?.podium || [];
   const criteriaBreakdown = result?.criteria_breakdown || [];
+  const resultCharts = result?.charts || [];
   const topTags = result?.top_tags || [];
   const teaMatches = result?.tea_matches || [];
+  const isTea = result?.type === "tea";
+
+  const horizontalBreakdown = criteriaBreakdown.filter((c) => c.orientation !== "vertical");
+  const verticalBreakdown = criteriaBreakdown.filter((c) => c.orientation === "vertical");
 
   // Все продукты-кандидаты на пьедестал (is_nominated=true), отсортированы
   // по баллам от большего к меньшему. Подиум — подсписок этого.
@@ -261,7 +490,19 @@ export default function ResultPage({ shared = false }) {
 
   return (
     <div className="result-scroll" style={scrollStyle}>
-      <PageHeader />
+      <PageHeader
+        back={
+          fromProfile ? (
+            <button
+              className="icon-btn icon-btn--leading"
+              onClick={() => navigate("/profile")}
+            >
+              <IconChevronLeft size={20} />
+              <span>Назад</span>
+            </button>
+          ) : null
+        }
+      />
 
       <div className="result-head">
         <div className="result-head__icon">
@@ -279,13 +520,7 @@ export default function ResultPage({ shared = false }) {
         <Aura color={auraColor} />
       </div>
 
-      {eveningLine ? (
-        <p className="evening-line">{eveningLine}</p>
-      ) : !shared ? (
-        <p className="evening-line evening-line--empty">
-          Отметьте сердечком вкусы, которые понравились — здесь появится фраза о вашем вечере.
-        </p>
-      ) : null}
+      {eveningLine && <p className="evening-line">{eveningLine}</p>}
 
       {!shared && (
         <div className="result-section">
@@ -294,9 +529,11 @@ export default function ResultPage({ shared = false }) {
           </p>
           {allCandidates.length > 0 ? (
             <>
-              <div className="tier-head tier-head--candidates">
-                <span className="tier-head__col">Баллы</span>
-              </div>
+              {!isTea && (
+                <div className="tier-head tier-head--candidates">
+                  <span className="tier-head__col">Баллы</span>
+                </div>
+              )}
               <ol className="candidate-list">
               {allCandidates.map(({ product, score }) => (
                 <li
@@ -312,7 +549,9 @@ export default function ResultPage({ shared = false }) {
                   <div className="candidate-row__body">
                     <span className="candidate-row__title">{product.name}</span>
                   </div>
-                  <span className="candidate-row__score tabnum">{score}</span>
+                  {!isTea && (
+                    <span className="candidate-row__score tabnum">{score}</span>
+                  )}
                 </li>
               ))}
               </ol>
@@ -335,7 +574,7 @@ export default function ResultPage({ shared = false }) {
           <div className="podium-section">
             <div className="tier-head">
               <div className="profile-card-head__eyebrow tier-head__title">Топ-3 вкусов</div>
-              <span className="tier-head__col">Баллы</span>
+              {!isTea && <span className="tier-head__col">Баллы</span>}
             </div>
             <ol className="tier-card tier-card--stacked">
               {podium.map((row, i) => {
@@ -363,9 +602,11 @@ export default function ResultPage({ shared = false }) {
                         {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
                       </div>
                     </div>
-                    <span className="tier-row__score tabnum">
-                      {row.total_score != null ? row.total_score : "—"}
-                    </span>
+                    {!isTea && (
+                      <span className="tier-row__score tabnum">
+                        {row.total_score != null ? row.total_score : "—"}
+                      </span>
+                    )}
                   </li>
                 );
               })}
@@ -376,7 +617,7 @@ export default function ResultPage({ shared = false }) {
 
       <IceCreamStats stats={result?.ice_cream_stats} />
 
-      {criteriaBreakdown.length > 0 && (
+      {(criteriaBreakdown.length > 0 || resultCharts.length > 0) && (
         <div className="portrait-section">
           <div className="profile-card-head__eyebrow">Вкусовой портрет дегустации</div>
           <p className="portrait-section__intro">
@@ -384,17 +625,41 @@ export default function ResultPage({ shared = false }) {
               ? "Звезда показывает, где оценки автора расположились на шкале от минимально возможного к максимально возможному баллу по каждому критерию."
               : "Звезда показывает, где ваши оценки расположились на шкале от минимально возможного к максимально возможному баллу по каждому критерию."}
           </p>
-          <div className="portrait">
-            {criteriaBreakdown.map((c) => (
-              <PortraitAxis
-                key={c.id}
-                name={c.name}
-                userTotal={c.user_total}
-                minTotal={c.min_total}
-                maxTotal={c.max_total}
-              />
-            ))}
-          </div>
+          {verticalBreakdown.length > 0 && (
+            <div className="portrait-vrow">
+              {verticalBreakdown.map((c) => (
+                <PortraitAxisVertical
+                  key={c.id}
+                  name={c.name}
+                  userTotal={c.user_total}
+                  minTotal={c.min_total}
+                  maxTotal={c.max_total}
+                />
+              ))}
+            </div>
+          )}
+          {resultCharts.map((chart) => (
+            <div key={chart.id} className="portrait-chart-block">
+              <div className="portrait-chart-block__title">{chart.name}</div>
+              {chart.description && (
+                <div className="portrait-chart-block__hint">{chart.description}</div>
+              )}
+              <PortraitRadar chart={chart} />
+            </div>
+          ))}
+          {horizontalBreakdown.length > 0 && (
+            <div className="portrait">
+              {horizontalBreakdown.map((c) => (
+                <PortraitAxis
+                  key={c.id}
+                  name={c.name}
+                  userTotal={c.user_total}
+                  minTotal={c.min_total}
+                  maxTotal={c.max_total}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

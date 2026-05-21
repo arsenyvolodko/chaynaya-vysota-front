@@ -7,6 +7,8 @@ import NominateToggle from "../components/NominateToggle.jsx";
 import ProductVisuals from "../components/ProductVisuals.jsx";
 import RankingList from "../components/RankingList.jsx";
 import StepSlider from "../components/StepSlider.jsx";
+import VerticalStepSlider from "../components/VerticalStepSlider.jsx";
+import CriteriaChart from "../components/CriteriaChart.jsx";
 import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
 
@@ -67,6 +69,11 @@ export default function DetailPage() {
       (p.taste_criteria || []).forEach((c) => {
         if (c.user_grade_review != null) m[c.id] = Number(c.user_grade_review);
       });
+      (p.charts || []).forEach((ch) => {
+        (ch.criterias || []).forEach((c) => {
+          if (c.user_grade_review != null) m[c.id] = Number(c.user_grade_review);
+        });
+      });
       setMarks(m);
       const ids = new Set();
       (p.taste_tags || []).forEach((t) => { if (t.marked) ids.add(t.id); });
@@ -108,7 +115,9 @@ export default function DetailPage() {
   useEffect(() => () => sendTimer.current && clearTimeout(sendTimer.current), []);
 
   const setMark = (cid, value) => {
-    const next = { ...marks, [cid]: value };
+    const next = { ...marks };
+    if (value == null) delete next[cid];
+    else next[cid] = value;
     setMarks(next);
     scheduleSend({ criteria_marks: next });
   };
@@ -135,14 +144,22 @@ export default function DetailPage() {
   };
 
   const criteriaSplit = useMemo(() => {
-    if (!product) return { flavor: [], pairing: [] };
-    const flavor = [];
+    if (!product) return { horizontal: [], vertical: [], pairing: [] };
+    const horizontal = [];
+    const vertical = [];
     const pairing = [];
     (product.taste_criteria || []).forEach((c) => {
-      (c.for_tea_combination ? pairing : flavor).push(c);
+      if (c.for_tea_combination) {
+        pairing.push(c);
+        return;
+      }
+      if (c.orientation === "vertical") vertical.push(c);
+      else horizontal.push(c);
     });
-    return { flavor, pairing };
+    return { horizontal, vertical, pairing };
   }, [product]);
+
+  const charts = product?.charts || [];
 
   const pairedTea = (product?.tea_flavor_combination || [])[0] || null;
   const matchCriteria = criteriaSplit.pairing[0] || null;
@@ -155,7 +172,10 @@ export default function DetailPage() {
       <PageHeader
         center={currentIdx >= 0 ? `Шаг ${currentIdx + 1}` : null}
         back={
-          <button className="icon-btn icon-btn--leading" onClick={() => navigate(`/tasting/${id}`)}>
+          <button
+            className="icon-btn icon-btn--leading"
+            onClick={() => (readOnly ? navigate(-1) : navigate(`/tasting/${id}`))}
+          >
             <IconChevronLeft size={20} />
             <span>Назад</span>
           </button>
@@ -168,6 +188,14 @@ export default function DetailPage() {
         )}
 
         <div className="detail-title-row">
+          {product.type === "tea" && product.image && (
+            <img
+              className="detail-title-img"
+              src={product.image}
+              alt=""
+              aria-hidden="true"
+            />
+          )}
           <h1 className="title-lg detail-title">{product.name}</h1>
           {product.number != null && (
             <span className="detail-num">
@@ -196,6 +224,65 @@ export default function DetailPage() {
           </div>
         )}
 
+        {product.type === "tea" && (
+          product.tea_nickname ||
+          product.tea_rubrucator ||
+          product.tea_sort ||
+          product.tea_index ||
+          product.tea_price ||
+          product.tea_geography ||
+          product.tea_plucking_season
+        ) && (
+          <div className="tea-meta">
+            <dl className="tea-meta__grid">
+              {product.tea_rubrucator && (
+                <div className="tea-meta__row">
+                  <dt>Рубрикатор</dt>
+                  <dd>{product.tea_rubrucator}</dd>
+                </div>
+              )}
+              {product.tea_geography && (
+                <div className="tea-meta__row">
+                  <dt>География</dt>
+                  <dd>{product.tea_geography}</dd>
+                </div>
+              )}
+              {product.tea_nickname && (
+                <div className="tea-meta__row tea-meta__row--nickname">
+                  <dt>Ник</dt>
+                  <dd>
+                    <span>{product.tea_nickname}</span>
+                  </dd>
+                </div>
+              )}
+              {product.tea_sort && (
+                <div className="tea-meta__row">
+                  <dt>Сорт</dt>
+                  <dd>{product.tea_sort}</dd>
+                </div>
+              )}
+              {product.tea_plucking_season && (
+                <div className="tea-meta__row">
+                  <dt>Дата/Сезон сбора</dt>
+                  <dd>{product.tea_plucking_season}</dd>
+                </div>
+              )}
+              {product.tea_index && (
+                <div className="tea-meta__row">
+                  <dt>Индекс</dt>
+                  <dd className="tabnum">{product.tea_index}</dd>
+                </div>
+              )}
+              {product.tea_price != null && Number(product.tea_price) > 0 && (
+                <div className="tea-meta__row">
+                  <dt>{product.tea_measure_unit ? `Цена за ${product.tea_measure_unit}` : "Цена"}</dt>
+                  <dd className="tabnum">{product.tea_price} ₽</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        )}
+
         {product.description && (
           <p className="detail-desc">{product.description}</p>
         )}
@@ -213,11 +300,49 @@ export default function DetailPage() {
         )}
       </div>
 
-      {criteriaSplit.flavor.length > 0 && (
+      {criteriaSplit.vertical.length > 0 && (
         <div className="detail-body section">
           <div className="section__label">Оценка вкуса</div>
+          <div className="vsteps-row">
+            {criteriaSplit.vertical.map((c) => (
+              <VerticalStepSlider
+                key={c.id}
+                label={c.name}
+                info={c.description}
+                steps={gradeFor(c)}
+                value={marks[c.id] ?? null}
+                onChange={(v) => setMark(c.id, v)}
+                readOnly={readOnly}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {charts.map((chart) => (
+        <div key={chart.id} className="detail-body section">
+          <div className="section__label">{chart.name}</div>
+          {chart.description && (
+            <div className="section__hint">{chart.description}</div>
+          )}
+          <CriteriaChart
+            criterias={chart.criterias || []}
+            marks={marks}
+            onChange={(cid, v) => setMark(cid, v)}
+            readOnly={readOnly}
+            labelPlacement={chart.label_placement}
+            color={chart.color}
+          />
+        </div>
+      ))}
+
+      {criteriaSplit.horizontal.length > 0 && (
+        <div className="detail-body section">
+          {criteriaSplit.vertical.length === 0 && (
+            <div className="section__label">Оценка вкуса</div>
+          )}
           <div className="step-sliders">
-            {criteriaSplit.flavor.map((c) => (
+            {criteriaSplit.horizontal.map((c) => (
               <StepSlider
                 key={c.id}
                 label={c.name}

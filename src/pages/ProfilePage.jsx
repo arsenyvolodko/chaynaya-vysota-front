@@ -267,7 +267,7 @@ export default function ProfilePage() {
               <TastingCard
                 key={t.id}
                 tasting={t}
-                onClick={() => navigate(`/tasting/${t.id}/result`)}
+                onClick={() => navigate(`/tasting/${t.id}/result?from=profile`)}
               />
             ))}
           </div>

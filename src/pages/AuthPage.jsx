@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Logomark from "../components/Logomark.jsx";
 import { IconPhone } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.js";
+import { getTasting } from "../api/catalog.js";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -21,6 +22,20 @@ export default function AuthPage() {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Подтягиваем title дегустации из URL, чтобы заголовок страницы соответствовал
+  // конкретной дегустации (например, чайной vs мороженого), а не был захардкожен.
+  const tastingIdMatch = safeReturn.match(/^\/tasting\/([^/?#]+)/);
+  const tastingId = tastingIdMatch ? tastingIdMatch[1] : null;
+  const [tastingTitle, setTastingTitle] = useState(null);
+  useEffect(() => {
+    if (!tastingId) return;
+    let cancelled = false;
+    getTasting(tastingId)
+      .then((t) => { if (!cancelled) setTastingTitle(t?.title || null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [tastingId]);
 
   const onEnter = async (e) => {
     e?.preventDefault?.();
@@ -60,13 +75,11 @@ export default function AuthPage() {
     <div className="screen">
       <form className="auth" onSubmit={onEnter}>
         <div style={{ marginBottom: 56 }}>
-          <Logomark size="lg" label="Дегустация чайного мороженого" />
+          <Logomark size="lg" label="Дегустация" />
         </div>
 
         <h1 className="title-xl">
-          Выборы чайного мороженого
-          <br />
-          <span className="auth__hero-line">+ дюжина историй от мороженщика</span>
+          {tastingTitle || " "}
         </h1>
         <p className="auth__lede">
           Зарегистрируйтесь, чтобы сохранить результаты и&nbsp;вернуться к&nbsp;ним позже.

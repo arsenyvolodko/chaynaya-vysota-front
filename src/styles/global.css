@@ -48,6 +48,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 html, body, #root { height: 100%; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; overscroll-behavior-x: none; }
 #root { min-height: 100dvh; }
 body {
   font-family: var(--sans);
@@ -108,6 +109,7 @@ input, textarea { font: inherit; color: inherit; }
   background: white;
   color: var(--stone-900);
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 
@@ -678,7 +680,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .candidate--on .candidate__title { color: var(--green-900); }
 
-.detail-scroll { position: absolute; inset: 0; overflow-y: auto; padding-bottom: 32px; }
+.detail-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 32px; }
 .detail--readonly .step-picker__track,
 .detail--readonly .step-picker__step,
 .detail--readonly .step-slider__label,
@@ -1360,7 +1362,7 @@ input, textarea { font: inherit; color: inherit; }
   z-index: 5;
 }
 .footer__hint { text-align: center; font-size: 12px; letter-spacing: 0.04em; color: var(--stone-500); margin-bottom: 8px; }
-.main-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
+.main-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 .main-footer-spacer { height: 96px; }
 .main-footer-spacer--tall { height: 160px; }
 
@@ -1531,7 +1533,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .result-scroll {
-  position: absolute; inset: 0; overflow-y: auto;
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
   padding: 0 22px 28px;
   background: linear-gradient(to bottom, #f7f5ef 0%, white 220px);
 }

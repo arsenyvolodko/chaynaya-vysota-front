@@ -9,6 +9,9 @@ import RankingList from "../components/RankingList.jsx";
 import StepSlider from "../components/StepSlider.jsx";
 import VerticalStepSlider from "../components/VerticalStepSlider.jsx";
 import CriteriaChart from "../components/CriteriaChart.jsx";
+import TastePlot from "../components/TastePlot.jsx";
+import PhraseFill from "../components/PhraseFill.jsx";
+import FreeTextPrompt from "../components/FreeTextPrompt.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
@@ -41,7 +44,10 @@ export default function DetailPage() {
   const [searchParams] = useSearchParams();
   const readOnly = searchParams.get("from") === "result";
 
-  const { products: siblingProducts } = useTasting(id, { autoJoin: false });
+  const { tasting, products: siblingProducts } = useTasting(id, { autoJoin: false });
+  // show_podium_candidates: вместо отметки кандидатов гость ранжирует все блюда
+  // в конце — отдельной кнопки «в кандидаты» в карточке быть не должно.
+  const rankingMode = !!tasting?.show_podium_candidates;
   const orderedSiblings = useMemo(() => flatProductsByCategory(siblingProducts), [siblingProducts]);
   const currentIdx = orderedSiblings.findIndex((p) => String(p.id) === String(productId));
   const isLast = currentIdx >= 0 && currentIdx === orderedSiblings.length - 1;
@@ -52,12 +58,16 @@ export default function DetailPage() {
   const [error, setError] = useState(null);
 
   // local edits that we'll send to backend
-  const [marks, setMarks] = useState({});         // { [criteria_id]: value }
+  const [marks, setMarks] = useState({});         // одномерные: { [criteria_id]: value }
+  const [plotMarks, setPlotMarks] = useState({});  // plot-точки: { [criteria_id]: { [x]: mark } }
+  const [phraseAnswers, setPhraseAnswers] = useState({}); // фразы: { [phrase_id]: string[] }
+  const [freeTexts, setFreeTexts] = useState({}); // свободный текст: { [prompt_id]: string }
   const [tagIds, setTagIds] = useState(new Set()); // selected taste_tags ids
   const [composition, setComposition] = useState([]); // user ranking
   const [comment, setComment] = useState("");
 
   const sendTimer = useRef(null);
+  const pendingRef = useRef({});  // накопленный патч ревью между дебаунс-флашами
   const scrollRef = useRef(null);
 
   const refresh = useCallback(async () => {
@@ -76,6 +86,32 @@ export default function DetailPage() {
         });
       });
       setMarks(m);
+      // plot-критерии: user_grade_review — список точек [{x, mark}].
+      const pm = {};
+      (p.plots || []).forEach((pl) => {
+        (pl.criterias || []).forEach((c) => {
+          const pts = Array.isArray(c.user_grade_review) ? c.user_grade_review : [];
+          if (!pts.length) return;
+          const byX = {};
+          pts.forEach((pt) => { byX[pt.x] = Number(pt.mark); });
+          pm[c.id] = byX;
+        });
+      });
+      setPlotMarks(pm);
+      // фразы с пропусками: держим массив длиной blanks_count, "" для пустых.
+      const pa = {};
+      (p.phrases || []).forEach((ph) => {
+        const len = Number(ph.blanks_count) || 0;
+        const ua = Array.isArray(ph.user_answers) ? ph.user_answers : [];
+        pa[ph.id] = Array.from({ length: len }, (_, i) => ua[i] ?? "");
+      });
+      setPhraseAnswers(pa);
+      // свободный текст по промптам.
+      const ft = {};
+      (p.free_text_prompts || []).forEach((pr) => {
+        ft[pr.id] = pr.user_text ?? "";
+      });
+      setFreeTexts(ft);
       const ids = new Set();
       (p.taste_tags || []).forEach((t) => { if (t.marked) ids.add(t.id); });
       setTagIds(ids);
@@ -97,20 +133,24 @@ export default function DetailPage() {
 
   const flushReview = useCallback(async (patch) => {
     try {
-      const updated = await reviewProduct(productId, patch);
-      // Бек на /review/ возвращает ProductSerializer (без tea_flavor_combination,
-      // category, is_nominated, podium_place), а мы изначально грузим
-      // ProductInTastingSerializer. Полная замена стейта стирала бы tea-связку
-      // и слайдер «Силы мэтча» из блока «С чем сочетал». Мерджим, сохраняя
-      // tasting-context-поля.
+      const updated = await reviewProduct(id, productId, patch);
+      // Бек на /review/ возвращает обновлённую карточку (ProductInTastingSerializer);
+      // мерджим в стейт, сохраняя поля, которые ручка могла не вернуть.
       setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
     } catch (_) { /* ignore */ }
-  }, [productId]);
+  }, [id, productId]);
 
+  // Накопительный дебаунс: патчи мерджатся в pendingRef, чтобы быстрые правки
+  // разных полей (слайдер + plot + тег) не затирали друг друга одним таймером.
   const scheduleSend = useCallback((patch) => {
     if (readOnly) return;
+    pendingRef.current = { ...pendingRef.current, ...patch };
     if (sendTimer.current) clearTimeout(sendTimer.current);
-    sendTimer.current = setTimeout(() => flushReview(patch), 450);
+    sendTimer.current = setTimeout(() => {
+      const body = pendingRef.current;
+      pendingRef.current = {};
+      flushReview(body);
+    }, 450);
   }, [flushReview, readOnly]);
 
   useEffect(() => () => sendTimer.current && clearTimeout(sendTimer.current), []);
@@ -121,6 +161,46 @@ export default function DetailPage() {
     else next[cid] = value;
     setMarks(next);
     scheduleSend({ criteria_marks: next });
+  };
+
+  // plot_marks — плоский снапшот всех точек всех plot-критериев: бек делает
+  // апсёрт по (criteria, x), поэтому слать полный набор безопасно и идемпотентно.
+  const buildPlotMarks = (pm) => {
+    const out = [];
+    Object.entries(pm).forEach(([cid, byX]) => {
+      Object.entries(byX).forEach(([x, mark]) => {
+        out.push({ criteria: Number(cid), x: Number(x), mark: Number(mark) });
+      });
+    });
+    return out;
+  };
+  const setPlotMark = (cid, x, mark) => {
+    const next = { ...plotMarks, [cid]: { ...(plotMarks[cid] || {}), [x]: mark } };
+    setPlotMarks(next);
+    scheduleSend({ plot_marks: buildPlotMarks(next) });
+  };
+
+  // phrase_answers — снапшот всех фраз: [{phrase, answers}], answers длиной
+  // blanks_count (пустые пропуски шлём "" — длина обязана совпадать с blanks_count).
+  const buildPhraseAnswers = (pa) =>
+    Object.entries(pa).map(([phrase, answers]) => ({
+      phrase: Number(phrase),
+      answers: Array.isArray(answers) ? answers : [],
+    }));
+  const setPhraseAnswer = (phraseId, idx, val) => {
+    const cur = phraseAnswers[phraseId] || [];
+    const next = { ...phraseAnswers, [phraseId]: cur.map((a, i) => (i === idx ? val : a)) };
+    setPhraseAnswers(next);
+    scheduleSend({ phrase_answers: buildPhraseAnswers(next) });
+  };
+
+  // free_text_answers — снапшот всех промптов: [{prompt, text}] (пустая строка очищает).
+  const buildFreeTextAnswers = (ft) =>
+    Object.entries(ft).map(([prompt, text]) => ({ prompt: Number(prompt), text: text ?? "" }));
+  const setFreeText = (promptId, text) => {
+    const next = { ...freeTexts, [promptId]: text };
+    setFreeTexts(next);
+    scheduleSend({ free_text_answers: buildFreeTextAnswers(next) });
   };
   const toggleTag = (tid) => {
     const next = new Set(tagIds);
@@ -144,26 +224,173 @@ export default function DetailPage() {
     catch (_) { setProduct({ ...product, is_nominated: !nextVal }); }
   };
 
-  const criteriaSplit = useMemo(() => {
-    if (!product) return { horizontal: [], vertical: [], pairing: [] };
-    const horizontal = [];
-    const vertical = [];
-    const pairing = [];
-    (product.taste_criteria || []).forEach((c) => {
-      if (c.for_tea_combination) {
-        pairing.push(c);
-        return;
-      }
-      if (c.orientation === "vertical") vertical.push(c);
-      else horizontal.push(c);
+  // Средства оценки раскладываются по taste_block. Бек присылает у каждого
+  // автономного критерия / чарта / плота / фразы / свободного текста поля
+  // taste_block (id или null) и order, а также упорядоченный список разделов
+  // taste_blocks: [{id, name}].
+  //   • taste_block === null  → рисуем в легаси-секциях (обратная совместимость).
+  //   • taste_block ∈ taste_blocks → рисуем внутри соответствующего раздела.
+  //   • taste_block не из списка → НЕ рисуем вовсе.
+  // Если taste_blocks пуст — остаются только null-элементы (как было раньше).
+  // Критерии «с чем сочетал» (for_tea_combination) — отдельная секция, в блоки
+  // их не раскладываем.
+  const evalGroups = useMemo(() => {
+    const emptyGroup = { criteria: [], charts: [], plots: [], phrases: [], freeTexts: [] };
+    if (!product) return { nullGroup: emptyGroup, blocks: [] };
+
+    const allCriteria = Array.isArray(product.taste_criteria) ? product.taste_criteria : [];
+    const allCharts = Array.isArray(product.charts) ? product.charts : [];
+    const allPlots = Array.isArray(product.plots) ? product.plots : [];
+    const allPhrases = Array.isArray(product.phrases) ? product.phrases : [];
+    const allFreeTexts = Array.isArray(product.free_text_prompts) ? product.free_text_prompts : [];
+    const blockList = Array.isArray(product.taste_blocks) ? product.taste_blocks : [];
+
+    const blockOf = (el) => (el?.taste_block == null ? null : el.taste_block);
+
+    const groupFor = (blockId) => ({
+      criteria: allCriteria.filter((c) => !c.for_tea_combination && blockOf(c) === blockId),
+      charts: allCharts.filter((ch) => blockOf(ch) === blockId),
+      plots: allPlots.filter((pl) => blockOf(pl) === blockId),
+      phrases: allPhrases.filter((ph) => blockOf(ph) === blockId),
+      freeTexts: allFreeTexts.filter((pr) => blockOf(pr) === blockId),
     });
-    return { horizontal, vertical, pairing };
+
+    return {
+      nullGroup: groupFor(null),
+      blocks: blockList.map((b) => ({ block: b, group: groupFor(b.id) })),
+    };
   }, [product]);
 
-  const charts = product?.charts || [];
-
   const pairedTea = (product?.tea_flavor_combination || [])[0] || null;
-  const matchCriteria = criteriaSplit.pairing[0] || null;
+  const matchCriteria =
+    (product?.taste_criteria || []).find((c) => c.for_tea_combination) || null;
+
+  // Рендер-хелперы средств оценки — переиспользуются и в легаси-секциях, и
+  // внутри секций taste_block.
+  const renderVerticalGroup = (crits) => (
+    <div className="vsteps-row">
+      {crits.map((c) => (
+        <VerticalStepSlider
+          key={c.id}
+          label={c.name}
+          info={c.description}
+          steps={gradeFor(c)}
+          value={marks[c.id] ?? null}
+          onChange={(v) => setMark(c.id, v)}
+          readOnly={readOnly}
+        />
+      ))}
+    </div>
+  );
+  const renderHorizontalGroup = (crits) => (
+    <div className="step-sliders">
+      {crits.map((c) => (
+        <StepSlider
+          key={c.id}
+          label={c.name}
+          info={c.description}
+          steps={gradeFor(c)}
+          value={marks[c.id] ?? null}
+          onChange={(v) => setMark(c.id, v)}
+          readOnly={readOnly}
+        />
+      ))}
+    </div>
+  );
+  const renderChart = (chart) => (
+    <CriteriaChart
+      criterias={chart.criterias || []}
+      marks={marks}
+      onChange={(cid, v) => setMark(cid, v)}
+      readOnly={readOnly}
+      labelPlacement={chart.label_placement}
+      color={chart.color}
+    />
+  );
+  const renderPlot = (plot) => (
+    <TastePlot
+      plot={plot}
+      value={plotMarks}
+      onChange={(cid, x, mark) => setPlotMark(cid, x, mark)}
+      readOnly={readOnly}
+    />
+  );
+  const renderPhrase = (phrase) => (
+    <PhraseFill
+      phrase={phrase}
+      value={phraseAnswers[phrase.id]}
+      onChange={(idx, v) => setPhraseAnswer(phrase.id, idx, v)}
+      readOnly={readOnly}
+    />
+  );
+  // В readOnly промпт без ответа скрываем целиком (вместе с заголовком секции).
+  const freeTextVisible = (pr) => !readOnly || String(freeTexts[pr.id] ?? "").trim().length > 0;
+  const renderFreeText = (pr) => (
+    <FreeTextPrompt
+      value={freeTexts[pr.id]}
+      onChange={(t) => setFreeText(pr.id, t)}
+      readOnly={readOnly}
+    />
+  );
+
+  // Сквозной порядок: мёржим все типы средств оценки одного блока в общий список
+  // по полю order и склеиваем подряд идущие вертикальные / горизонтальные шкалы
+  // в один ряд (чтобы вертикальные слайдеры стояли «бок о бок», как раньше).
+  const ordOf = (el) => (Number.isFinite(Number(el?.order)) ? Number(el.order) : 0);
+  const buildUnits = (group) => {
+    const items = [
+      ...group.criteria.map((item) => ({ type: "criteria", item })),
+      ...group.charts.map((item) => ({ type: "chart", item })),
+      ...group.plots.map((item) => ({ type: "plot", item })),
+      ...group.phrases.map((item) => ({ type: "phrase", item })),
+      ...group.freeTexts.filter(freeTextVisible).map((item) => ({ type: "freeText", item })),
+    ]
+      .map((x, i) => ({ ...x, i }))
+      .sort((a, b) => ordOf(a.item) - ordOf(b.item) || a.i - b.i);
+
+    const units = [];
+    let run = null; // объединяем подряд идущие критерии одной ориентации
+    for (const it of items) {
+      if (it.type === "criteria") {
+        const kind = it.item.orientation === "vertical" ? "vrun" : "hrun";
+        if (run && run.kind === kind) {
+          run.items.push(it.item);
+        } else {
+          run = { kind, items: [it.item] };
+          units.push(run);
+        }
+      } else {
+        run = null;
+        units.push({ kind: it.type, item: it.item });
+      }
+    }
+    return units;
+  };
+
+  // Контрол юнита без обёртки-секции (для использования внутри секции блока).
+  const renderUnitControl = (unit) => {
+    switch (unit.kind) {
+      case "vrun": return renderVerticalGroup(unit.items);
+      case "hrun": return renderHorizontalGroup(unit.items);
+      case "chart": return renderChart(unit.item);
+      case "plot": return renderPlot(unit.item);
+      case "phrase": return renderPhrase(unit.item);
+      case "freeText": return renderFreeText(unit.item);
+      default: return null;
+    }
+  };
+  const unitKey = (unit, idx) =>
+    unit.item ? `${unit.kind}-${unit.item.id}` : `${unit.kind}-${idx}`;
+  // Под-заголовок юнита внутри секции блока (у шкал заголовка нет — он на самих шкалах).
+  const unitSubLabel = (unit) => {
+    switch (unit.kind) {
+      case "chart":
+      case "plot": return unit.item.name || null;
+      case "phrase": return unit.item.name || null;
+      case "freeText": return unit.item.name || null;
+      default: return null;
+    }
+  };
 
   if (loading) return <div className="fullscreen-center">Загружаем…</div>;
   if (error || !product) return <div className="fullscreen-center">Не удалось загрузить продукт.</div>;
@@ -301,62 +528,65 @@ export default function DetailPage() {
         )}
       </div>
 
-      {criteriaSplit.vertical.length > 0 && (
-        <div className="detail-body section">
-          <div className="section__label">Оценка вкуса</div>
-          <div className="vsteps-row">
-            {criteriaSplit.vertical.map((c) => (
-              <VerticalStepSlider
-                key={c.id}
-                label={c.name}
-                info={c.description}
-                steps={gradeFor(c)}
-                value={marks[c.id] ?? null}
-                onChange={(v) => setMark(c.id, v)}
-                readOnly={readOnly}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Легаси: элементы без taste_block. Упорядочены сквозным order, каждый
+          юнит — своя секция-карточка (исторический вид). */}
+      {(() => {
+        const units = buildUnits(evalGroups.nullGroup);
+        let criteriaLabelShown = false;
+        return units.map((unit, idx) => {
+          if (unit.kind === "vrun" || unit.kind === "hrun") {
+            const showLabel = !criteriaLabelShown;
+            criteriaLabelShown = true;
+            return (
+              <div key={unitKey(unit, idx)} className="detail-body section">
+                {showLabel && <div className="section__label">Оценка вкуса</div>}
+                {renderUnitControl(unit)}
+              </div>
+            );
+          }
+          const item = unit.item;
+          const label =
+            unit.kind === "phrase"
+              ? item.name || "Закончите фразу"
+              : unit.kind === "freeText"
+                ? item.name || "Ваш ответ"
+                : item.name;
+          return (
+            <div key={unitKey(unit, idx)} className="detail-body section">
+              {label && <div className="section__label">{label}</div>}
+              {item.description && <div className="section__hint">{item.description}</div>}
+              {renderUnitControl(unit)}
+            </div>
+          );
+        });
+      })()}
 
-      {charts.map((chart) => (
-        <div key={chart.id} className="detail-body section">
-          <div className="section__label">{chart.name}</div>
-          {chart.description && (
-            <div className="section__hint">{chart.description}</div>
-          )}
-          <CriteriaChart
-            criterias={chart.criterias || []}
-            marks={marks}
-            onChange={(cid, v) => setMark(cid, v)}
-            readOnly={readOnly}
-            labelPlacement={chart.label_placement}
-            color={chart.color}
-          />
-        </div>
-      ))}
-
-      {criteriaSplit.horizontal.length > 0 && (
-        <div className="detail-body section">
-          {criteriaSplit.vertical.length === 0 && (
-            <div className="section__label">Оценка вкуса</div>
-          )}
-          <div className="step-sliders">
-            {criteriaSplit.horizontal.map((c) => (
-              <StepSlider
-                key={c.id}
-                label={c.name}
-                info={c.description}
-                steps={gradeFor(c)}
-                value={marks[c.id] ?? null}
-                onChange={(v) => setMark(c.id, v)}
-                readOnly={readOnly}
-              />
-            ))}
+      {/* Секции taste_block — после всей инфо о продукте и легаси-шкал. Внутри
+          секции все типы средств оценки идут единым списком по order. */}
+      {evalGroups.blocks.map(({ block, group }) => {
+        const units = buildUnits(group);
+        if (!units.length) return null;
+        return (
+          <div key={`block-${block.id}`} className="detail-body section">
+            <div className="section__label">{block.name}</div>
+            {units.map((unit, idx) => {
+              if (unit.kind === "vrun" || unit.kind === "hrun") {
+                return <div key={unitKey(unit, idx)}>{renderUnitControl(unit)}</div>;
+              }
+              const subLabel = unitSubLabel(unit);
+              return (
+                <div key={unitKey(unit, idx)} className="block-sub">
+                  {subLabel && <div className="block-sub__label">{subLabel}</div>}
+                  {unit.item.description && (
+                    <div className="section__hint">{unit.item.description}</div>
+                  )}
+                  {renderUnitControl(unit)}
+                </div>
+              );
+            })}
           </div>
-        </div>
-      )}
+        );
+      })}
 
       {composition.length > 0 && (
         <div className="detail-body section">
@@ -450,12 +680,14 @@ export default function DetailPage() {
         </div>
       ) : (
         <div className="detail-body footer--detail">
-          <NominateToggle
-            isNominated={!!product.is_nominated}
-            onToggle={onToggleLike}
-            disabled={readOnly}
-          />
-          <div className="footer__row" style={{ marginTop: 12 }}>
+          {!rankingMode && (
+            <NominateToggle
+              isNominated={!!product.is_nominated}
+              onToggle={onToggleLike}
+              disabled={readOnly}
+            />
+          )}
+          <div className="footer__row" style={{ marginTop: rankingMode ? 0 : 12 }}>
             <button
               className="btn btn--primary footer__next"
               onClick={() => {

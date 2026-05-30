@@ -10,22 +10,8 @@ import {
 } from "../components/icons.jsx";
 import { setPodium } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
-
-// Цвета медалей по позиции: золото, серебро, бронза.
-const MEDAL_PALETTE = [
-  { bg: "#fff5d4", border: "#e3bb45", text: "#9c7926" }, // 1 — gold
-  { bg: "#f0f1f4", border: "#b8bcc4", text: "#73767e" }, // 2 — silver
-  { bg: "#fae0c6", border: "#cf8744", text: "#88491b" }, // 3 — bronze
-];
-
-const medalStyle = (i) => {
-  const c = MEDAL_PALETTE[i] || MEDAL_PALETTE[0];
-  return {
-    "--medal-bg": c.bg,
-    "--medal-border": c.border,
-    "--medal-text": c.text,
-  };
-};
+import { medalStyle } from "../utils/medal.js";
+import RankingList from "../components/RankingList.jsx";
 
 /**
  * Кандидаты-на-пьедестал: пользователь перетягивает финалистов (карточки из
@@ -39,10 +25,15 @@ const medalStyle = (i) => {
 export default function SelectTopPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, loading } = useTasting(id, { autoJoin: false });
+  const { tasting, products, loading } = useTasting(id, { autoJoin: false });
+
+  // show_podium_candidates: вместо отбора кандидатов в топ-3 ранжируем ВСЕ
+  // продукты дегустации единым списком.
+  const rankingMode = !!tasting?.show_podium_candidates;
 
   const [pool, setPool] = useState([]);
   const [top3, setTop3] = useState([null, null, null]);
+  const [ranking, setRanking] = useState([]); // режим rankingMode: все продукты по порядку
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -51,6 +42,19 @@ export default function SelectTopPage() {
   useEffect(() => {
     if (loading || initedRef.current) return;
     if (!products.length) return;
+
+    if (rankingMode) {
+      // Начальный порядок: уже выставленный podium_place (1..N), затем
+      // неотранжированные — в исходном порядке ProductTasting.order.
+      const sorted = products
+        .map((p, i) => ({ p, i, place: p.podium_place == null ? Infinity : p.podium_place }))
+        .sort((a, b) => a.place - b.place || a.i - b.i)
+        .map((x) => x.p);
+      setRanking(sorted);
+      initedRef.current = true;
+      return;
+    }
+
     const slots = [null, null, null];
     const rest = [];
     products.forEach((p) => {
@@ -64,7 +68,7 @@ export default function SelectTopPage() {
     setTop3(slots);
     setPool(rest);
     initedRef.current = true;
-  }, [loading, products]);
+  }, [loading, products, rankingMode]);
 
   // --- Drag state ---
   const slotRefs = useRef([null, null, null]);
@@ -191,6 +195,36 @@ export default function SelectTopPage() {
   const ready = top3.every(Boolean);
   const remaining = 3 - top3.filter(Boolean).length;
 
+  const confirmRanking = async () => {
+    if (submitting || !ranking.length) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await setPodium(id, { ranking: ranking.map((p) => p.id) });
+      navigate(`/tasting/${id}/result`);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Не удалось сохранить рейтинг.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Строка рейтинга продукта: медаль для топ-3, иначе номер места.
+  const renderRankRow = (p, i) => (
+    <>
+      <span
+        className={`ranking__rank ${i < 3 ? "ranking__rank--medal" : ""}`}
+        style={i < 3 ? medalStyle(i) : undefined}
+      >
+        {i < 3 ? <IconMedal size={15} filled stroke={1.8} /> : <span className="tabnum">{i + 1}</span>}
+      </span>
+      <span className="ranking__body">
+        <span className="ranking__name">{p.name}</span>
+        {p.number != null && <span className="ranking__num tabnum">№{p.number}</span>}
+      </span>
+    </>
+  );
+
   const confirm = async () => {
     if (!ready || submitting) return;
     setSubmitting(true);
@@ -211,6 +245,57 @@ export default function SelectTopPage() {
 
   if (loading) {
     return <div className="fullscreen-center">Загружаем…</div>;
+  }
+
+  // Режим ранжирования всех продуктов (show_podium_candidates).
+  if (rankingMode) {
+    return (
+      <div className="main-scroll">
+        <PageHeader
+          back={
+            <button className="icon-btn icon-btn--leading" onClick={() => navigate(-1)}>
+              <IconChevronLeft size={20} />
+              <span>Назад</span>
+            </button>
+          }
+        />
+
+        <div className="hero">
+          <div className="hero__eyebrow">Финальный шаг</div>
+          <h1 className="title-xl">Ваш рейтинг</h1>
+          <p className="hero__lede">
+            Расставьте все блюда по&nbsp;местам — от&nbsp;любимого к&nbsp;наименее
+            понравившемуся. Первые три места отмечены медалями.
+          </p>
+        </div>
+
+        <div className="rank-all">
+          <RankingList
+            items={ranking}
+            onChange={setRanking}
+            getKey={(p) => p.id}
+            renderItem={renderRankRow}
+          />
+        </div>
+
+        {error && <div className="error-banner">{error}</div>}
+
+        <div className="select-top-actions">
+          <div className="select-top-actions__hint">
+            Перетаскивайте карточки за&nbsp;«ручку», чтобы изменить порядок.
+          </div>
+          <button
+            className="btn btn--primary"
+            disabled={submitting || !ranking.length}
+            onClick={confirmRanking}
+          >
+            <span>{submitting ? "Сохраняем…" : "Узнать результат"}</span>
+            {!submitting && <IconArrowRight size={18} stroke={2} />}
+          </button>
+        </div>
+        <AppFooter />
+      </div>
+    );
   }
 
   return (

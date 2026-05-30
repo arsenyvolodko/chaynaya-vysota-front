@@ -8,6 +8,7 @@ import { getResult, getSharedResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { useTasting } from "../hooks/useTasting.js";
 import { productPalette } from "../utils/color.js";
+import { medalStyle } from "../utils/medal.js";
 import { formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.js";
 
 function vibrant(hex) {
@@ -220,7 +221,8 @@ export default function ResultPage({ shared = false }) {
 
   // products подгружаем по tastingId: в shared берём из payload, иначе из URL
   const tastingId = shared ? result?.tasting_id : params.id;
-  const { productById, products } = useTasting(tastingId || null, { autoJoin: false });
+  const { tasting, productById, products } = useTasting(tastingId || null, { autoJoin: false });
+  const rankingMode = !!tasting?.show_podium_candidates;
 
   const podium = result?.podium || [];
   const criteriaBreakdown = result?.criteria_breakdown || [];
@@ -249,6 +251,26 @@ export default function ResultPage({ shared = false }) {
     () => podium.map((row) => ({ row, p: productById(row.id) || null })),
     [podium, productById]
   );
+
+  // rankingMode: единый отранжированный список ВСЕХ блюд. Берём из products по
+  // podium_place (1..N) — это полный ранжир. Для shared-просмотра у viewer'а нет
+  // меток автора (карточка отдаёт метки текущего юзера), поэтому фолбэк — топ-3
+  // из result.podium (полного ранжира в payload результата нет).
+  const rankedList = useMemo(() => {
+    if (!rankingMode) return [];
+    const fromProducts = products
+      .filter((p) => p.podium_place != null)
+      .sort((a, b) => a.podium_place - b.podium_place)
+      .map((p) => ({
+        place: p.podium_place,
+        id: p.id,
+        name: p.name,
+        number: p.number,
+        total_score: p.total_score,
+      }));
+    if (fromProducts.length) return fromProducts;
+    return podium.map((row) => ({ ...row }));
+  }, [rankingMode, products, podium]);
 
   const eveningLine = useMemo(() => {
     const phrases = podiumProducts
@@ -320,7 +342,7 @@ export default function ResultPage({ shared = false }) {
 
       {eveningLine && <p className="evening-line">{eveningLine}</p>}
 
-      {!shared && (
+      {!shared && !rankingMode && (
         <div className="result-section">
           <p className="result-intro">
             Вы&nbsp;попробовали и оценили <strong>{ratedCount}</strong>&nbsp;{pluralRu(ratedCount, ["сорт", "сорта", "сортов"])}, из&nbsp;них выделили в&nbsp;кандидаты на&nbsp;пьедестал <strong>{allCandidates.length}</strong>:
@@ -362,7 +384,56 @@ export default function ResultPage({ shared = false }) {
         </div>
       )}
 
-      {podium.length > 0 && (
+      {rankingMode && rankedList.length > 0 && (
+        <div className="result-section">
+          <p className="result-intro">
+            {shared ? "Личный рейтинг блюд:" : "Ваш личный рейтинг блюд:"}
+          </p>
+          <div className="podium-section">
+            <div className="tier-head">
+              <div className="profile-card-head__eyebrow tier-head__title">Рейтинг блюд</div>
+              {!isTea && <span className="tier-head__col">Баллы</span>}
+            </div>
+            <ol className="tier-card tier-card--stacked">
+              {rankedList.map((row) => {
+                const clickable = !shared;
+                const isMedal = row.place <= 3;
+                return (
+                  <li
+                    key={row.id}
+                    style={isMedal ? medalStyle(row.place - 1) : undefined}
+                    className={`tier-row ${isMedal ? "tier-row--medal" : ""} ${clickable ? "tier-row--clickable" : ""}`}
+                    onClick={clickable ? () => navigate(`/tasting/${tastingId}/product/${row.id}?from=result`) : undefined}
+                    role={clickable ? "button" : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                  >
+                    <span className="tier-row__rank">
+                      {isMedal ? (
+                        <IconMedal size={16} filled stroke={1.8} />
+                      ) : (
+                        <span className="tabnum">{row.place}</span>
+                      )}
+                    </span>
+                    <div className="tier-row__body">
+                      <div className="tier-row__title-row">
+                        <span className="tier-row__title">{row.name}</span>
+                        {row.number != null && <span className="tier-row__num tabnum">№{row.number}</span>}
+                      </div>
+                    </div>
+                    {!isTea && (
+                      <span className="tier-row__score tabnum">
+                        {row.total_score != null ? row.total_score : "—"}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+      )}
+
+      {!rankingMode && podium.length > 0 && (
         <div className="result-section">
           <p className="result-intro">
             {shared

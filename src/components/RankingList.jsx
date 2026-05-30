@@ -1,7 +1,20 @@
 import { useRef, useState } from "react";
 import { IconGrip } from "./icons.jsx";
 
-export default function RankingList({ items, onChange, readOnly }) {
+// getKey/renderItem опциональны. По умолчанию items — строки (как в составе
+// блюда): ключ = сама строка, рендер = ранг + название. Для произвольных
+// объектов передайте getKey и renderItem (renderItem рисует первые две ячейки
+// грид-строки: ранг и тело; «ручку» добавляет сам список).
+export default function RankingList({ items, onChange, readOnly, getKey, renderItem }) {
+  const keyOf = getKey || ((item) => item);
+  const renderRow =
+    renderItem ||
+    ((item, i) => (
+      <>
+        <span className="ranking__rank tabnum">{i + 1}</span>
+        <span className="ranking__name">{item}</span>
+      </>
+    ));
   const listRef = useRef(null);
   const stateRef = useRef(null);
   const [, force] = useState(0);
@@ -87,7 +100,7 @@ export default function RankingList({ items, onChange, readOnly }) {
         const isDragging = s && s.idx === i;
         return (
           <li
-            key={item}
+            key={keyOf(item)}
             className={`ranking__item ${isDragging ? "ranking__item--dragging" : ""}`}
             style={
               isDragging
@@ -95,8 +108,7 @@ export default function RankingList({ items, onChange, readOnly }) {
                 : undefined
             }
           >
-            <span className="ranking__rank tabnum">{i + 1}</span>
-            <span className="ranking__name">{item}</span>
+            {renderRow(item, i)}
             <span
               className="ranking__grip"
               onPointerDown={onPointerDown(i)}

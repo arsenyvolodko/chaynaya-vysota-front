@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Оценка чая · по проливам</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ["Fraunces", "ui-serif", "Georgia", "serif"],
+              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+            },
+            colors: {
+              ivory: { DEFAULT: "#ece7df", soft: "#f3efe7", deep: "#e3ddd2" },
+              stone: {
+                50: "#fafaf9", 100: "#f5f5f4", 200: "#e7e5e4", 300: "#d6d3d1",
+                400: "#a8a29e", 500: "#78716c", 600: "#57534e", 700: "#44403c",
+                800: "#292524", 900: "#1c1917",
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --serif: "Fraunces", ui-serif, Georgia, serif;
+        --sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; min-height: 100%; }
+      body {
+        font-family: var(--sans);
+        font-weight: 300;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-variant-numeric: lining-nums tabular-nums;
+        background:
+          radial-gradient(1200px 700px at 50% -8%, #f6f2ea 0%, #ece7df 58%, #e3ddd2 100%);
+        color: #1c1917;
+      }
+      .stage {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+      }
+      /* Stable container width — the panel must NOT shrink-to-fit its content,
+         or the card visibly resizes whenever the hint/labels change length. */
+      #root { width: 100%; max-width: 412px; }
+      .serif { font-family: var(--serif); letter-spacing: -0.01em; }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-weight: 500;
+      }
+      button { font: inherit; cursor: pointer; }
+      button:focus-visible { outline: 2px solid #047857; outline-offset: 2px; }
+
+      /* card */
+      .panel {
+        width: 100%;
+        max-width: 412px;
+        background: #ffffff;
+        border-radius: 30px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.9) inset,
+          0 0 0 1px rgba(28, 25, 23, 0.04),
+          0 40px 90px -40px rgba(28, 36, 30, 0.4),
+          0 16px 44px -14px rgba(28, 36, 30, 0.1);
+        padding: 30px 26px 26px;
+      }
+
+      /* segmented legend */
+      .seg {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        background: #f5f5f4;
+        border: 1px solid #e7e5e4;
+        border-radius: 16px;
+        padding: 5px;
+      }
+      .seg__btn {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 11px 6px 9px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #78716c;
+        transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 120ms;
+      }
+      .seg__btn:active { transform: translateY(1px); }
+      .seg__btn.is-on {
+        background: #ffffff;
+        color: #292524;
+        box-shadow:
+          0 1px 0 rgba(255,255,255,0.8) inset,
+          0 6px 16px -10px rgba(28, 36, 30, 0.35),
+          0 0 0 1px rgba(28, 25, 23, 0.04);
+      }
+      .seg__swatch {
+        width: 13px; height: 13px; border-radius: 999px;
+        flex-shrink: 0;
+        transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 220ms;
+      }
+      .seg__btn.is-on .seg__swatch { transform: scale(1.18); }
+      .seg__name {
+        font-size: 13px;
+        font-weight: 400;
+        letter-spacing: -0.003em;
+        line-height: 1;
+      }
+      .seg__btn.is-on .seg__name { font-weight: 500; }
+      .seg__count {
+        font-family: var(--serif);
+        font-size: 10.5px;
+        line-height: 1;
+        color: #a8a29e;
+        font-variant-numeric: tabular-nums;
+      }
+      .seg__btn.is-on .seg__count { color: inherit; opacity: 0.7; }
+
+      /* chart svg */
+      .chart-wrap {
+        margin-top: 18px;
+        padding: 0;
+      }
+      .chart-svg { display: block; width: 100%; height: auto; touch-action: none; }
+      .chart-svg.is-edit { cursor: crosshair; }
+
+      .grid-line { stroke: #ece9e3; stroke-width: 1; }
+      .grid-line--base { stroke: #d9d4cb; stroke-width: 1.25; }
+      .axis-label { fill: #b0a89d; font-family: var(--sans); font-weight: 400; font-size: 11px; }
+      .axis-cap {
+        fill: #a8a29e; font-family: var(--sans); font-weight: 500;
+        font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      }
+
+      .dot { transition: opacity 260ms ease; }
+      .dot__halo { opacity: 0.16; }
+      @keyframes dot-pop {
+        0% { transform: scale(0); }
+        60% { transform: scale(1.28); }
+        100% { transform: scale(1); }
+      }
+      .dot--pop { animation: dot-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1); transform-box: fill-box; transform-origin: center; }
+
+      .curve { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+      .ghost { pointer-events: none; transition: opacity 140ms; }
+
+      /* footer actions */
+      .actions { margin-top: 20px; display: flex; gap: 10px; }
+      .btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 16px;
+        font-size: 15.5px;
+        font-weight: 500;
+        padding: 15px;
+        border: 0;
+        transition: background-color 160ms, color 160ms, transform 110ms, box-shadow 160ms, opacity 160ms;
+      }
+      .btn--primary {
+        background: #047857;
+        color: white;
+        box-shadow:
+          0 1px 0 rgba(255,255,255,0.16) inset,
+          0 12px 26px -14px rgba(4, 80, 55, 0.7);
+      }
+      .btn--primary:hover { background: #065f46; }
+      .btn--primary:active { background: #064e3b; transform: translateY(1px); }
+      .btn--primary:disabled { background: #f5f5f4; color: #c8c4bd; box-shadow: none; cursor: not-allowed; }
+      .btn--ghost {
+        flex: 0 0 auto;
+        background: #ffffff;
+        color: #57534e;
+        border: 1px solid #e7e5e4;
+        padding: 15px 20px;
+      }
+      .btn--ghost:hover { color: #292524; border-color: #d6d3d1; background: #fafaf9; }
+      .btn--ghost:active { transform: translateY(1px); }
+
+      .hint {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: #a8a29e;
+        text-wrap: pretty;
+        min-height: 18px;
+        transition: color 200ms;
+      }
+      .hint em { font-style: normal; color: #57534e; font-weight: 400; }
+
+      .head { text-align: left; }
+      .head__eyebrow { color: #9c9489; }
+      .head__title {
+        font-family: var(--serif);
+        font-size: 27px;
+        line-height: 1.08;
+        letter-spacing: -0.018em;
+        font-weight: 400;
+        margin: 6px 0 0;
+        color: #1c1917;
+      }
+      .head__sub {
+        margin: 9px 0 0;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: #78716c;
+        text-wrap: pretty;
+      }
+      .legend-cap {
+        margin: 22px 0 8px;
+        font-size: 10.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 500;
+        color: #b0a89d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div id="root"></div>
+    </div>
+
+    <script type="text/babel" data-presets="react">
+      const { useState, useRef, useMemo, useLayoutEffect, useEffect } = React;
+
+      /* ─── Criteria — tuned to the app's earthy sage/stone/ivory world.
+         Three distinct, harmonious mid-tones: golden, matcha, terracotta. ── */
+      const CRITERIA = [
+        { id: "aroma",      name: "Аромат",      color: "#C99A3A", soft: "#FBF3DF" },
+        { id: "taste",      name: "Вкус",        color: "#5E8C3E", soft: "#EDF3E2" },
+        { id: "aftertaste", name: "Послевкусие", color: "#C2693E", soft: "#FBEBE0" },
+      ];
+
+      const INFUSIONS = [1, 2, 3, 4, 5, 6];
+      const SCORE_MAX = 8;
+
+      /* ─── Plot geometry (viewBox units) ─────────────────────────────── */
+      const VB_W = 380, VB_H = 300;
+      const PAD = { l: 17, r: 5, t: 14, b: 28 };
+      const PLOT_W = VB_W - PAD.l - PAD.r;
+      const PLOT_H = VB_H - PAD.t - PAD.b;
+
+      const xFor = (inf) => PAD.l + ((inf - 1) / (INFUSIONS.length - 1)) * PLOT_W;
+      const yFor = (score) => PAD.t + (1 - score / SCORE_MAX) * PLOT_H;
+
+      /* Catmull-Rom → cubic Bézier. Operates on whatever points exist (sorted
+         by infusion), so missing infusions are bridged smoothly instead of
+         dropping to zero. */
+      function smoothPath(points) {
+        if (points.length < 2) return "";
+        const p = points;
+        let d = `M ${p[0].x.toFixed(2)} ${p[0].y.toFixed(2)}`;
+        for (let i = 0; i < p.length - 1; i++) {
+          const p0 = p[i - 1] || p[i];
+          const p1 = p[i];
+          const p2 = p[i + 1];
+          const p3 = p[i + 2] || p[i + 1];
+          const c1x = p1.x + (p2.x - p0.x) / 6;
+          const c1y = p1.y + (p2.y - p0.y) / 6;
+          const c2x = p2.x - (p3.x - p1.x) / 6;
+          const c2y = p2.y - (p3.y - p1.y) / 6;
+          d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+        }
+        return d;
+      }
+
+      /* An animated, self-drawing smooth curve. Replays its draw whenever
+         `signal` changes (e.g. its criterion is re-selected). Opacity lives on
+         a wrapper <g> so dimming/un-dimming never interferes with the
+         stroke-dashoffset draw transition on the path itself. */
+      function Curve({ d, color, delay, signal, dim }) {
+        const ref = useRef(null);
+        useLayoutEffect(() => {
+          const el = ref.current;
+          if (!el || !d) return;
+          const len = el.getTotalLength();
+          el.style.transition = "none";
+          el.style.strokeDasharray = len;
+          el.style.strokeDashoffset = len;
+          // force reflow so the browser registers the start state
+          el.getBoundingClientRect();
+          requestAnimationFrame(() => {
+            el.style.transition = `stroke-dashoffset 1050ms cubic-bezier(0.33, 0.9, 0.3, 1) ${delay}ms`;
+            el.style.strokeDashoffset = "0";
+          });
+        }, [d, signal]);
+        if (!d) return null;
+        return (
+          <g style={{ opacity: dim ? 0.2 : 1, transition: "opacity 420ms ease" }}>
+            <path
+              ref={ref}
+              className="curve"
+              d={d}
+              stroke={color}
+              strokeWidth="2.5"
+            />
+          </g>
+        );
+      }
+
+      function Legend({ active, setActive, counts }) {
+        return (
+          <div className="seg" role="radiogroup" aria-label="Критерий оценки">
+            {CRITERIA.map((c) => {
+              const on = c.id === active;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={"seg__btn" + (on ? " is-on" : "")}
+                  style={on ? { color: c.color, background: c.soft } : undefined}
+                  onClick={() => setActive(c.id)}
+                >
+                  <span className="seg__swatch" style={{ background: c.color, boxShadow: on ? `0 0 0 4px ${c.soft}` : "none" }}></span>
+                  <span className="seg__name">{c.name}</span>
+                  <span className="seg__count">{counts[c.id] || 0}/6</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      }
+
+      function App() {
+        // data: { [criterionId]: { [infusion]: score } }
+        const [data, setData] = useState({ aroma: {}, taste: {}, aftertaste: {} });
+        const [active, setActive] = useState("taste");
+        const [done, setDone] = useState(false);
+        // Per-criterion draw signal — bumping a value replays that curve.
+        const [signals, setSignals] = useState({ aroma: 0, taste: 0, aftertaste: 0 });
+        const [ghost, setGhost] = useState(null); // {inf, score} preview
+        const [lastPlaced, setLastPlaced] = useState(null); // `${crit}-${inf}` for pop anim
+        const svgRef = useRef(null);
+
+        const counts = useMemo(() => {
+          const o = {};
+          for (const c of CRITERIA) o[c.id] = Object.keys(data[c.id]).length;
+          return o;
+        }, [data]);
+
+        const totalDots = counts.aroma + counts.taste + counts.aftertaste;
+        const activeCrit = CRITERIA.find((c) => c.id === active) || null;
+
+        /* Convert a pointer event to viewBox coords (handles touch + scaling
+           via the SVG's own CTM — robust to any responsive resize). */
+        function toSvgPoint(evt) {
+          const svg = svgRef.current;
+          if (!svg) return null;
+          const pt = svg.createSVGPoint();
+          const src = evt.touches && evt.touches[0] ? evt.touches[0] : evt;
+          pt.x = src.clientX;
+          pt.y = src.clientY;
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return null;
+          return pt.matrixTransform(ctm.inverse());
+        }
+
+        function nearest(p) {
+          // nearest infusion (1..8) and score (0..8) to the point
+          const fx = (p.x - PAD.l) / PLOT_W;          // 0..1
+          const inf = Math.min(
+            INFUSIONS.length,
+            Math.max(1, Math.round(fx * (INFUSIONS.length - 1)) + 1)
+          );
+          const fy = 1 - (p.y - PAD.t) / PLOT_H;        // 0..1
+          const score = Math.min(SCORE_MAX, Math.max(0, Math.round(fy * SCORE_MAX)));
+          return { inf, score };
+        }
+
+        function handleMove(evt) {
+          if (done) return;
+          const p = toSvgPoint(evt);
+          if (!p) return;
+          // only preview when inside the plot-ish area
+          if (p.x < PAD.l - 14 || p.x > VB_W - PAD.r + 6 || p.y < PAD.t - 6 || p.y > VB_H - PAD.b + 14) {
+            setGhost(null);
+            return;
+          }
+          setGhost(nearest(p));
+        }
+
+        function handlePlace(evt) {
+          if (done) return;
+          const p = toSvgPoint(evt);
+          if (!p) return;
+          const { inf, score } = nearest(p);
+          setData((prev) => ({ ...prev, [active]: { ...prev[active], [inf]: score } }));
+          setLastPlaced(`${active}-${inf}`);
+          setGhost(null);
+        }
+
+        // Selecting a criterion. In the result state it toggles: tapping a new
+        // one dims the other two and replays its draw; tapping the active one
+        // again clears the selection so all three curves are bright again.
+        function pickCriterion(id) {
+          if (!done) { setActive(id); return; }
+          if (active === id) {
+            setActive(null); // back to the bright overview, nothing selected
+          } else {
+            setActive(id);
+            setSignals((s) => ({ ...s, [id]: s[id] + 1 }));
+          }
+        }
+
+        function finish() {
+          setDone(true);
+          setActive(null); // open the result in overview — no criterion selected
+          // Draw all three curves brightly on entry.
+          setSignals((s) => ({ aroma: s.aroma + 1, taste: s.taste + 1, aftertaste: s.aftertaste + 1 }));
+        }
+
+        function edit() {
+          setDone(false);
+          setActive((a) => a || "taste"); // restore a selectable criterion for placing
+        }
+
+        function clearActive() {
+          setData((prev) => ({ ...prev, [active]: {} }));
+        }
+        function resetAll() {
+          setData({ aroma: {}, taste: {}, aftertaste: {} });
+          setDone(false);
+        }
+
+        const pointsByCrit = useMemo(() => {
+          const o = {};
+          for (const c of CRITERIA) {
+            o[c.id] = Object.entries(data[c.id])
+              .map(([inf, score]) => ({ inf: +inf, score: +score, x: xFor(+inf), y: yFor(+score) }))
+              .sort((a, b) => a.inf - b.inf);
+          }
+          return o;
+        }, [data]);
+
+        // Draw active criterion last so its dots sit on top.
+        const drawOrder = [...CRITERIA].sort((a, b) => (a.id === active ? 1 : 0) - (b.id === active ? 1 : 0));
+
+        return (
+          <div className="panel">
+            <div className="head">
+              <div className="eyebrow head__eyebrow">Дегустация · по проливам</div>
+              <h1 className="head__title">Как чай раскрывается от пролива к проливу</h1>
+              <p className="head__sub">
+                Выберите критерий и отметьте оценку для каждого пролива. Кривая
+                покажет, где вкус набирает силу и где начинает угасать.
+              </p>
+            </div>
+
+            <div className="legend-cap">Критерий</div>
+            <Legend active={active} setActive={pickCriterion} counts={counts} />
+
+            <div className="chart-wrap">
+              <svg
+                ref={svgRef}
+                className={"chart-svg" + (done ? "" : " is-edit")}
+                viewBox={`0 0 ${VB_W} ${VB_H}`}
+                preserveAspectRatio="xMidYMid meet"
+                onClick={handlePlace}
+                onMouseMove={handleMove}
+                onMouseLeave={() => setGhost(null)}
+                onTouchStart={(e) => { e.preventDefault(); handlePlace(e); }}
+              >
+                {/* horizontal grid + Y labels */}
+                {Array.from({ length: SCORE_MAX + 1 }, (_, s) => (
+                  <g key={"h" + s}>
+                    <line
+                      className={s === 0 ? "grid-line grid-line--base" : "grid-line"}
+                      x1={PAD.l} y1={yFor(s)} x2={VB_W - PAD.r} y2={yFor(s)}
+                    />
+                    {s % 2 === 0 && (
+                      <text className="axis-label" x={PAD.l - 8} y={yFor(s) + 3.5} textAnchor="end">{s}</text>
+                    )}
+                  </g>
+                ))}
+
+                {/* vertical grid + X labels */}
+                {INFUSIONS.map((inf) => (
+                  <g key={"v" + inf}>
+                    <line
+                      className={inf === 1 ? "grid-line grid-line--base" : "grid-line"}
+                      x1={xFor(inf)} y1={PAD.t} x2={xFor(inf)} y2={VB_H - PAD.b}
+                    />
+                    <text className="axis-label" x={xFor(inf)} y={VB_H - PAD.b + 16} textAnchor="middle">{inf}</text>
+                  </g>
+                ))}
+
+                {/* axis captions */}
+                <text className="axis-cap" x={VB_W - PAD.r} y={VB_H - 4} textAnchor="end">Пролив</text>
+
+                {/* ghost preview (edit mode) */}
+                {!done && ghost && (
+                  <g className="ghost">
+                    <line
+                      x1={xFor(ghost.inf)} y1={PAD.t} x2={xFor(ghost.inf)} y2={VB_H - PAD.b}
+                      stroke={activeCrit.color} strokeWidth="1" strokeDasharray="2 4" opacity="0.5"
+                    />
+                    <circle
+                      cx={xFor(ghost.inf)} cy={yFor(ghost.score)} r="7"
+                      fill={activeCrit.color} opacity="0.22"
+                    />
+                    <circle
+                      cx={xFor(ghost.inf)} cy={yFor(ghost.score)} r="3.5"
+                      fill="none" stroke={activeCrit.color} strokeWidth="1.5" opacity="0.7"
+                    />
+                  </g>
+                )}
+
+                {/* curves (result state) */}
+                {done && drawOrder.map((c) => {
+                  const isActive = c.id === active;
+                  // Overview (nothing selected): gentle stagger. With a selection,
+                  // the chosen curve draws instantly and the others recede.
+                  const ordIdx = CRITERIA.filter((x) => x.id !== active).findIndex((x) => x.id === c.id);
+                  const delay = isActive ? 0 : active === null ? ordIdx * 180 : 200 + ordIdx * 200;
+                  return (
+                    <Curve
+                      key={"curve-" + c.id}
+                      d={smoothPath(pointsByCrit[c.id])}
+                      color={c.color}
+                      signal={signals[c.id]}
+                      dim={active !== null && !isActive}
+                      delay={delay}
+                    />
+                  );
+                })}
+
+                {/* dots */}
+                {drawOrder.map((c) => {
+                  const isActive = c.id === active;
+                  return pointsByCrit[c.id].map((pt) => {
+                    const key = `${c.id}-${pt.inf}`;
+                    const dim = active !== null && !isActive;
+                    return (
+                      <g
+                        key={key}
+                        className={"dot" + (key === lastPlaced ? " dot--pop" : "")}
+                        style={{ opacity: dim ? 0.34 : 1 }}
+                      >
+                        <circle className="dot__halo" cx={pt.x} cy={pt.y} r="9" fill={c.color} />
+                        <circle cx={pt.x} cy={pt.y} r="4.5" fill="#fff" stroke={c.color} strokeWidth="2.5" />
+                      </g>
+                    );
+                  });
+                })}
+              </svg>
+            </div>
+
+            <div className="hint">
+              {done ? (
+                active === null ? (
+                  <span>Нажмите критерий, чтобы выделить его кривую</span>
+                ) : (
+                  <span><em>«{activeCrit.name}»</em> выделен — нажмите ещё раз, чтобы показать все кривые</span>
+                )
+              ) : counts[active] === 0 ? (
+                <span>Нажмите на сетку, чтобы поставить оценку <em>«{activeCrit.name}»</em></span>
+              ) : (
+                <span>Отмечено проливов: <em>{counts[active]} из 6</em>. Нажмите ещё раз, чтобы передвинуть точку.</span>
+              )}
+            </div>
+
+            <div className="actions">
+              {done ? (
+                <>
+                  <button className="btn btn--ghost" onClick={edit}>Изменить</button>
+                  <button className="btn btn--ghost" onClick={resetAll}>Сбросить</button>
+                </>
+              ) : (
+                <>
+                  {counts[active] > 0 && (
+                    <button className="btn btn--ghost" onClick={clearActive}>Очистить</button>
+                  )}
+                  <button
+                    className="btn btn--primary"
+                    disabled={totalDots === 0}
+                    onClick={finish}
+                  >
+                    Готово
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

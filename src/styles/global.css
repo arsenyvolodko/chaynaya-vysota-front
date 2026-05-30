@@ -1143,6 +1143,103 @@ input, textarea { font: inherit; color: inherit; }
   overflow: visible;
 }
 
+/* ── TastePlot — двумерный график «по проливам» ─────────────────────── */
+.taste-plot { margin-top: 12px; }
+.taste-plot__legend {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px;
+  background: var(--stone-100); border: 1px solid var(--stone-200);
+  border-radius: 16px; padding: 5px;
+}
+.taste-plot__seg {
+  position: relative; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; padding: 11px 6px 9px;
+  border: 0; border-radius: 12px; background: transparent;
+  color: var(--stone-500);
+  transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 120ms;
+}
+.taste-plot__seg:active { transform: translateY(1px); }
+.taste-plot__seg.is-on {
+  background: #fff; color: var(--stone-800);
+  box-shadow: 0 6px 16px -10px rgba(28, 36, 30, 0.35), 0 0 0 1px rgba(28, 25, 23, 0.04);
+}
+.taste-plot__swatch {
+  width: 13px; height: 13px; border-radius: 999px; flex-shrink: 0;
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 220ms;
+}
+.taste-plot__seg.is-on .taste-plot__swatch { transform: scale(1.18); }
+.taste-plot__seg-name { font-size: 13px; line-height: 1; letter-spacing: -0.003em; }
+.taste-plot__seg.is-on .taste-plot__seg-name { font-weight: 500; }
+.taste-plot__seg-count {
+  font-family: var(--serif); font-size: 10.5px; line-height: 1;
+  color: var(--stone-400); font-variant-numeric: tabular-nums;
+}
+.taste-plot__seg.is-on .taste-plot__seg-count { color: inherit; opacity: 0.7; }
+
+.taste-plot__svg {
+  display: block; width: 100%; max-width: 100%; height: auto; margin-top: 16px;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  overflow: visible;
+}
+.taste-plot__grid { stroke: var(--stone-200); stroke-width: 1; }
+.taste-plot__grid--base { stroke: var(--stone-300); stroke-width: 1.25; }
+.taste-plot__axis-label {
+  fill: var(--stone-400); font-family: var(--sans); font-weight: 400; font-size: 11px;
+}
+.taste-plot__axis-cap {
+  fill: var(--stone-400); font-family: var(--sans); font-weight: 500;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.taste-plot__curve {
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+  transition: opacity 420ms ease;
+}
+.taste-plot__dot { transition: opacity 260ms ease; }
+.taste-plot__svg.is-edit { cursor: crosshair; }
+.taste-plot__ghost { transition: opacity 140ms; }
+.taste-plot__hint {
+  margin-top: 14px; text-align: center; font-size: 12.5px; line-height: 1.5;
+  color: var(--stone-400); min-height: 18px; text-wrap: pretty;
+}
+.taste-plot__hint em { font-style: normal; color: var(--stone-600); font-weight: 400; }
+.detail--readonly .taste-plot__svg { cursor: default; }
+
+/* ── PhraseFill — «закончите фразу» ─────────────────────────────────── */
+.phrase-fill { margin-top: 12px; }
+.phrase-fill__text {
+  margin: 0; font-family: var(--serif); font-size: 17px; line-height: 2;
+  letter-spacing: -0.005em; color: var(--stone-700); text-wrap: pretty;
+}
+.phrase-blank__input {
+  font: inherit; color: var(--sage-warm-deep); font-weight: 500;
+  text-align: center; border: 0; border-bottom: 1.5px solid var(--sage-warm);
+  background: transparent; padding: 0 4px; margin: 0 2px; min-width: 2ch;
+  outline: none; border-radius: 0;
+  transition: border-color 140ms, background-color 140ms;
+}
+.phrase-blank__input::placeholder { color: var(--stone-400); font-weight: 400; }
+.phrase-blank__input:focus {
+  border-bottom-color: var(--sage-warm-deep); background: var(--green-50);
+}
+.phrase-blank--filled {
+  color: var(--sage-warm-deep); font-weight: 500;
+  border-bottom: 1.5px solid var(--sage-warm); padding: 0 3px;
+}
+
+/* ── FreeTextPrompt — свободный текстовый ответ ─────────────────────── */
+.free-text__input { margin-top: 12px; }
+.free-text__readonly {
+  margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: var(--stone-700);
+  white-space: pre-wrap; text-wrap: pretty;
+}
+
+/* Под-блок (чарт/плот с собственным именем) внутри секции taste_block. */
+.block-sub { margin-top: 22px; }
+.block-sub:first-of-type { margin-top: 16px; }
+.block-sub__label {
+  font-size: 13px; font-weight: 500; color: var(--stone-600);
+  letter-spacing: -0.005em; margin-bottom: 2px;
+}
+
 .info-tip { position: relative; display: inline-flex; align-items: center; }
 .info-tip.is-open { z-index: 200; }
 .info-tip__btn {
@@ -1322,7 +1419,14 @@ input, textarea { font: inherit; color: inherit; }
   animation: none;
 }
 .ranking__rank { font-family: var(--serif); font-size: 14px; color: var(--green-700); font-weight: 500; }
-.ranking__name { font-size: 14px; color: var(--stone-800); }
+.ranking__rank--medal {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--medal-text, var(--green-700));
+}
+.ranking__name { font-size: 14px; color: var(--stone-800); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking__body { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.ranking__num { font-size: 12px; color: var(--stone-400); flex-shrink: 0; }
+.rank-all { padding: 0 4px; }
 .ranking__grip {
   color: var(--stone-400); display: inline-flex; padding: 6px; margin: -6px;
   border-radius: 6px; cursor: grab; touch-action: none;
@@ -1867,6 +1971,10 @@ input, textarea { font: inherit; color: inherit; }
 .tier-row__rank {
   font-size: 12px; color: var(--stone-400); font-weight: 400;
   text-align: center; font-variant-numeric: tabular-nums lining-nums;
+}
+.tier-row--medal .tier-row__rank {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--medal-text, var(--green-700));
 }
 .tier-row__body { min-width: 0; }
 .tier-row__title-row {

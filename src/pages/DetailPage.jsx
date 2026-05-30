@@ -12,8 +12,9 @@ import CriteriaChart from "../components/CriteriaChart.jsx";
 import TastePlot from "../components/TastePlot.jsx";
 import PhraseFill from "../components/PhraseFill.jsx";
 import FreeTextPrompt from "../components/FreeTextPrompt.jsx";
+import PhotoStrip from "../components/PhotoStrip.jsx";
 import AppFooter from "../components/AppFooter.jsx";
-import { getTastingProduct, nominate, reviewProduct } from "../api/catalog";
+import { clearPlotMarks, getTastingProduct, nominate, reviewProduct } from "../api/catalog";
 import { useTasting } from "../hooks/useTasting.js";
 
 // Раскладываем продукты в порядок «категория-за-категорией», где порядок
@@ -45,9 +46,11 @@ export default function DetailPage() {
   const readOnly = searchParams.get("from") === "result";
 
   const { tasting, products: siblingProducts } = useTasting(id, { autoJoin: false });
-  // show_podium_candidates: вместо отметки кандидатов гость ранжирует все блюда
-  // в конце — отдельной кнопки «в кандидаты» в карточке быть не должно.
-  const rankingMode = !!tasting?.show_podium_candidates;
+  // show_podium_candidates=true → классический отбор кандидатов: кнопка «в
+  // кандидаты» в карточке есть. Если флаг false — кандидатов нет, гость в конце
+  // ранжирует все блюда, и кнопки в карточке быть не должно. Дефолт на время
+  // загрузки tasting — режим кандидатов (кнопку не прячем зря).
+  const rankingMode = !!tasting && !tasting.show_podium_candidates;
   const orderedSiblings = useMemo(() => flatProductsByCategory(siblingProducts), [siblingProducts]);
   const currentIdx = orderedSiblings.findIndex((p) => String(p.id) === String(productId));
   const isLast = currentIdx >= 0 && currentIdx === orderedSiblings.length - 1;
@@ -178,6 +181,24 @@ export default function DetailPage() {
     const next = { ...plotMarks, [cid]: { ...(plotMarks[cid] || {}), [x]: mark } };
     setPlotMarks(next);
     scheduleSend({ plot_marks: buildPlotMarks(next) });
+  };
+  // Очистить все точки конкретного plot. Бек удаляет оценки по критериям чарта
+  // (DELETE .../charts/{plot.id}/marks) и возвращает обновлённую карточку.
+  const clearPlot = async (plot) => {
+    const ids = (plot?.criterias || []).map((c) => c.id);
+    if (!ids.length) return;
+    // Оптимистично чистим локально.
+    const next = { ...plotMarks };
+    ids.forEach((id) => { delete next[id]; });
+    setPlotMarks(next);
+    // Не дать отложенному флашу вернуть очищенные точки (апсёрт по снапшоту).
+    if (pendingRef.current.plot_marks) {
+      pendingRef.current = { ...pendingRef.current, plot_marks: buildPlotMarks(next) };
+    }
+    try {
+      const updated = await clearPlotMarks(id, productId, plot.id);
+      setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
+    } catch (_) { /* локально уже очищено */ }
   };
 
   // phrase_answers — снапшот всех фраз: [{phrase, answers}], answers длиной
@@ -312,6 +333,7 @@ export default function DetailPage() {
       plot={plot}
       value={plotMarks}
       onChange={(cid, x, mark) => setPlotMark(cid, x, mark)}
+      onClear={() => clearPlot(plot)}
       readOnly={readOnly}
     />
   );
@@ -391,6 +413,32 @@ export default function DetailPage() {
       default: return null;
     }
   };
+
+  // Теги «Общее впечатление». Где показывать решает show_tags на блоках:
+  //   • блоков нет           → отдельной секцией (как раньше);
+  //   • есть блок(и) show_tags → внутри такого блока;
+  //   • блоки есть, но ни в одном show_tags → не показываем нигде.
+  const hasTags = (product?.taste_tags || []).length > 0;
+  const hasBlocks = Array.isArray(product?.taste_blocks) && product.taste_blocks.length > 0;
+  const renderTags = () => (
+    <>
+      <MarqueeTags
+        tags={product.taste_tags}
+        selectedIds={tagIds}
+        onToggle={toggleTag}
+        readOnly={readOnly}
+      />
+      <div className="section__hint section__hint--swipe section__hint--below">
+        <span className="section__hint-swipe section__hint-swipe--left" aria-hidden="true">
+          <IconChevronLeft size={11} stroke={2.2} />
+        </span>
+        <span>Листайте теги и&nbsp;выбирайте всё, что откликается</span>
+        <span className="section__hint-swipe section__hint-swipe--right" aria-hidden="true">
+          <IconChevronRight size={11} stroke={2.2} />
+        </span>
+      </div>
+    </>
+  );
 
   if (loading) return <div className="fullscreen-center">Загружаем…</div>;
   if (error || !product) return <div className="fullscreen-center">Не удалось загрузить продукт.</div>;
@@ -526,6 +574,9 @@ export default function DetailPage() {
             <p className="trivia__body">{product.interesting_fact}</p>
           </div>
         )}
+
+        {/* Фото без блока — под описанием продукта. */}
+        {(product.photos || []).length > 0 && <PhotoStrip photos={product.photos} />}
       </div>
 
       {/* Легаси: элементы без taste_block. Упорядочены сквозным order, каждый
@@ -565,10 +616,17 @@ export default function DetailPage() {
           секции все типы средств оценки идут единым списком по order. */}
       {evalGroups.blocks.map(({ block, group }) => {
         const units = buildUnits(group);
-        if (!units.length) return null;
+        const showTagsHere = !!block.show_tags && hasTags;
+        const blockPhotos = block.photos || [];
+        if (!units.length && !showTagsHere && !blockPhotos.length) return null;
         return (
-          <div key={`block-${block.id}`} className="detail-body section">
-            <div className="section__label">{block.name}</div>
+          <div key={`block-${block.id}`} className="detail-body section section--block">
+            <div className="taste-block-head">
+              <div className="taste-block-head__eyebrow">Раздел оценки</div>
+              <h2 className="taste-block-head__title">{block.name}</h2>
+            </div>
+            {/* Фото блока — сразу под названием раздела. */}
+            {blockPhotos.length > 0 && <PhotoStrip photos={blockPhotos} />}
             {units.map((unit, idx) => {
               if (unit.kind === "vrun" || unit.kind === "hrun") {
                 return <div key={unitKey(unit, idx)}>{renderUnitControl(unit)}</div>;
@@ -584,6 +642,12 @@ export default function DetailPage() {
                 </div>
               );
             })}
+            {showTagsHere && (
+              <div className="block-sub">
+                <div className="block-sub__label">Общее впечатление</div>
+                {renderTags()}
+              </div>
+            )}
           </div>
         );
       })}
@@ -598,24 +662,12 @@ export default function DetailPage() {
         </div>
       )}
 
-      {(product.taste_tags || []).length > 0 && (
+      {/* Без блоков теги показываем отдельной секцией (как раньше). С блоками
+          они уходят внутрь блока(ов) с show_tags. */}
+      {!hasBlocks && hasTags && (
         <div className="detail-body section">
           <div className="section__label">Общее впечатление</div>
-          <MarqueeTags
-            tags={product.taste_tags}
-            selectedIds={tagIds}
-            onToggle={toggleTag}
-            readOnly={readOnly}
-          />
-          <div className="section__hint section__hint--swipe section__hint--below">
-            <span className="section__hint-swipe section__hint-swipe--left" aria-hidden="true">
-              <IconChevronLeft size={11} stroke={2.2} />
-            </span>
-            <span>Листайте теги и&nbsp;выбирайте всё, что откликается</span>
-            <span className="section__hint-swipe section__hint-swipe--right" aria-hidden="true">
-              <IconChevronRight size={11} stroke={2.2} />
-            </span>
-          </div>
+          {renderTags()}
         </div>
       )}
 

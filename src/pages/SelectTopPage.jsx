@@ -27,9 +27,9 @@ export default function SelectTopPage() {
   const navigate = useNavigate();
   const { tasting, products, loading } = useTasting(id, { autoJoin: false });
 
-  // show_podium_candidates: вместо отбора кандидатов в топ-3 ранжируем ВСЕ
-  // продукты дегустации единым списком.
-  const rankingMode = !!tasting?.show_podium_candidates;
+  // show_podium_candidates=true → классический отбор 3 кандидатов в топ. Если
+  // флаг false — кандидатов нет, ранжируем ВСЕ продукты дегустации единым списком.
+  const rankingMode = !!tasting && !tasting.show_podium_candidates;
 
   const [pool, setPool] = useState([]);
   const [top3, setTop3] = useState([null, null, null]);

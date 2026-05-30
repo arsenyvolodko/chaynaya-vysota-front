@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import ShareSheet from "../components/ShareSheet.jsx";
+import WordCloud from "../components/WordCloud.jsx";
 import { IconChevronLeft, IconMedal, IconShare, IconSparkles, IconTelegram } from "../components/icons.jsx";
 import { getResult, getSharedResult } from "../api/catalog";
 import { useAuth } from "../auth/AuthContext.jsx";
@@ -222,11 +223,25 @@ export default function ResultPage({ shared = false }) {
   // products подгружаем по tastingId: в shared берём из payload, иначе из URL
   const tastingId = shared ? result?.tasting_id : params.id;
   const { tasting, productById, products } = useTasting(tastingId || null, { autoJoin: false });
-  const rankingMode = !!tasting?.show_podium_candidates;
+  // show_podium_candidates=true → топ-3 + кандидаты (как раньше). Если флаг false —
+  // кандидатов нет, показываем единый отранжированный список всех блюд.
+  const rankingMode = !!tasting && !tasting.show_podium_candidates;
 
   const podium = result?.podium || [];
   const criteriaBreakdown = result?.criteria_breakdown || [];
-  const topTags = result?.top_tags || [];
+  // tags_cloud — облако впечатлений: выбранные теги (source="tag") + слова из
+  // заполненных пропусков фраз (source="phrase"). weight = частота. id у phrase null.
+  const tagCloud = result?.tags_cloud || [];
+  // Слова для облака; размер/цвет считает сам WordCloud (d3-cloud).
+  const cloudWords = useMemo(
+    () =>
+      tagCloud.map((t) => ({
+        name: t.name,
+        weight: Number(t.weight) || 1,
+        source: t.source,
+      })),
+    [tagCloud]
+  );
   const teaMatches = result?.tea_matches || [];
   const isTea = result?.type === "tea";
 
@@ -523,16 +538,10 @@ export default function ResultPage({ shared = false }) {
         </div>
       )}
 
-      {topTags.length > 0 && (
+      {cloudWords.length > 0 && (
         <div className="impressions-section">
           <div className="profile-card-head__eyebrow">Впечатление</div>
-          <div className="tag-cloud">
-            {topTags.map((t, i) => (
-              <span key={t.id} className={`tag-cloud__pill tag-cloud__pill--${(i % 5) + 1}`}>
-                {t.name}
-              </span>
-            ))}
-          </div>
+          <WordCloud words={cloudWords} />
         </div>
       )}
 

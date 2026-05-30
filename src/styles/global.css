@@ -864,6 +864,28 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--stone-400); font-weight: 500; line-height: 1.4; text-wrap: balance;
 }
 .section__hint { margin-top: 6px; font-size: 12px; color: var(--stone-400); }
+
+/* Заголовок taste_block — глобальный разделитель оценок в карточке продукта.
+   Должен явно отделять крупные разделы, поэтому: больший отступ сверху,
+   разделительная линия во всю карточку и крупный serif-заголовок. */
+.section--block { margin-top: 44px; }
+.taste-block-head {
+  padding-top: 24px;
+  border-top: 1px solid var(--stone-200);
+}
+.taste-block-head__eyebrow {
+  font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--sage-warm-deep); font-weight: 600; margin-bottom: 7px;
+}
+.taste-block-head__title {
+  font-family: var(--serif); font-size: 23px; line-height: 1.12;
+  letter-spacing: -0.015em; font-weight: 400; color: var(--stone-900);
+  margin: 0; text-wrap: balance;
+}
+.taste-block-head__desc {
+  margin: 8px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--stone-500);
+  text-wrap: pretty;
+}
 .section__hint--swipe {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 4px 10px; border-radius: 999px;
@@ -1144,39 +1166,37 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 /* ── TastePlot — двумерный график «по проливам» ─────────────────────── */
-.taste-plot { margin-top: 12px; }
+/* Отступ от описания/заголовка больше, чем у легенды+хинта до сетки графика —
+   чтобы кнопки-критерии визуально относились к графику, а не к описанию. */
+.taste-plot { margin-top: 22px; }
+/* Легенда — ряд кнопок-пилюль: явный бордер + фон + тень, чтобы было понятно,
+   что это тыкаемые кнопки выбора критерия. */
 .taste-plot__legend {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px;
-  background: var(--stone-100); border: 1px solid var(--stone-200);
-  border-radius: 16px; padding: 5px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
 }
 .taste-plot__seg {
-  position: relative; display: flex; flex-direction: column;
-  align-items: center; gap: 6px; padding: 11px 6px 9px;
-  border: 0; border-radius: 12px; background: transparent;
-  color: var(--stone-500);
-  transition: background-color 200ms, color 200ms, box-shadow 200ms, transform 120ms;
+  display: inline-flex; flex-direction: row; align-items: center; gap: 8px;
+  padding: 9px 14px; border-radius: 999px;
+  border: 1px solid var(--stone-300); background: #fff;
+  color: var(--stone-600); font-weight: 500;
+  box-shadow: 0 1px 2px rgba(28, 36, 30, 0.06);
+  transition: background-color 180ms, color 180ms, border-color 180ms, box-shadow 180ms, transform 120ms;
 }
+.taste-plot__seg:hover { border-color: var(--stone-400); box-shadow: 0 2px 6px -2px rgba(28, 36, 30, 0.14); }
 .taste-plot__seg:active { transform: translateY(1px); }
 .taste-plot__seg.is-on {
-  background: #fff; color: var(--stone-800);
-  box-shadow: 0 6px 16px -10px rgba(28, 36, 30, 0.35), 0 0 0 1px rgba(28, 25, 23, 0.04);
+  border-color: currentColor;
+  box-shadow: 0 4px 12px -6px rgba(28, 36, 30, 0.28);
 }
 .taste-plot__swatch {
-  width: 13px; height: 13px; border-radius: 999px; flex-shrink: 0;
+  width: 12px; height: 12px; border-radius: 999px; flex-shrink: 0;
   transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 220ms;
 }
-.taste-plot__seg.is-on .taste-plot__swatch { transform: scale(1.18); }
-.taste-plot__seg-name { font-size: 13px; line-height: 1; letter-spacing: -0.003em; }
-.taste-plot__seg.is-on .taste-plot__seg-name { font-weight: 500; }
-.taste-plot__seg-count {
-  font-family: var(--serif); font-size: 10.5px; line-height: 1;
-  color: var(--stone-400); font-variant-numeric: tabular-nums;
-}
-.taste-plot__seg.is-on .taste-plot__seg-count { color: inherit; opacity: 0.7; }
+.taste-plot__seg.is-on .taste-plot__swatch { transform: scale(1.15); }
+.taste-plot__seg-name { font-size: 13.5px; line-height: 1; letter-spacing: -0.003em; }
 
 .taste-plot__svg {
-  display: block; width: 100%; max-width: 100%; height: auto; margin-top: 16px;
+  display: block; width: 100%; max-width: 100%; height: auto; margin-top: 6px;
   touch-action: manipulation; user-select: none; -webkit-user-select: none;
   overflow: visible;
 }
@@ -1196,8 +1216,39 @@ input, textarea { font: inherit; color: inherit; }
 .taste-plot__dot { transition: opacity 260ms ease; }
 .taste-plot__svg.is-edit { cursor: crosshair; }
 .taste-plot__ghost { transition: opacity 140ms; }
+.taste-plot__foot {
+  margin-top: 6px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.taste-plot__clear {
+  padding: 7px 15px; border-radius: 999px;
+  border: 1px solid var(--stone-300); background: #fff;
+  color: var(--stone-600); font-size: 13px; font-weight: 500;
+  transition: background-color 160ms, color 160ms, border-color 160ms, transform 110ms;
+}
+.taste-plot__clear:hover:not(:disabled) {
+  background: var(--stone-50); color: var(--stone-800); border-color: var(--stone-400);
+}
+.taste-plot__clear:active:not(:disabled) { transform: translateY(1px); }
+.taste-plot__clear:disabled { opacity: 0.45; cursor: not-allowed; }
+.taste-plot__confirm {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.taste-plot__confirm-text { font-size: 13px; color: var(--stone-600); }
+.taste-plot__confirm-actions { display: flex; gap: 8px; }
+.taste-plot__confirm-btn {
+  padding: 7px 15px; border-radius: 999px; font-size: 13px; font-weight: 500;
+  border: 1px solid var(--stone-300); background: #fff; color: var(--stone-600);
+  transition: background-color 160ms, color 160ms, border-color 160ms, transform 110ms;
+}
+.taste-plot__confirm-btn:active { transform: translateY(1px); }
+.taste-plot__confirm-btn--yes {
+  border-color: #d9a3a3; background: #fbeaea; color: #a23b3b;
+}
+.taste-plot__confirm-btn--yes:hover { background: #f7dede; }
+/* Хинт теперь под кнопками-критериями (над графиком). */
 .taste-plot__hint {
-  margin-top: 14px; text-align: center; font-size: 12.5px; line-height: 1.5;
+  margin-top: 6px; text-align: center; font-size: 12.5px; line-height: 1.5;
   color: var(--stone-400); min-height: 18px; text-wrap: pretty;
 }
 .taste-plot__hint em { font-style: normal; color: var(--stone-600); font-weight: 400; }
@@ -1206,24 +1257,50 @@ input, textarea { font: inherit; color: inherit; }
 /* ── PhraseFill — «закончите фразу» ─────────────────────────────────── */
 .phrase-fill { margin-top: 12px; }
 .phrase-fill__text {
-  margin: 0; font-family: var(--serif); font-size: 17px; line-height: 2;
-  letter-spacing: -0.005em; color: var(--stone-700); text-wrap: pretty;
+  margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.75;
+  letter-spacing: -0.005em; color: var(--stone-800); text-wrap: pretty;
+}
+/* В режиме редактирования чуть больше межстрочного — чтобы подчёркнутые инпуты
+   не липли к соседним строкам. */
+.phrase-fill--edit .phrase-fill__text { line-height: 2.05; }
+/* Авто-рост инпута: ::after дублирует введённый текст и задаёт ширину ячейки. */
+.phrase-blank {
+  display: inline-grid; vertical-align: baseline; margin: 0 2px; max-width: 100%;
+}
+.phrase-blank::after {
+  content: attr(data-value); grid-area: 1 / 1;
+  visibility: hidden; white-space: pre;
+  font: inherit; font-size: 15px; font-weight: 500;
+  padding: 1px 4px; min-width: 2.5ch;
 }
 .phrase-blank__input {
-  font: inherit; color: var(--sage-warm-deep); font-weight: 500;
+  grid-area: 1 / 1; width: 100%; min-width: 2.5ch; max-width: 100%;
+  font: inherit; font-size: 15px; color: var(--sage-warm-deep); font-weight: 500;
   text-align: center; border: 0; border-bottom: 1.5px solid var(--sage-warm);
-  background: transparent; padding: 0 4px; margin: 0 2px; min-width: 2ch;
-  outline: none; border-radius: 0;
+  background: transparent; padding: 1px 4px; outline: none; border-radius: 4px 4px 0 0;
   transition: border-color 140ms, background-color 140ms;
 }
 .phrase-blank__input::placeholder { color: var(--stone-400); font-weight: 400; }
 .phrase-blank__input:focus {
   border-bottom-color: var(--sage-warm-deep); background: var(--green-50);
 }
-.phrase-blank--filled {
-  color: var(--sage-warm-deep); font-weight: 500;
-  border-bottom: 1.5px solid var(--sage-warm); padding: 0 3px;
+.phrase-fill__empty { color: var(--stone-400); font-style: italic; }
+/* Маленькие иконки-кнопки рядом с текстом. */
+.phrase-fill__icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 999px; margin-left: 8px;
+  vertical-align: middle; flex-shrink: 0;
+  border: 1px solid var(--stone-300); background: #fff; color: var(--stone-500);
+  transition: background-color 150ms, color 150ms, border-color 150ms, transform 110ms;
 }
+.phrase-fill__icon-btn:hover {
+  background: var(--stone-50); color: var(--stone-800); border-color: var(--stone-400);
+}
+.phrase-fill__icon-btn:active { transform: translateY(1px); }
+.phrase-fill__icon-btn--done {
+  border-color: var(--sage-warm); background: var(--green-50); color: var(--sage-warm-deep);
+}
+.phrase-fill__icon-btn--done:hover { background: var(--green-100); border-color: var(--sage-warm-deep); }
 
 /* ── FreeTextPrompt — свободный текстовый ответ ─────────────────────── */
 .free-text__input { margin-top: 12px; }
@@ -2131,32 +2208,69 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .impressions-section { margin-top: 30px; }
-.tag-cloud {
-  margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 10px 12px; padding: 6px 4px 10px;
+/* ── PhotoStrip — лента квадратных фото + лайтбокс ─────────────────── */
+.photo-strip {
+  margin-top: 14px;
+  display: flex; gap: 8px; overflow-x: auto;
+  /* Когда фото помещаются — по центру; при переполнении `safe` откатывает к
+     началу, чтобы скролл к первому фото не клипался. */
+  justify-content: safe center;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; padding-bottom: 2px;
 }
-.tag-cloud__pill {
-  display: inline-flex; align-items: center; padding: 9px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  border: 1px solid var(--stone-200); color: var(--stone-700);
-  font-size: 13.5px; font-weight: 400; letter-spacing: -0.002em;
-  box-shadow: 0 4px 12px -8px rgba(20, 28, 24, 0.18);
-  white-space: nowrap; will-change: transform;
+.photo-strip::-webkit-scrollbar { display: none; }
+.photo-strip__item {
+  /* ≈3 в ширину + «подглядывание» следующего → видно, что листается. */
+  flex: 0 0 calc((100% - 16px) / 3.18);
+  aspect-ratio: 1; padding: 0; overflow: hidden;
+  border: 1px solid var(--stone-200); border-radius: 14px;
+  background: var(--stone-100); scroll-snap-align: start; cursor: pointer;
+  transition: transform 120ms, box-shadow 160ms;
 }
-.tag-cloud__pill--1 { animation: tag-float-1 4.0s ease-in-out infinite alternate; }
-.tag-cloud__pill--2 { animation: tag-float-2 4.8s ease-in-out infinite alternate; animation-delay: 0.4s; }
-.tag-cloud__pill--3 { animation: tag-float-3 3.6s ease-in-out infinite alternate; animation-delay: 0.8s; }
-.tag-cloud__pill--4 { animation: tag-float-4 4.4s ease-in-out infinite alternate; animation-delay: 0.2s; }
-.tag-cloud__pill--5 { animation: tag-float-5 5.0s ease-in-out infinite alternate; animation-delay: 0.6s; }
-@keyframes tag-float-1 { 0%{transform:translate(-2px,-1px);} 100%{transform:translate(3px,-5px);} }
-@keyframes tag-float-2 { 0%{transform:translate(2px,1px);}  100%{transform:translate(-4px,-4px);} }
-@keyframes tag-float-3 { 0%{transform:translate(-1px,2px);} 100%{transform:translate(4px,-3px);} }
-@keyframes tag-float-4 { 0%{transform:translate(3px,-1px);} 100%{transform:translate(-3px,-5px);} }
-@keyframes tag-float-5 { 0%{transform:translate(-3px,1px);} 100%{transform:translate(5px,3px);} }
-@media (prefers-reduced-motion: reduce) {
-  .tag-cloud__pill { animation-duration: 0s !important; transform: none !important; }
+.photo-strip__item:active { transform: scale(0.98); }
+.photo-strip__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-strip__hint {
+  margin-top: 8px; display: flex; align-items: center; justify-content: center;
+  gap: 8px; font-size: 12px; color: var(--stone-400); text-wrap: pretty;
+}
+
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(20, 18, 16, 0.92);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  animation: lightbox-in 160ms ease;
+}
+@keyframes lightbox-in { from { opacity: 0; } to { opacity: 1; } }
+.lightbox__stage { max-width: 100%; max-height: 100%; display: flex; }
+.lightbox__img {
+  max-width: 100%; max-height: 84vh; object-fit: contain;
+  border-radius: 10px; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+}
+.lightbox__close,
+.lightbox__nav {
+  position: absolute; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: background-color 150ms, transform 110ms;
+}
+.lightbox__close { top: 16px; right: 16px; width: 40px; height: 40px; }
+.lightbox__nav { top: 50%; transform: translateY(-50%); width: 44px; height: 44px; }
+.lightbox__nav--prev { left: 12px; }
+.lightbox__nav--next { right: 12px; }
+.lightbox__close:hover,
+.lightbox__nav:hover { background: rgba(255, 255, 255, 0.26); }
+.lightbox__nav:active { transform: translateY(-50%) scale(0.94); }
+.lightbox__counter {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.85); font-size: 13px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+}
+
+/* ── Облако слов (впечатления) — d3-cloud, рисуется в SVG ── */
+.word-cloud-wrap { margin-top: 14px; width: 100%; }
+.word-cloud-wrap svg {
+  display: block; margin: 0 auto; max-width: 100%; height: auto; overflow: visible;
 }
 
 .pair-cards { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }

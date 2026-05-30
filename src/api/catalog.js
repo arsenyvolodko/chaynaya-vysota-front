@@ -33,6 +33,15 @@ export async function reviewProduct(tastingId, productId, body) {
   return data;
 }
 
+// Очистить оценки гостя по конкретному plot-чарту («очистить график»).
+// chartId — id чарта (поле plot.id в карточке). Возвращает обновлённую карточку.
+export async function clearPlotMarks(tastingId, productId, chartId) {
+  const { data } = await api.delete(
+    `/api/catalog/tastings/${tastingId}/products/${productId}/charts/${chartId}/marks/`
+  );
+  return data;
+}
+
 export async function nominate(tastingId, productId, isNominated) {
   const { data } = await api.post(
     `/api/catalog/tastings/${tastingId}/products/${productId}/nominate/`,

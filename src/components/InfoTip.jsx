@@ -44,7 +44,7 @@ export default function InfoTip({ text }) {
     setShiftX(shift);
   }, [open, text]);
 
-  if (!text) return null;
+  if (!text || !String(text).trim()) return null;
 
   return (
     <span className={`info-tip ${open ? "is-open" : ""}`} ref={wrapRef}>

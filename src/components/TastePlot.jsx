@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * TastePlot — двумерный график «как продукт раскрывается вдоль оси X».
@@ -59,9 +59,11 @@ function smoothPath(points) {
   return d;
 }
 
-export default function TastePlot({ plot, value, onChange, readOnly }) {
+export default function TastePlot({ plot, value, onChange, onClear, readOnly }) {
   const svgRef = useRef(null);
+  const legendRef = useRef(null);
   const [ghost, setGhost] = useState(null); // {xi, yi} превью в режиме редактирования
+  const [confirmingClear, setConfirmingClear] = useState(false);
 
   const xAxis = useMemo(() => (Array.isArray(plot?.x_axis) ? plot.x_axis : []), [plot]);
   const yAxis = useMemo(() => (Array.isArray(plot?.y_axis) ? plot.y_axis : []), [plot]);
@@ -78,6 +80,20 @@ export default function TastePlot({ plot, value, onChange, readOnly }) {
   const [active, setActive] = useState(() =>
     !readOnly && criterias.length ? criterias[0].id : null
   );
+
+  // Тап вне легенды и самого графика снимает выделение критерия → график снова
+  // показывает все кривые ярко (выход из режима редактирования конкретной серии).
+  useEffect(() => {
+    if (active == null) return;
+    const onDocDown = (e) => {
+      const t = e.target;
+      if (legendRef.current?.contains(t)) return;
+      if (svgRef.current?.contains(t)) return;
+      setActive(null);
+    };
+    document.addEventListener("pointerdown", onDocDown, true);
+    return () => document.removeEventListener("pointerdown", onDocDown, true);
+  }, [active]);
 
   // idx деления оси → экранная координата.
   const xFor = (xi) =>
@@ -115,6 +131,7 @@ export default function TastePlot({ plot, value, onChange, readOnly }) {
 
   const activeCurve = active != null ? curves.find((cu) => cu.c.id === active) : null;
   const activeColor = activeCurve?.color || PALETTE[0].color;
+  const hasPoints = curves.some((cu) => cu.points.length > 0);
 
   // Активную кривую рисуем последней, чтобы её точки/линия были сверху.
   const drawOrder = [...curves].sort(
@@ -176,7 +193,7 @@ export default function TastePlot({ plot, value, onChange, readOnly }) {
 
   return (
     <div className="taste-plot">
-      <div className="taste-plot__legend" role="radiogroup" aria-label="Критерий">
+      <div className="taste-plot__legend" role="radiogroup" aria-label="Критерий" ref={legendRef}>
         {curves.map((cu) => {
           const on = cu.c.id === active;
           return (
@@ -194,12 +211,25 @@ export default function TastePlot({ plot, value, onChange, readOnly }) {
                 style={{ background: cu.color, boxShadow: on ? `0 0 0 4px ${cu.soft}` : "none" }}
               />
               <span className="taste-plot__seg-name">{cu.c.name}</span>
-              <span className="taste-plot__seg-count">
-                {cu.points.length}/{xCount}
-              </span>
             </button>
           );
         })}
+      </div>
+
+      <div className="taste-plot__hint">
+        {readOnly ? (
+          activeCurve ? (
+            <span>
+              <em>«{activeCurve.c.name}»</em> выделен — нажмите ещё раз, чтобы показать все кривые
+            </span>
+          ) : (
+            <span>Нажмите критерий, чтобы выделить его кривую</span>
+          )
+        ) : activeCurve ? (
+          <span>Поставьте точку на&nbsp;графике для оценки критерия</span>
+        ) : (
+          <span>Выберите критерий, чтобы поставить оценку</span>
+        )}
       </div>
 
       <svg
@@ -322,24 +352,40 @@ export default function TastePlot({ plot, value, onChange, readOnly }) {
         })}
       </svg>
 
-      <div className="taste-plot__hint">
-        {readOnly ? (
-          activeCurve ? (
-            <span>
-              <em>«{activeCurve.c.name}»</em> выделен — нажмите ещё раз, чтобы показать все кривые
-            </span>
+      {!readOnly && hasPoints && (
+        <div className="taste-plot__foot">
+          {confirmingClear && active == null ? (
+            <div className="taste-plot__confirm">
+              <span className="taste-plot__confirm-text">Очистить все точки графика?</span>
+              <div className="taste-plot__confirm-actions">
+                <button
+                  type="button"
+                  className="taste-plot__confirm-btn taste-plot__confirm-btn--yes"
+                  onClick={() => { setConfirmingClear(false); onClear?.(); }}
+                >
+                  Очистить
+                </button>
+                <button
+                  type="button"
+                  className="taste-plot__confirm-btn"
+                  onClick={() => setConfirmingClear(false)}
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
           ) : (
-            <span>Нажмите критерий, чтобы выделить его кривую</span>
-          )
-        ) : activeCurve ? (
-          <span>
-            Ставите <em>«{activeCurve.c.name}»</em>: {activeCurve.points.length} из {xCount}. Тапните
-            по сетке, чтобы отметить деление.
-          </span>
-        ) : (
-          <span>Выберите критерий, чтобы отмечать точки</span>
-        )}
-      </div>
+            <button
+              type="button"
+              className="taste-plot__clear"
+              onClick={() => setConfirmingClear(true)}
+              disabled={active != null}
+            >
+              Очистить график
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

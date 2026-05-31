@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyTastings } from "../api/catalog.js";
+import { getMyTastings, getTastingProducts } from "../api/catalog.js";
 import { useAuth } from "../auth/AuthContext.jsx";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
@@ -186,9 +186,15 @@ function EditablePhone({ user, updateProfile }) {
   return null;
 }
 
-function TastingCard({ tasting, onClick }) {
+function TastingCard({ tasting, onClick, pending, disabled }) {
   return (
-    <button type="button" className="tasting-card" onClick={onClick}>
+    <button
+      type="button"
+      className="tasting-card"
+      onClick={onClick}
+      disabled={pending || disabled}
+      aria-busy={pending || undefined}
+    >
       <div className="tasting-card__body">
         <div className="tasting-card__date">{formatTastingDate(tasting.date)}</div>
         <div className="tasting-card__title">{tasting.title}</div>
@@ -207,6 +213,8 @@ export default function ProfilePage() {
   const [tastings, setTastings] = useState([]);
   const [tastingsLoading, setTastingsLoading] = useState(true);
   const [tastingsError, setTastingsError] = useState(null);
+  // id дегустации, для которой сейчас выясняем, все ли чаи попробованы.
+  const [openingId, setOpeningId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,6 +233,31 @@ export default function ProfilePage() {
   const onLogout = () => {
     logout();
     navigate("/auth", { replace: true });
+  };
+
+  // Открытие прежней дегустации из профиля:
+  //   • все чаи попробованы (зелёная галочка) → страница результата (как раньше);
+  //   • есть неотмеченный чай → страница дегустации со списком продуктов.
+  const openTasting = async (t) => {
+    if (openingId) return;
+    setOpeningId(t.id);
+    try {
+      const products = await getTastingProducts(t.id);
+      const allReviewed =
+        Array.isArray(products) &&
+        products.length > 0 &&
+        products.every((p) => p.is_reviewed);
+      navigate(
+        allReviewed
+          ? `/tasting/${t.id}/result?from=profile`
+          : `/tasting/${t.id}?from=profile`
+      );
+    } catch {
+      // Не смогли проверить — ведём на список продуктов дегустации.
+      navigate(`/tasting/${t.id}?from=profile`);
+    } finally {
+      setOpeningId(null);
+    }
   };
 
   return (
@@ -268,7 +301,9 @@ export default function ProfilePage() {
               <TastingCard
                 key={t.id}
                 tasting={t}
-                onClick={() => navigate(`/tasting/${t.id}/result?from=profile`)}
+                pending={openingId === t.id}
+                disabled={openingId != null && openingId !== t.id}
+                onClick={() => openTasting(t)}
               />
             ))}
           </div>

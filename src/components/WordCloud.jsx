@@ -43,6 +43,23 @@ export default function WordCloud({ words }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(0);
   const [laid, setLaid] = useState(null); // { items, vb }
+  // d3-cloud меряет ширину слов canvas-ом по шрифту. Пока веб-шрифт (Inter) не
+  // загружен, метрики берутся от фолбэка → рендер в Inter не совпадает и слова
+  // налезают. Ждём document.fonts.ready и пересчитываем раскладку.
+  const [fontsReady, setFontsReady] = useState(
+    typeof document === "undefined" || !document.fonts
+      ? true
+      : document.fonts.status === "loaded"
+  );
+
+  useEffect(() => {
+    if (fontsReady || typeof document === "undefined" || !document.fonts) return;
+    let cancelled = false;
+    document.fonts.ready.then(() => {
+      if (!cancelled) setFontsReady(true);
+    });
+    return () => { cancelled = true; };
+  }, [fontsReady]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -61,8 +78,8 @@ export default function WordCloud({ words }) {
   );
 
   useEffect(() => {
-    if (!data.length || !width) {
-      setLaid(null);
+    if (!data.length || !width || !fontsReady) {
+      if (!data.length || !width) setLaid(null);
       return;
     }
     let min = Infinity;
@@ -90,7 +107,9 @@ export default function WordCloud({ words }) {
     const layout = cloud()
       .size([side, side])
       .words(prepared)
-      .padding(1.5)
+      // Минимальный зазор растёт с кеглем: крупные слова и налезают на мелкие
+      // из-за дискретности sprite-коллизии d3-cloud, поэтому им нужно больше.
+      .padding((d) => Math.max(4, Math.round(d.size * 0.16)))
       .rotate(0)
       .random(seededRandom(0x9e3779b1))
       .font(FONT)
@@ -126,7 +145,7 @@ export default function WordCloud({ words }) {
       cancelled = true;
       layout.stop();
     };
-  }, [data, width]);
+  }, [data, width, fontsReady]);
 
   return (
     <div ref={wrapRef} className="word-cloud-wrap">

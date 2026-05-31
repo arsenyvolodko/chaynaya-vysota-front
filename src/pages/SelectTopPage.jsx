@@ -262,10 +262,11 @@ export default function SelectTopPage() {
 
         <div className="hero">
           <div className="hero__eyebrow">Финальный шаг</div>
-          <h1 className="title-xl">Ваш рейтинг</h1>
+          <h1 className="title-xl">Рассудите и&nbsp;распределите по&nbsp;местам</h1>
           <p className="hero__lede">
-            Расставьте все блюда по&nbsp;местам — от&nbsp;любимого к&nbsp;наименее
-            понравившемуся. Первые три места отмечены медалями.
+            Расставьте все сорта дегустации по&nbsp;местам — от&nbsp;высшей
+            персональной оценки к&nbsp;наименее понравившемуся. Первые три места
+            отмечены медалями.
           </p>
         </div>
 

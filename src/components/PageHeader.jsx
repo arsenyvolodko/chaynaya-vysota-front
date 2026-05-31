@@ -38,6 +38,7 @@ export default function PageHeader({ right, back, center, transparent }) {
           aria-label="На главный экран"
         >
           <Logomark />
+          <span className="page-header__brand-name">Чайная высота</span>
         </button>
         <a
           className="page-header__contacts"

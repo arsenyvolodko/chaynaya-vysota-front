@@ -27,7 +27,7 @@ export default function FreeTextPrompt({ value, onChange, readOnly, placeholder 
       className="comment free-text__input"
       value={value ?? ""}
       rows={2}
-      placeholder={placeholder || "Ваш ответ…"}
+      placeholder={placeholder || "Ваши наблюдения…"}
       onChange={(e) => onChange?.(e.target.value)}
     />
   );

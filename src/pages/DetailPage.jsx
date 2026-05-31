@@ -643,7 +643,6 @@ export default function DetailPage() {
         return (
           <div key={`block-${block.id}`} className="detail-body section section--block">
             <div className="taste-block-head">
-              <div className="taste-block-head__eyebrow">Раздел оценки</div>
               <h2 className="taste-block-head__title">{block.name}</h2>
             </div>
             {/* Фото блока — сразу под названием раздела. */}

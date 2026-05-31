@@ -129,7 +129,7 @@ input, textarea { font: inherit; color: inherit; }
 .tabnum { font-variant-numeric: tabular-nums; }
 
 .logomark { display: inline-flex; align-items: center; gap: 10px; color: var(--green-700); }
-.logomark__img { display: block; flex-shrink: 0; border-radius: 999px; }
+.logomark__img { display: block; flex-shrink: 0; object-fit: contain; }
 .logomark__dot {
   width: 24px; height: 24px; border-radius: 999px;
   background: var(--green-100);
@@ -253,7 +253,7 @@ input, textarea { font: inherit; color: inherit; }
 .page-header__brand {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 4px;
   min-width: 0;
 }
@@ -263,16 +263,7 @@ input, textarea { font: inherit; color: inherit; }
   padding: 0;
   cursor: pointer;
   display: inline-flex;
-  align-items: center;
-  gap: 10px;
 }
-.page-header__brand-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--stone-800);
-  white-space: nowrap;
-}
-.page-header--reversed .page-header__logo-btn { flex-direction: row-reverse; }
 .page-header__contacts {
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -872,12 +863,26 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--stone-400); font-weight: 500; line-height: 1.4; text-wrap: balance;
 }
-.section__hint { margin-top: 6px; font-size: 12px; color: var(--stone-400); }
+.section__hint { margin-top: 6px; font-size: 12px; color: var(--stone-600); }
 
 /* Заголовок taste_block — глобальный разделитель оценок в карточке продукта.
    Должен явно отделять крупные разделы, поэтому: больший отступ сверху,
    разделительная линия во всю карточку и крупный serif-заголовок. */
 .section--block { margin-top: 44px; }
+/* Фото между разделами: та же неяркая линия, что у taste-block-head, но
+   сверху и снизу — фото оказываются «в рамке» между разделами. */
+.section--block-photos {
+  margin-top: 44px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-top: 1px solid var(--stone-200);
+  border-bottom: 1px solid var(--stone-200);
+}
+/* Линию снизу фото уже нарисовали — не дублируем её у заголовка блока. */
+.section--block-photos + .section--block .taste-block-head {
+  border-top: 0;
+  padding-top: 0;
+}
 .taste-block-head {
   padding-top: 24px;
   border-top: 1px solid var(--stone-200);
@@ -895,6 +900,8 @@ input, textarea { font: inherit; color: inherit; }
   margin: 8px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--stone-500);
   text-wrap: pretty;
 }
+/* Заголовок группы внутри блока (напр. «Вкусоароматические ассоциации:»). */
+.block-group-title { margin-top: 22px; }
 .section__hint--swipe {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 4px 10px; border-radius: 999px;

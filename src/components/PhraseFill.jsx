@@ -63,6 +63,9 @@ export default function PhraseFill({ phrase, value, onChange, readOnly }) {
   const segments = Array.isArray(phrase?.segments) ? phrase.segments : [];
   const answers = Array.isArray(value) ? value : [];
   const anyFilled = answers.some((a) => String(a ?? "").trim());
+  // Флаг с бэка: первый пропуск — выпадающий список степени выраженности.
+  // Если false (или нет флага) — обычное многоточие-инпут, как у прочих.
+  const showToggleList = !!phrase?.show_toggle_list;
 
   // Не трогали текст → открываем сразу на редактирование.
   const [editing, setEditing] = useState(() => !readOnly && !anyFilled);
@@ -70,8 +73,9 @@ export default function PhraseFill({ phrase, value, onChange, readOnly }) {
 
   // Первый пропуск — степень выраженности; по умолчанию «не обнаружены».
   // Проставляем дефолт в состояние, если пусто (чтобы он попал в сохранение).
+  // Только когда первый пропуск — выпадающий список.
   useEffect(() => {
-    if (!readOnly && n > 0 && !String(answers[0] ?? "").trim()) {
+    if (showToggleList && !readOnly && n > 0 && !String(answers[0] ?? "").trim()) {
       onChange?.(0, GRADE_OPTIONS[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,8 +91,8 @@ export default function PhraseFill({ phrase, value, onChange, readOnly }) {
             <span key={`s-${i}`}>
               {seg(i)}
               {i < n && (
-                i === 0 ? (
-                  // Первый пропуск — всегда выпадающий список (степень выраженности).
+                i === 0 && showToggleList ? (
+                  // Первый пропуск — выпадающий список (степень выраженности).
                   <span
                     className="phrase-blank phrase-blank--select"
                     data-value={answers[i] || GRADE_OPTIONS[0]}
@@ -152,7 +156,7 @@ export default function PhraseFill({ phrase, value, onChange, readOnly }) {
 
   // Просмотр на странице сорта (не readOnly) при наличии пропусков: первый
   // пропуск остаётся живым списком, остальное — собранный текст.
-  if (!readOnly && n > 0) {
+  if (!readOnly && n > 0 && showToggleList) {
     const grade = answers[0] || GRADE_OPTIONS[0];
     const suffix = buildFilledText(segments.slice(1), answers.slice(1), n - 1);
     return (

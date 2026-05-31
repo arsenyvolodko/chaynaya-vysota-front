@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import { IconArrowRight, IconChevronLeft, IconChevronRight, IconSparkles } from "../components/icons.jsx";
@@ -639,27 +639,41 @@ export default function DetailPage() {
         const units = buildUnits(group);
         const showTagsHere = !!block.show_tags && hasTags;
         const blockPhotos = block.photos || [];
+        // Перед первой заполняемой фразой — заголовок группы ассоциаций.
+        const firstPhraseIdx = units.findIndex((u) => u.kind === "phrase");
         if (!units.length && !showTagsHere && !blockPhotos.length) return null;
         return (
-          <div key={`block-${block.id}`} className="detail-body section section--block">
+          <Fragment key={`block-${block.id}`}>
+            {/* Фото блока — над самим блоком (между предыдущим блоком и этим). */}
+            {blockPhotos.length > 0 && (
+              <div className="detail-body section section--block-photos">
+                <PhotoStrip photos={blockPhotos} />
+              </div>
+            )}
+            <div className="detail-body section section--block">
             <div className="taste-block-head">
               <h2 className="taste-block-head__title">{block.name}</h2>
             </div>
-            {/* Фото блока — сразу под названием раздела. */}
-            {blockPhotos.length > 0 && <PhotoStrip photos={blockPhotos} />}
             {units.map((unit, idx) => {
               if (unit.kind === "vrun" || unit.kind === "hrun") {
                 return <div key={unitKey(unit, idx)}>{renderUnitControl(unit)}</div>;
               }
               const subLabel = unitSubLabel(unit);
               return (
-                <div key={unitKey(unit, idx)} className="block-sub">
-                  {subLabel && <div className="block-sub__label">{subLabel}</div>}
-                  {unit.item.description && (
-                    <div className="section__hint">{unit.item.description}</div>
+                <Fragment key={unitKey(unit, idx)}>
+                  {idx === firstPhraseIdx && (
+                    <h3 className="block-sub__label block-group-title">
+                      Вкусоароматические ассоциации:
+                    </h3>
                   )}
-                  {renderUnitControl(unit)}
-                </div>
+                  <div className="block-sub">
+                    {subLabel && <div className="block-sub__label">{subLabel}</div>}
+                    {unit.item.description && (
+                      <div className="section__hint">{unit.item.description}</div>
+                    )}
+                    {renderUnitControl(unit)}
+                  </div>
+                </Fragment>
               );
             })}
             {showTagsHere && (
@@ -668,7 +682,8 @@ export default function DetailPage() {
                 {renderTags()}
               </div>
             )}
-          </div>
+            </div>
+          </Fragment>
         );
       })}
 

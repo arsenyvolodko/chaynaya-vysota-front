@@ -11,7 +11,20 @@ import { IconChevronLeft, IconChevronRight, IconX } from "./icons.jsx";
 export default function PhotoStrip({ photos }) {
   const list = Array.isArray(photos) ? photos : [];
   const [openIdx, setOpenIdx] = useState(null);
+  const [scrollable, setScrollable] = useState(false);
+  const stripRef = useRef(null);
   const touchX = useRef(null);
+
+  // Листается ли лента (контент шире контейнера) — для текста подсказки.
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const check = () => setScrollable(el.scrollWidth - el.clientWidth > 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [list.length]);
 
   const close = () => setOpenIdx(null);
   const prev = () => setOpenIdx((i) => (i > 0 ? i - 1 : list.length - 1));
@@ -46,7 +59,7 @@ export default function PhotoStrip({ photos }) {
 
   return (
     <>
-      <div className="photo-strip">
+      <div className="photo-strip" ref={stripRef}>
         {list.map((p, i) => (
           <button
             key={p.id ?? i}
@@ -60,7 +73,7 @@ export default function PhotoStrip({ photos }) {
         ))}
       </div>
 
-      {list.length > 1 && (
+      {scrollable ? (
         <div className="photo-strip__hint">
           <span className="section__hint-swipe section__hint-swipe--left" aria-hidden="true">
             <IconChevronLeft size={11} stroke={2.2} />
@@ -69,6 +82,10 @@ export default function PhotoStrip({ photos }) {
           <span className="section__hint-swipe section__hint-swipe--right" aria-hidden="true">
             <IconChevronRight size={11} stroke={2.2} />
           </span>
+        </div>
+      ) : (
+        <div className="photo-strip__hint">
+          <span>Нажмите, чтобы открыть</span>
         </div>
       )}
 

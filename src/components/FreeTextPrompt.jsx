@@ -26,7 +26,7 @@ export default function FreeTextPrompt({ value, onChange, readOnly, placeholder 
     <textarea
       className="comment free-text__input"
       value={value ?? ""}
-      rows={3}
+      rows={2}
       placeholder={placeholder || "Ваш ответ…"}
       onChange={(e) => onChange?.(e.target.value)}
     />

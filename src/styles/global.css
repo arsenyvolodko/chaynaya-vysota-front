@@ -997,7 +997,7 @@ input, textarea { font: inherit; color: inherit; }
 .section > .step-sliders:not(.step-sliders--single) .step-slider__head { padding-left: 12px; }
 .section > .vsteps-row { margin-left: -12px; margin-right: -12px; }
 .step-slider { display: flex; flex-direction: column; }
-.step-slider__head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.step-slider__head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .step-slider__name {
   font-size: 14px;
   color: var(--stone-800);
@@ -1005,7 +1005,9 @@ input, textarea { font: inherit; color: inherit; }
 }
 .step-slider__rail-wrap { position: relative; user-select: none; -webkit-user-select: none; }
 .step-slider__labels { position: relative; min-height: 30px; }
-.step-slider__labels--top { margin-bottom: 0; }
+/* Верхние подписи (режим «через одну») выше: даём запас на 2-3 строки, чтобы
+   они не наезжали на название шкалы — трек уезжает ниже названия. */
+.step-slider__labels--top { margin-bottom: 0; min-height: 42px; }
 .step-slider__labels--bot { margin-top: 0; }
 .step-slider__label {
   position: absolute; display: inline-block; max-width: 84px;
@@ -1255,14 +1257,14 @@ input, textarea { font: inherit; color: inherit; }
 .detail--readonly .taste-plot__svg { cursor: default; }
 
 /* ── PhraseFill — «закончите фразу» ─────────────────────────────────── */
-.phrase-fill { margin-top: 12px; }
+.phrase-fill { margin-top: 8px; }
 .phrase-fill__text {
-  margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.75;
+  margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.5;
   letter-spacing: -0.005em; color: var(--stone-800); text-wrap: pretty;
 }
 /* В режиме редактирования чуть больше межстрочного — чтобы подчёркнутые инпуты
    не липли к соседним строкам. */
-.phrase-fill--edit .phrase-fill__text { line-height: 2.05; }
+.phrase-fill--edit .phrase-fill__text { line-height: 1.7; }
 /* Авто-рост инпута: ::after дублирует введённый текст и задаёт ширину ячейки. */
 .phrase-blank {
   display: inline-grid; vertical-align: baseline; margin: 0 2px; max-width: 100%;
@@ -1312,8 +1314,10 @@ input, textarea { font: inherit; color: inherit; }
 /* Под-блок (чарт/плот с собственным именем) внутри секции taste_block. */
 .block-sub { margin-top: 22px; }
 .block-sub:first-of-type { margin-top: 16px; }
+/* Заголовок элемента внутри блока (чарт/плот/фраза/свободный текст) — тот же
+   размер, что и название шкалы (.step-slider__name), чтобы все заголовки совпадали. */
 .block-sub__label {
-  font-size: 13px; font-weight: 500; color: var(--stone-600);
+  font-size: 14px; font-weight: 500; color: var(--stone-800);
   letter-spacing: -0.005em; margin-bottom: 2px;
 }
 
@@ -2354,8 +2358,8 @@ input, textarea { font: inherit; color: inherit; }
 .result-bottom { margin-top: 28px; text-align: center; }
 
 .app-footer {
-  margin-top: 36px;
-  padding: 16px 20px 28px;
+  margin-top: 16px;
+  padding: 12px 20px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -507,7 +507,10 @@ export default function DetailPage() {
           product.tea_index ||
           product.tea_price ||
           product.tea_geography ||
-          product.tea_plucking_season
+          product.tea_plucking_season ||
+          product.tea_cultivar ||
+          product.tea_altitude ||
+          product.tea_color_type_name
         ) && (
           <div className="tea-meta">
             <dl className="tea-meta__grid">
@@ -517,10 +520,22 @@ export default function DetailPage() {
                   <dd>{product.tea_rubrucator}</dd>
                 </div>
               )}
+              {product.tea_color_type_name && (
+                <div className="tea-meta__row">
+                  <dt>Раздел чайного разнообразия</dt>
+                  <dd>{product.tea_color_type_name}</dd>
+                </div>
+              )}
               {product.tea_geography && (
                 <div className="tea-meta__row">
                   <dt>География</dt>
                   <dd>{product.tea_geography}</dd>
+                </div>
+              )}
+              {product.tea_altitude && (
+                <div className="tea-meta__row">
+                  <dt>Высота над уровнем моря</dt>
+                  <dd>{product.tea_altitude}</dd>
                 </div>
               )}
               {product.tea_nickname && (
@@ -535,6 +550,12 @@ export default function DetailPage() {
                 <div className="tea-meta__row">
                   <dt>Сорт</dt>
                   <dd>{product.tea_sort}</dd>
+                </div>
+              )}
+              {product.tea_cultivar && (
+                <div className="tea-meta__row">
+                  <dt>Культивар</dt>
+                  <dd>{product.tea_cultivar}</dd>
                 </div>
               )}
               {product.tea_plucking_season && (

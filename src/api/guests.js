@@ -24,9 +24,10 @@ export async function loginByPhone({ phone }) {
 }
 
 // Регистрация по телефону с доп. полями. Пустые необязательные поля не шлём.
+// Телеграм на бэке — поле `tg`.
 export async function registerByPhone({ phone, name, telegram, email }) {
   const body = { phone, name };
-  if (telegram) body.telegram = telegram;
+  if (telegram) body.tg = telegram;
   if (email) body.email = email;
   const { data } = await api.post("/api/guests/register/", body);
   setTokens(data);

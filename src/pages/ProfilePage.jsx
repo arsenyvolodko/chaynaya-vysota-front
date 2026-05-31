@@ -384,8 +384,8 @@ export default function ProfilePage() {
           </div>
           <div className="profile-hero__contacts">
             <EditableContact
-              field="telegram"
-              value={user?.telegram}
+              field="tg"
+              value={user?.tg}
               label="Telegram"
               addLabel="Добавить telegram"
               placeholder="@username"

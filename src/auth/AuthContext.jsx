@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { authOrRegister, getMe, registerAnon, updateMe } from "../api/guests";
+import { authOrRegister, getMe, loginByPhone, registerAnon, registerByPhone, updateMe } from "../api/guests";
 import { clearTokens, getAccessToken, TOKEN_KEYS } from "../api/client";
 
 const AuthContext = createContext(null);
@@ -49,6 +49,20 @@ export function AuthProvider({ children }) {
     return refreshUser();
   }, [refreshUser]);
 
+  // Вход по телефону: при 404 ошибка пробрасывается наверх (экран показывает
+  // форму регистрации), refreshUser выполняется только при успехе.
+  const loginPhone = useCallback(async ({ phone }) => {
+    await loginByPhone({ phone });
+    wasSkipped.current = false;
+    return refreshUser();
+  }, [refreshUser]);
+
+  const register = useCallback(async ({ phone, name, telegram, email }) => {
+    await registerByPhone({ phone, name, telegram, email });
+    wasSkipped.current = false;
+    return refreshUser();
+  }, [refreshUser]);
+
   const updateProfile = useCallback(async (patch) => {
     const next = await updateMe(patch);
     setUser(next);
@@ -66,10 +80,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    user, loading, login, loginSkip, logout, updateProfile, refreshUser,
+    user, loading, login, loginSkip, loginPhone, register, logout, updateProfile, refreshUser,
     isAuthenticated: !!getAccessToken(),
     wasSkipped: wasSkipped.current,
-  }), [user, loading, login, loginSkip, logout, updateProfile, refreshUser]);
+  }), [user, loading, login, loginSkip, loginPhone, register, logout, updateProfile, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

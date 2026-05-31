@@ -1636,6 +1636,23 @@ input, textarea { font: inherit; color: inherit; }
   transition: background-color 140ms, border-color 140ms;
 }
 .profile-hero__phone-add:hover { background: var(--green-100); border-color: var(--green-200); }
+/* Контакты (telegram, почта) — редактируемые строки под телефоном. */
+.profile-hero__contacts {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 5px; margin-top: 8px;
+}
+.profile-hero__contact {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+  font-size: 13px; line-height: 1.2;
+}
+.profile-hero__contact-label { color: var(--stone-400); flex-shrink: 0; }
+.profile-hero__contact-value {
+  color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.profile-hero__contact-edit { color: var(--stone-400); display: inline-flex; flex-shrink: 0; }
+.profile-hero__contact:hover .profile-hero__contact-value,
+.profile-hero__contact:hover .profile-hero__contact-edit { color: var(--green-700); }
 .profile-section { padding: 14px 22px 0; }
 
 /* Inline edit — текст превращается в инпут «в типографике», с микро-иконками */

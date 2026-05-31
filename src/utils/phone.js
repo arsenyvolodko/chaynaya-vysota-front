@@ -34,6 +34,32 @@ export function formatPhone(raw) {
   return raw || "";
 }
 
+/**
+ * Маска российского номера для ввода: «+7 999 123-45-67».
+ * Принимает любое содержимое инпута, нормализует код страны (8/7 → +7) и
+ * обрезает лишние цифры — больше 10 национальных ввести нельзя.
+ */
+export function formatRuPhone(raw) {
+  let digits = (raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits[0] === "8") digits = "7" + digits.slice(1);
+  if (digits[0] !== "7") digits = "7" + digits;
+  const nat = digits.slice(1, 11); // 10 цифр после кода страны
+  let out = "+7";
+  if (nat.length) out += " " + nat.slice(0, 3);
+  if (nat.length > 3) out += " " + nat.slice(3, 6);
+  if (nat.length > 6) out += "-" + nat.slice(6, 8);
+  if (nat.length > 8) out += "-" + nat.slice(8, 10);
+  return out;
+}
+
+/** true, если введён полный российский номер (10 национальных цифр). */
+export function isRuPhoneComplete(value) {
+  const digits = (value || "").replace(/\D/g, "");
+  const nat = digits[0] === "7" || digits[0] === "8" ? digits.slice(1) : digits;
+  return nat.length === 10;
+}
+
 export function normalizeToE164(raw) {
   const digits = (raw || "").replace(/\D/g, "");
   if (digits.length === 11 && (digits[0] === "7" || digits[0] === "8")) {

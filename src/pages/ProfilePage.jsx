@@ -186,6 +186,110 @@ function EditablePhone({ user, updateProfile }) {
   return null;
 }
 
+// Универсальный редактируемый контакт (telegram, почта). Пустое значение
+// очищает поле. transform/validate настраивают конкретное поле.
+function EditableContact({ field, value, label, addLabel, placeholder, inputType, prefill, transform, validate, updateProfile }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const original = (value || "").trim();
+
+  const start = () => { setDraft(original || prefill || ""); setError(null); setEditing(true); };
+  const cancel = () => { setEditing(false); setError(null); };
+  const onChange = (raw) => setDraft(transform ? transform(raw) : raw);
+  const save = async () => {
+    let v = (draft || "").trim();
+    if (validate) {
+      const res = validate(v);
+      if (res.error) { setError(res.error); return; }
+      v = res.value;
+    }
+    if (v === original) { setEditing(false); return; }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updateProfile({ [field]: v });
+      setEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Не удалось сохранить");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const onKeyDown = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); save(); }
+    else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+  };
+
+  if (editing) {
+    return (
+      <div className="inline-edit inline-edit--contact">
+        <input
+          autoFocus
+          className="inline-edit__input inline-edit__input--phone"
+          value={draft}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          disabled={submitting}
+          type={inputType || "text"}
+          placeholder={placeholder}
+        />
+        <button
+          type="button"
+          className="inline-edit__action inline-edit__action--save"
+          onClick={save}
+          disabled={submitting}
+          aria-label="Сохранить"
+          title="Сохранить"
+        >
+          <IconCheck size={14} stroke={2.4} />
+        </button>
+        <button
+          type="button"
+          className="inline-edit__action"
+          onClick={cancel}
+          disabled={submitting}
+          aria-label="Отмена"
+          title="Отмена"
+        >
+          <IconX size={13} stroke={2.2} />
+        </button>
+        {error && <div className="inline-edit__error">{error}</div>}
+      </div>
+    );
+  }
+
+  if (original) {
+    return (
+      <button type="button" className="profile-hero__contact" onClick={start} aria-label={`Изменить: ${label}`}>
+        <span className="profile-hero__contact-label">{label}</span>
+        <span className="profile-hero__contact-value">{original}</span>
+        <span className="profile-hero__contact-edit">
+          <IconPencil size={12} stroke={1.6} />
+        </span>
+      </button>
+    );
+  }
+  return (
+    <button type="button" className="profile-hero__phone-add" onClick={start}>
+      <IconPlus size={13} stroke={2.2} />
+      <span>{addLabel}</span>
+    </button>
+  );
+}
+
+// «@» всегда в начале telegram; пустой (только «@») трактуем как очистку.
+const telegramTransform = (raw) => "@" + raw.replace(/^@+/, "");
+const telegramValidate = (v) => ({ value: v === "@" ? "" : v });
+const emailValidate = (v) => {
+  if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+    return { error: "Введите корректную почту" };
+  }
+  return { value: v };
+};
+
 function TastingCard({ tasting, onClick, pending, disabled }) {
   return (
     <button
@@ -277,6 +381,29 @@ export default function ProfilePage() {
           <EditableName user={user} updateProfile={updateProfile} />
           <div className="profile-hero__phone-slot">
             <EditablePhone user={user} updateProfile={updateProfile} />
+          </div>
+          <div className="profile-hero__contacts">
+            <EditableContact
+              field="telegram"
+              value={user?.telegram}
+              label="Telegram"
+              addLabel="Добавить telegram"
+              placeholder="@username"
+              prefill="@"
+              transform={telegramTransform}
+              validate={telegramValidate}
+              updateProfile={updateProfile}
+            />
+            <EditableContact
+              field="email"
+              value={user?.email}
+              label="Почта"
+              addLabel="Добавить почту"
+              placeholder="you@example.com"
+              inputType="email"
+              validate={emailValidate}
+              updateProfile={updateProfile}
+            />
           </div>
         </div>
       </div>

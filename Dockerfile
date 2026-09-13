@@ -15,3 +15,4 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 4200
 # CMD не указан — наследуем дефолтный entrypoint+CMD nginx:alpine
 # (`nginx -g 'daemon off;'`).
+

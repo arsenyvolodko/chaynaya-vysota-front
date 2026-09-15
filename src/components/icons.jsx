@@ -158,6 +158,85 @@ export const IconVK = (p) => (
   </Icon>
 );
 
+export const IconCart = (p) => (
+  <Icon {...p}>
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="19" cy="21" r="1" />
+    <path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21.5 7H6" />
+  </Icon>
+);
+
+export const IconLeaf = (p) => (
+  <Icon {...p}>
+    <path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 12-11 1 6 1 12-2 15.5-1.2 1.4-2 2.5-3 2.5z" />
+    <path d="M5.5 17.5C8 15 10.5 12.5 15 9" />
+  </Icon>
+);
+
+// Джелато/мороженое — значок цветка (по образцу specs/желато.png), без рожка.
+export const IconIceCream = (p) => (
+  <Icon {...p}>
+    <path d="M12 12C9.8 9.6 9.8 5.2 12 2.4C14.2 5.2 14.2 9.6 12 12Z" transform="rotate(0 12 12)" />
+    <path d="M12 12C9.8 9.6 9.8 5.2 12 2.4C14.2 5.2 14.2 9.6 12 12Z" transform="rotate(72 12 12)" />
+    <path d="M12 12C9.8 9.6 9.8 5.2 12 2.4C14.2 5.2 14.2 9.6 12 12Z" transform="rotate(144 12 12)" />
+    <path d="M12 12C9.8 9.6 9.8 5.2 12 2.4C14.2 5.2 14.2 9.6 12 12Z" transform="rotate(216 12 12)" />
+    <path d="M12 12C9.8 9.6 9.8 5.2 12 2.4C14.2 5.2 14.2 9.6 12 12Z" transform="rotate(288 12 12)" />
+    <circle cx="12" cy="12" r="1.8" />
+  </Icon>
+);
+
+export const IconClock = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3.5 2" />
+  </Icon>
+);
+
+export const IconTicket = (p) => (
+  <Icon {...p}>
+    <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+    <path d="M13 6v2M13 11v2M13 16v2" />
+  </Icon>
+);
+
+export const IconMapPin = (p) => (
+  <Icon {...p}>
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </Icon>
+);
+
+export const IconCalendar = (p) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="16" rx="3" />
+    <path d="M3.5 10h17" />
+    <path d="M8 3v4M16 3v4" />
+  </Icon>
+);
+
+export const IconSort = (p) => (
+  <Icon {...p}>
+    <path d="M8 8l4-4 4 4" />
+    <path d="M8 16l4 4 4-4" />
+    <path d="M12 5v14" />
+  </Icon>
+);
+
+export const IconCandy = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M4.5 8L7.5 10L4.5 12" />
+    <path d="M19.5 8L16.5 10L19.5 12" />
+  </Icon>
+);
+
+export const IconSearch = (p) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.3-4.3" />
+  </Icon>
+);
+
 export const IconCopy = (p) => (
   <Icon {...p}>
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />

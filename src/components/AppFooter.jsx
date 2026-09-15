@@ -1,4 +1,5 @@
 import Logomark from "./Logomark.jsx";
+import { CONTACTS_URL } from "../utils/links.js";
 
 /**
  * Бренд-футер, общий для всех страниц приложения. Сидит в потоке внизу
@@ -9,6 +10,15 @@ export default function AppFooter() {
     <div className="app-footer" role="contentinfo">
       <Logomark />
       <span className="app-footer__text">дегустация ЧАЙКОДИНГ</span>
+      <a
+        className="app-footer__link"
+        href={CONTACTS_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Контакты
+      </a>
+      <span className="app-footer__copy">© {new Date().getFullYear()} Чайная высота</span>
     </div>
   );
 }

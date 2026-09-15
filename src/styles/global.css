@@ -202,6 +202,7 @@ input, textarea { font: inherit; color: inherit; }
 .icon-btn:hover { color: var(--stone-900); }
 .icon-btn:active { background: var(--stone-100); }
 .icon-btn--saved { color: var(--green-700); }
+.icon-btn.is-on { color: var(--green-700); background: var(--stone-100); }
 .icon-btn--leading { margin-left: -8px; gap: 4px; padding: 8px 10px; font-size: 14px; }
 .icon-btn--trailing { margin-right: -8px; }
 
@@ -404,6 +405,116 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--stone-400); margin-bottom: 10px;
 }
 .hero__lede { margin-top: 12px; font-size: 14px; line-height: 1.55; color: var(--stone-500); }
+
+/* Превью-дизайн страницы дегустации (design/tasting-preview) — фото, по
+   образцу модалки события на luma.com, квадратное, с инсетом по краям. */
+.tasting-cover {
+  margin: 4px 20px 0;
+  aspect-ratio: 1 / 1; border-radius: 20px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.tasting-cover__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tasting-cover--ph { flex-direction: column; gap: 8px; border: 1px solid var(--stone-200); }
+.tasting-cover--tea {
+  background: linear-gradient(135deg, #f5f8ef 0%, #e9f1de 100%);
+  color: var(--sage-warm-deep); border-color: #e3ead0;
+}
+.tasting-cover--ice-cream {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde2c2 100%);
+  color: #b8801f; border-color: #fde68a;
+}
+.tasting-cover__label {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6;
+}
+
+/* Строки метаданных (ведущий/дата/место/цена) под заголовком — по структуре
+   карточки события на luma.com, в нашей типографике и палитре. */
+.hero-meta-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 10px; font-size: 13.5px; color: var(--stone-700);
+}
+.hero-meta-row__icon {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--stone-50); color: var(--stone-500);
+}
+.hero-meta-row__text { min-width: 0; }
+.hero-meta-row__main { font-weight: 500; color: var(--stone-900); line-height: 1.3; }
+.hero-meta-row__sub { font-size: 12px; color: var(--stone-500); margin-top: 1px; }
+
+/* Бейдж-«календарик»: месяц на зелёной плашке сверху, число — крупно снизу. */
+.tasting-datebadge {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--stone-200); overflow: hidden;
+}
+.tasting-datebadge__month {
+  width: 100%; text-align: center; padding: 1px 0;
+  font-family: var(--sans); font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.04em; color: white; background: var(--green-700);
+}
+.tasting-datebadge__day {
+  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  color: var(--stone-900); line-height: 1.4;
+}
+
+.hero-includes { margin-top: 18px; }
+.hero-includes__list {
+  margin: 8px 0 0; padding-left: 18px;
+  font-size: 13px; line-height: 1.6; color: var(--stone-600);
+}
+.hero-includes__list li { margin-top: 2px; }
+
+/* «Что входит в дегустацию» — 4 мини-блока в ряд: иконка + короткая подпись. */
+.hero-features { margin-top: 20px; display: flex; gap: 8px; }
+.hero-features__item {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  text-align: center;
+}
+.hero-features__icon {
+  width: 40px; height: 40px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--green-50); color: var(--green-800);
+}
+.hero-features__label { font-size: 10.5px; line-height: 1.3; color: var(--stone-600); }
+
+/* Блок билета: иконка гостя + «фишечный» пикер числа персон + пересчитанная
+   цена. Пикер — ряд кружков-гостей, заполняются по клику до выбранного
+   числа (как рейтинг-звёзды, только людьми) — приятнее обычного степпера. */
+.ticket-block { margin-top: 20px; }
+.ticket-row {
+  margin-top: 8px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 12px;
+}
+.ticket-row__icon {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--stone-200); color: var(--stone-500);
+}
+.ticket-row__picker { flex: 1; display: flex; justify-content: center; gap: 5px; }
+.ticket-row__dot {
+  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--stone-200); color: var(--stone-300);
+  transition: background-color 140ms, color 140ms, border-color 140ms, transform 100ms;
+}
+.ticket-row__dot.is-on { background: var(--green-600); border-color: var(--green-600); color: white; }
+.ticket-row__dot:active { transform: scale(0.9); }
+.ticket-row__price {
+  flex-shrink: 0; font-family: var(--sans); font-size: 15px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.005em;
+}
+
+/* Плашка «превью-дизайн» вверху страницы — чтобы не спутать со страницей боевой дегустации. */
+.preview-banner {
+  margin: 0 0 4px; padding: 8px 20px;
+  background: #fff7e2; border-bottom: 1px solid #f0d489;
+  color: #8a6215; font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.02em; text-align: center;
+}
 
 .progress { margin-top: 24px; }
 .progress__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
@@ -2556,4 +2667,285 @@ input, textarea { font: inherit; color: inherit; }
 @keyframes share-sheet-in {
   from { transform: translateY(28px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Футер — доп. элементы (ссылка на контакты, копирайт) поверх базового лого+текста. */
+.app-footer__link {
+  font-size: 11px; letter-spacing: 0.06em; color: var(--stone-500);
+  text-decoration: underline; text-underline-offset: 2px;
+  transition: color 140ms;
+}
+.app-footer__link:hover { color: var(--green-800); }
+.app-footer__copy { font-size: 10.5px; color: var(--stone-400); }
+
+/* Иконки-действия в шапке (корзина + личный кабинет), рядом друг с другом. */
+.page-header__icons { display: flex; align-items: center; gap: 8px; }
+
+/* ===== Страница «Чартерные дегустации» ===== */
+.schedule-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+
+/* Промо-экран — плейсхолдер, контент добавим позже. Высота — «на весь экран». */
+.schedule-promo-screen {
+  min-height: 70vh;
+  margin: 0 16px 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--stone-300);
+  background: var(--stone-50);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 24px;
+}
+.schedule-promo-screen__eyebrow {
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--stone-400); font-weight: 500;
+}
+.schedule-promo-screen__text {
+  margin: 0; font-size: 14px; color: var(--stone-500); max-width: 260px;
+}
+
+.schedule-head { padding: 8px 16px 0; }
+.schedule-head__lede { margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--stone-500); }
+
+.schedule-tabs {
+  margin: 0 16px 8px; padding: 3px;
+  display: flex; background: var(--stone-50); border: 1px solid var(--stone-100);
+  border-radius: 8px;
+}
+.schedule-tabs__tab {
+  flex: 1; text-align: center; padding: 6px 13px; border-radius: 6px;
+  font-size: 12.5px; font-weight: 500; color: var(--stone-500);
+  transition: background-color 140ms, color 140ms, box-shadow 140ms;
+}
+.schedule-tabs__tab.is-on {
+  background: white; color: var(--green-800);
+  box-shadow: 0 4px 12px -8px rgba(20, 28, 24, 0.25);
+}
+
+/* Заголовок блока расписания — размер/вес по образцу luma.com (h2 24px/600),
+   с кнопкой поиска справа (тоже оттуда, чисто визуально — поиск пока не подключён). */
+.schedule-section-head {
+  margin: 12px 16px 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.schedule-section-head__title {
+  font-family: var(--sans); font-size: 21px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.012em; line-height: 1.2; margin: 0;
+}
+.schedule-section-head__actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.schedule-section-head--secondary { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--stone-100); }
+.schedule-section-lede { padding: 0 16px; margin-bottom: 8px; margin-top: -2px; }
+
+.schedule-cta-block {
+  margin: 20px 16px 0; padding: 14px;
+  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 12px;
+}
+.schedule-cta-block__title {
+  font-family: var(--sans); font-size: 17px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.008em; margin: 0;
+}
+.schedule-cta-block__text {
+  margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: var(--stone-500);
+}
+.schedule-cta-block__btn { margin-top: 12px; text-decoration: none; }
+
+/* Универсальное выпадающее меню (календарь/сортировка в шапке расписания). */
+.dropdown { position: relative; display: inline-flex; }
+.dropdown__panel {
+  position: absolute; top: calc(100% + 8px); z-index: 60;
+  min-width: 190px; max-width: calc(100vw - 32px);
+  padding: 6px; background: white; border: 1px solid var(--stone-200); border-radius: 10px;
+  box-shadow: 0 14px 32px -12px rgba(20, 28, 24, 0.25);
+  animation: tooltip-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dropdown__panel--right { right: 0; }
+.dropdown__panel--left { left: 0; }
+.dropdown__list { display: flex; flex-direction: column; }
+.dropdown__item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; text-align: left; padding: 9px 10px; border-radius: 6px;
+  font-size: 13px; color: var(--stone-700);
+  transition: background-color 140ms, color 140ms;
+}
+.dropdown__item:hover { background: var(--stone-50); color: var(--stone-900); }
+.dropdown__item svg { color: var(--green-700); flex-shrink: 0; }
+.dropdown__empty { padding: 9px 10px; font-size: 13px; color: var(--stone-400); }
+
+/* Таймлайн — пунктирная линия слева + точка на каждой группе (по месяцам),
+   в духе списка событий luma.com. */
+.schedule-timeline { padding: 0 16px; }
+.schedule-timeline__group {
+  position: relative;
+  padding-left: 16px;
+  border-left: 1.5px dashed var(--stone-300);
+}
+.schedule-timeline__group:last-child { border-left-color: transparent; }
+.schedule-timeline__group + .schedule-timeline__group { margin-top: 10px; }
+.schedule-timeline__marker { display: flex; align-items: center; gap: 8px; margin: 0 0 5px; }
+.schedule-timeline__dot {
+  position: absolute; left: -5px; top: 3px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green-600);
+}
+.schedule-timeline__label {
+  font-family: var(--sans); font-size: 13.5px; font-weight: 600;
+  color: var(--stone-700); letter-spacing: -0.003em;
+}
+
+.schedule-list { display: flex; flex-direction: column; gap: 14px; }
+.schedule-list--flat { padding: 0 16px; }
+
+/* Большая карточка — по образцу «большая карточка» из specs: фото на 2/3
+   высоты, дата и теги поверх фото, текст ниже. Цвета — свои (stone/green),
+   не Luma. Для карточек «мест нет» есть компактный вариант-строка (см.
+   .schedule-card--compact) — бронировать всё равно нельзя, крупная витрина
+   ей не нужна. */
+.schedule-card {
+  width: 100%; text-align: left; display: flex; flex-direction: column;
+  height: 66dvh; max-height: 620px;
+  padding: 0; background: var(--stone-50);
+  border: 1px solid var(--stone-100); border-radius: 16px;
+  overflow: hidden;
+  transition: background-color 140ms, border-color 140ms, transform 100ms;
+}
+.schedule-card:hover { background: white; border-color: var(--stone-200); }
+.schedule-card:active { transform: translateY(1px); }
+
+/* Компактный вариант — как обычная карточка списка (для «мест нет»). */
+.schedule-card--compact {
+  flex-direction: row; align-items: stretch; height: auto; max-height: none;
+  padding: 8px 8px 8px 10px; gap: 8px; border-radius: 10px;
+}
+
+/* Карточка без мест — «недействительна», бледная: фон почти как у обычной
+   карточки, а весь контент (кроме CTA) притушен прозрачностью — так текст
+   не спорит цветом с фоном, просто визуально «выцветает» целиком.
+   CTA (кнопка листа ожидания) остаётся полноцветной и активной. */
+.schedule-card--full { background: var(--stone-50); border-color: var(--stone-100); }
+.schedule-card--full:hover { background: var(--stone-50); }
+.schedule-card--full .schedule-card__top,
+.schedule-card--full .schedule-card__title,
+.schedule-card--full .schedule-card__desc,
+.schedule-card--full .schedule-card__price { opacity: 0.45; }
+.schedule-card--full .schedule-card__cover { filter: grayscale(1); opacity: 0.5; }
+/* Уже в листе ожидания — карточка выключена (повторный клик не нужен), но
+   не должна тускнеть сильнее обычного через глобальный button:disabled. */
+.schedule-card:disabled { opacity: 1; cursor: default; }
+.schedule-card:disabled:hover { background: var(--stone-50); border-color: var(--stone-100); }
+.schedule-card:disabled:active { transform: none; }
+
+/* Фото — 2/3 карточки, дата/теги поверх на затемняющем градиенте (чтобы
+   читались на любом реальном фото, а не только на нашей заглушке). */
+.schedule-card__cover {
+  position: relative; flex: 1 1 auto; min-height: 0; width: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  transition: filter 140ms, opacity 140ms;
+}
+.schedule-card__cover--tea {
+  background: linear-gradient(135deg, #f5f8ef 0%, #e9f1de 100%);
+  color: var(--sage-warm-deep);
+}
+.schedule-card__cover--ice-cream {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde2c2 100%);
+  color: #b8801f;
+}
+/* Маленькое фото компактной карточки — квадрат слева, со своей рамкой. */
+.schedule-card__cover--compact {
+  flex: 0 0 76px; width: 76px; min-height: 76px; border-radius: 9px;
+  border: 1px solid var(--stone-200);
+}
+.schedule-card__cover-label {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6;
+}
+.schedule-card__cover--compact .schedule-card__cover-label { font-size: 9px; }
+.schedule-card__cover-overlay {
+  position: absolute; inset: 0 0 auto 0;
+  padding: 14px 16px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  background: linear-gradient(180deg, rgba(20, 24, 20, 0.4) 0%, rgba(20, 24, 20, 0) 70%);
+}
+/* Дата: в компактной карточке — обычная тёмная строка над заголовком;
+   поверх фото (в оверлее большой карточки) — крупная белая с тенью. */
+.schedule-card__date {
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.003em;
+  font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
+}
+.schedule-card__cover-overlay .schedule-card__date {
+  font-size: 18px; color: white; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  display: inline-flex; align-items: baseline; gap: 8px;
+}
+.schedule-card__full-label {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  color: var(--stone-400); white-space: nowrap;
+}
+.schedule-card__top { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.schedule-card__tags { display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+.schedule-card--compact .schedule-card__tags { margin-left: auto; }
+.schedule-card__tag-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.schedule-card__tag-icon--tea { color: var(--sage-warm-deep); }
+.schedule-card__tag-icon--ice-cream { color: #b8801f; }
+.schedule-card__tag-chip {
+  width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.85); color: var(--stone-700);
+}
+
+.schedule-card__main {
+  flex-shrink: 0; min-width: 0;
+  padding: 14px 16px 16px;
+  display: flex; flex-direction: column;
+}
+.schedule-card--compact .schedule-card__main { flex: 1; padding: 0; }
+.schedule-card__title {
+  font-family: var(--sans); font-size: 19px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.01em; line-height: 1.25;
+}
+.schedule-card--compact .schedule-card__title { font-size: 15.5px; }
+.schedule-card__desc {
+  margin: 6px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--stone-500);
+  font-weight: 400;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.schedule-card--compact .schedule-card__desc { margin-top: 2px; font-size: 12px; line-height: 1.4; }
+.schedule-card__bottom {
+  margin-top: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap;
+}
+.schedule-card--compact .schedule-card__bottom { margin-top: auto; padding-top: 4px; }
+/* Статус — деликатный: точка + подпись, без заливки/обводки. */
+.schedule-card__status {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  color: var(--stone-500);
+}
+.schedule-card--compact .schedule-card__status { font-size: 11.5px; }
+.schedule-card__status-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+}
+.schedule-card__status--neutral { color: var(--stone-400); }
+/* Идёт набор — акцентный рыжий, чтобы статус сразу цеплял взгляд. */
+.schedule-card__status--accent { color: var(--amber-500); font-weight: 600; }
+.schedule-card__status--confirmed { color: var(--green-700); }
+.schedule-card__status--joined { color: var(--stone-500); }
+.schedule-card__waitlist-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 15px; border-radius: 8px;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  background: transparent; color: var(--green-700); border: 1px solid var(--green-700);
+  transition: background-color 140ms, transform 100ms;
+}
+.schedule-card--compact .schedule-card__waitlist-btn { padding: 5px 13px; font-size: 12px; }
+.schedule-card__waitlist-btn:active { transform: translateY(1px); }
+.schedule-card__price {
+  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.005em; flex-shrink: 0;
+}
+.schedule-card--compact .schedule-card__price { font-size: 14px; }
+
+.schedule-empty {
+  margin: 8px 16px 0; padding: 16px 14px;
+  background: var(--stone-50); border: 1px dashed var(--stone-200); border-radius: 10px;
+  text-align: center; font-size: 13.5px; color: var(--stone-500); text-wrap: pretty;
 }

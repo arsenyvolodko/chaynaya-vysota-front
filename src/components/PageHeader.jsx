@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Logomark from "./Logomark.jsx";
-
-const CONTACTS_URL = "https://www.чайная.москва/contact_page";
+import { CONTACTS_URL } from "../utils/links.js";
 
 /**
  * Шапка, общая для всех внутренних страниц.

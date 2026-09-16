@@ -66,7 +66,9 @@ function PriceTag({ tasting }) {
 }
 
 export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted, onJoinWaitlist }) {
-  const hasCapacity = tasting.guests_count != null;
+  // Прошедшие не показывают вместимость/цену вовсе (см. ниже) — статус мест
+  // им попросту не нужен, поэтому и не считаем его для прошедших.
+  const hasCapacity = !past && tasting.guests_count != null;
   const status = hasCapacity ? getStatusMeta(tasting.guests_count) : null;
   const full = status?.key === "full";
   const isIceCream = tasting.cover === "ice_cream";
@@ -88,7 +90,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
 
   const bottomStatus = hasCapacity ? (
     full ? (
-      past ? null : waitlisted ? (
+      waitlisted ? (
         <span className="schedule-card__status schedule-card__status--joined">
           <IconCheck size={12} stroke={2.4} />
           Вы в листе ожидания
@@ -103,23 +105,25 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
       </span>
     )
   ) : (
-    tasting.note && <span className="schedule-card__status schedule-card__status--neutral">{tasting.note}</span>
+    !past && tasting.note && <span className="schedule-card__status schedule-card__status--neutral">{tasting.note}</span>
   );
 
-  // Мест нет — карточка маленькая, компактная строка (как до укрупнения):
-  // фото слева небольшим квадратом, дата/теги обычной строкой сверху.
-  if (full) {
+  // Компактная строка (как «мест нет») — теперь и для всех прошедших, не
+  // только для случая без мест: фото маленьким квадратом слева, дата/теги
+  // строкой сверху. У прошедших внизу нет ни статуса мест, ни цены — они не
+  // актуальны для того, что уже случилось, — и карточка не притушена
+  // (кликабельна как обычно, в отличие от «нет мест» у предстоящих).
+  if (past || full) {
     return (
       <button
         type="button"
-        className="schedule-card schedule-card--compact schedule-card--full"
+        className={`schedule-card schedule-card--compact ${full && !past ? "schedule-card--full" : ""}`}
         onClick={handleClick}
-        disabled={waitlisted}
+        disabled={isWaitlistCta && waitlisted}
       >
         <div className="schedule-card__main">
           <div className="schedule-card__top">
             <span className="schedule-card__date">{dateLabel}</span>
-            <span className="schedule-card__full-label">Мест нет</span>
             <div className="schedule-card__tags">
               {(tasting.tags || []).map((t) => <TagIcon key={t} tag={t} />)}
             </div>
@@ -130,10 +134,15 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
             <p className="schedule-card__desc">{tasting.description}</p>
           )}
 
-          <div className="schedule-card__bottom">
-            {bottomStatus}
-            <PriceTag tasting={tasting} />
-          </div>
+          {!past && (
+            <div className="schedule-card__bottom">
+              <span className="schedule-card__bottom-left">
+                {bottomStatus}
+                {full && <span className="schedule-card__full-label">Мест нет</span>}
+              </span>
+              <PriceTag tasting={tasting} />
+            </div>
+          )}
         </div>
 
         <div className={`schedule-card__cover schedule-card__cover--compact ${isIceCream ? "schedule-card__cover--ice-cream" : "schedule-card__cover--tea"}`}>

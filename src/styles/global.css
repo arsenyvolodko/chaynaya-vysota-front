@@ -2684,23 +2684,157 @@ input, textarea { font: inherit; color: inherit; }
 /* ===== Страница «Чартерные дегустации» ===== */
 .schedule-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 
-/* Промо-экран — плейсхолдер, контент добавим позже. Высота — «на весь экран». */
-.schedule-promo-screen {
-  min-height: 70vh;
-  margin: 0 16px 16px;
-  border-radius: 12px;
-  border: 1px dashed var(--stone-300);
-  background: var(--stone-50);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; text-align: center; padding: 24px;
+/* Промо-листалка — 2/3 экрана, три смысловых экрана со скролл-снапом:
+   ближайшая дегустация / шеф-чаепития / пьючерсы и лучерсы. Карточки уже
+   ширины трека — справа (и слева, кроме самой первой) виден край соседней,
+   это и есть подсказка «листай дальше», а не просто список во весь экран. */
+.promo-carousel { margin: 0 0 18px; }
+.promo-carousel__track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 0 16px;
+  /* Без этого браузер снапает карточки к самому краю скролл-контейнера,
+     игнорируя padding, — со 2-й карточки левый отступ пропадал. */
+  scroll-padding-left: 16px; scroll-padding-right: 16px;
+  scrollbar-width: none; -ms-overflow-style: none;
 }
-.schedule-promo-screen__eyebrow {
+.promo-carousel__track::-webkit-scrollbar { display: none; }
+
+.promo-carousel__cell {
+  flex: 0 0 96%; scroll-snap-align: start; margin-right: 8px;
+}
+.promo-carousel__cell:last-child { margin-right: 0; }
+
+.promo-slide {
+  height: 66dvh; max-height: 620px;
+  border-radius: 20px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  text-align: left; overflow: hidden;
+  padding: 22px 22px 24px;
+}
+
+.promo-slide--event {
+  justify-content: flex-end; gap: 6px;
+  background: linear-gradient(160deg, #eef3e4 0%, #dfe9d0 55%, #cfdfbb 100%);
+  color: var(--sage-warm-deep);
+  transition: background-color 140ms;
+}
+.promo-slide--event:active { transform: translateY(1px); }
+.promo-slide--chef {
+  justify-content: flex-end; gap: 10px;
+  background: linear-gradient(160deg, #3c4633 0%, #2a3223 65%, #1e241a 100%);
+  color: var(--ivory-soft);
+}
+.promo-slide--futures {
+  justify-content: flex-end; gap: 10px;
+  background: linear-gradient(160deg, #faf3e3 0%, #f2e3c4 100%);
+  color: var(--stone-800);
+}
+
+.promo-slide__eyebrow {
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--stone-400); font-weight: 500;
+  font-weight: 600; opacity: 0.65;
 }
-.schedule-promo-screen__text {
-  margin: 0; font-size: 14px; color: var(--stone-500); max-width: 260px;
+.promo-slide__mark { opacity: 0.55; margin-top: 8px; }
+.promo-slide__title {
+  font-family: var(--serif); font-size: 26px; line-height: 1.12;
+  letter-spacing: -0.012em; font-weight: 400; margin-top: 4px;
 }
+.promo-slide__title--event { font-size: 22px; margin-top: 2px; }
+.promo-slide__text {
+  margin: 0; font-size: 13.5px; line-height: 1.55; opacity: 0.82; max-width: 30ch;
+}
+.promo-slide__event-when {
+  font-size: 13px; font-variant-numeric: tabular-nums lining-nums; opacity: 0.8;
+}
+.promo-slide__event-link {
+  margin-top: 10px; display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13.5px; font-weight: 600; color: var(--green-800);
+}
+.promo-slide__cta {
+  margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border-radius: 999px; text-decoration: none;
+  font-size: 14px; font-weight: 500; color: var(--stone-900);
+  background: rgba(255, 255, 255, 0.92);
+  transition: transform 100ms, background-color 140ms;
+}
+.promo-slide__cta:hover { background: white; }
+.promo-slide__cta:active { transform: translateY(1px); }
+
+.promo-carousel__dots {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 12px;
+}
+.promo-carousel__dot {
+  width: 6px; height: 6px; border-radius: 999px; background: var(--stone-300);
+  transition: width 180ms, background-color 180ms;
+}
+.promo-carousel__dot.is-on { width: 18px; background: var(--sage-warm-deep); }
+
+/* ===== Инфо-блок под листалкой: форматы / билеты / тизер дег. листа ===== */
+.info-block {
+  margin: 4px 16px 28px; padding: 18px 16px 20px;
+  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 18px;
+}
+.info-block__intro { margin-bottom: 12px; }
+.info-block__title { margin-top: 4px; }
+
+/* --- переключатель формата (чартерные / шеф) --- */
+.format-switch__tabs { margin: 0 0 14px; }
+.format-switch__panel { animation: format-panel-in 220ms ease; }
+@keyframes format-panel-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.format-switch__text { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--stone-600); }
+
+.format-facts { display: flex; flex-direction: column; gap: 8px; }
+.format-fact {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  font-size: 13px;
+}
+.format-fact__label { color: var(--stone-500); }
+.format-fact__value { color: var(--stone-800); font-weight: 500; }
+
+/* --- тизер дегустационного листа --- */
+.sheet-teaser { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--stone-100); }
+.sheet-teaser__title {
+  margin: 4px 0 0; font-family: var(--serif); font-size: 20px; line-height: 1.2;
+  font-weight: 400; color: var(--stone-900); letter-spacing: -0.01em;
+}
+.sheet-teaser__text { margin: 8px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--stone-600); }
+
+/* --- акцентная плашка про абонементы (отдельная от info-block карточка) ---
+   структура по образцу: заголовок + бейдж сверху, текст, кнопка на всю
+   ширину снизу. */
+.plank {
+  margin: 0 16px 28px; padding: 20px 18px 18px;
+  background: linear-gradient(155deg, var(--green-700) 0%, var(--green-900) 100%);
+  border-radius: 18px; color: white;
+}
+.plank__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.plank__title {
+  margin: 0; font-family: var(--serif); font-size: 21px; line-height: 1.2;
+  font-weight: 400; letter-spacing: -0.01em;
+}
+.plank__badge {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  margin-top: 3px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.plank__text {
+  margin: 10px 0 0; font-size: 13.5px; line-height: 1.55; color: rgba(255, 255, 255, 0.82);
+  max-width: 40ch;
+}
+.plank__btn {
+  margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px; border-radius: 14px; text-decoration: none;
+  background: white; color: var(--green-800);
+  font-size: 14.5px; font-weight: 600;
+  transition: background-color 140ms, transform 100ms;
+}
+.plank__btn:hover { background: var(--ivory-soft); }
+.plank__btn:active { transform: translateY(1px); }
 
 .schedule-head { padding: 8px 16px 0; }
 .schedule-head__lede { margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--stone-500); }
@@ -2768,6 +2902,41 @@ input, textarea { font: inherit; color: inherit; }
 .dropdown__item:hover { background: var(--stone-50); color: var(--stone-900); }
 .dropdown__item svg { color: var(--green-700); flex-shrink: 0; }
 .dropdown__empty { padding: 9px 10px; font-size: 13px; color: var(--stone-400); }
+
+/* Календарь на месяц в дропдауне «Календарь»: точка под числом — есть
+   дегустация в этот день (ярче для предстоящих, тусклее для прошедших). */
+.cal { width: 232px; padding: 4px 2px; }
+.cal__head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 8px; }
+.cal__nav {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 999px; color: var(--stone-500);
+  transition: background-color 140ms, color 140ms;
+}
+.cal__nav:hover { background: var(--stone-100); color: var(--stone-900); }
+.cal__month {
+  font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--stone-900);
+  text-transform: capitalize;
+}
+.cal__weekdays, .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal__weekday {
+  font-size: 10.5px; font-weight: 600; color: var(--stone-400); text-align: center;
+  padding-bottom: 4px;
+}
+.cal__cell {
+  position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--stone-700); border-radius: 8px;
+}
+.cal__cell--empty { visibility: hidden; }
+.cal__cell.is-today { font-weight: 700; color: var(--green-800); }
+button.cal__cell { cursor: pointer; transition: background-color 140ms; }
+button.cal__cell:hover { background: var(--stone-100); }
+.cal__cell--has-event { font-weight: 600; color: var(--stone-900); padding-bottom: 4px; }
+.cal__dot {
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 999px; background: var(--green-600);
+}
+.cal__cell--has-event.is-past { color: var(--stone-400); font-weight: 500; }
+.cal__cell--has-event.is-past .cal__dot { background: var(--stone-300); }
 
 /* Таймлайн — пунктирная линия слева + точка на каждой группе (по месяцам),
    в духе списка событий luma.com. */
@@ -2877,6 +3046,9 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--sans); font-size: 11px; font-weight: 600;
   color: var(--stone-400); white-space: nowrap;
 }
+/* Группа слева внизу «мест нет»-карточки: кнопка листа ожидания + подпись
+   «Мест нет» рядом с ней (справа от кнопки). */
+.schedule-card__bottom-left { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .schedule-card__top { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
 .schedule-card__tags { display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
 .schedule-card--compact .schedule-card__tags { margin-left: auto; }

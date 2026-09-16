@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
+import PromoCarousel from "../components/PromoCarousel.jsx";
+import TastingFormatsBlock from "../components/TastingFormatsBlock.jsx";
 import TastingScheduleCard from "../components/TastingScheduleCard.jsx";
 import Dropdown from "../components/Dropdown.jsx";
+import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
 import { IconCalendar, IconCart, IconCheck, IconSearch, IconSort, IconTelegram } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
@@ -67,7 +70,6 @@ export default function TastingSchedulePage() {
   const [tab, setTab] = useState("upcoming");
   const [sortBy, setSortBy] = useState("date");
   const [waitlisted, setWaitlisted] = useState(() => new Set());
-  const pendingScrollKey = useRef(null);
 
   const [ceremonies, setCeremonies] = useState([]);
   const [ceremoniesLoading, setCeremoniesLoading] = useState(true);
@@ -110,28 +112,16 @@ export default function TastingSchedulePage() {
     () => (isTimeline ? groupByMonth(list) : []),
     [list, isTimeline]
   );
-  // Меню календаря всегда предлагает месяцы в хронологическом порядке, даже
-  // если сейчас выбрана другая сортировка.
-  const calendarMonths = useMemo(() => groupByMonth(dateOrderedList), [dateOrderedList]);
-
-  useEffect(() => {
-    if (!isTimeline || !pendingScrollKey.current) return;
-    const el = document.getElementById(`schedule-month-${pendingScrollKey.current}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    pendingScrollKey.current = null;
-  }, [isTimeline, monthGroups]);
-
-  const jumpToMonth = (key) => {
-    if (sortBy !== "date") {
-      pendingScrollKey.current = key;
-      setSortBy("date");
-    } else {
-      document.getElementById(`schedule-month-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
 
   const openTasting = (tasting) => {
     navigate(tab === "past" ? `/tasting/${tasting.id}/result` : `/tasting/${tasting.id}`);
+  };
+
+  // Календарь в шапке не привязан к активной вкладке — сам решает по дате
+  // конкретной дегустации, вести на дегустацию или на её отчёт.
+  const openFromCalendar = (tasting) => {
+    const isPast = new Date(tasting.date).getTime() < Date.now();
+    navigate(isPast ? `/tasting/${tasting.id}/result` : `/tasting/${tasting.id}`);
   };
 
   const joinWaitlist = (id) => {
@@ -164,13 +154,15 @@ export default function TastingSchedulePage() {
         }
       />
 
-      {/* TODO: промо-экран — о видах чаепитий и формате чартеров, наполнить позже. */}
-      <div className="schedule-promo-screen">
-        <span className="schedule-promo-screen__eyebrow">Скоро здесь</span>
-        <p className="schedule-promo-screen__text">
-          Промо-экран о видах чаепитий и формате чартеров
-        </p>
-      </div>
+      <PromoCarousel
+        nearestTasting={upcoming[0] || null}
+        onOpenNearest={(t) => navigate(`/tasting/${t.id}`)}
+        onOpenChefTeas={() =>
+          document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      />
+
+      <TastingFormatsBlock />
 
       <div className="schedule-head">
         <h1 className="title-xl">Чаепития</h1>
@@ -191,22 +183,10 @@ export default function TastingSchedulePage() {
             )}
           >
             {({ close }) => (
-              <div className="dropdown__list">
-                {calendarMonths.length === 0 ? (
-                  <div className="dropdown__empty">Нет дат</div>
-                ) : (
-                  calendarMonths.map((g) => (
-                    <button
-                      key={g.key}
-                      type="button"
-                      className="dropdown__item"
-                      onClick={() => { jumpToMonth(g.key); close(); }}
-                    >
-                      {g.label}
-                    </button>
-                  ))
-                )}
-              </div>
+              <ScheduleCalendar
+                tastings={schedule}
+                onSelect={(t) => { close(); openFromCalendar(t); }}
+              />
             )}
           </Dropdown>
           <Dropdown
@@ -287,8 +267,8 @@ export default function TastingSchedulePage() {
         <div className="schedule-list schedule-list--flat">{list.map(renderCard)}</div>
       )}
 
-      <div className="schedule-section-head schedule-section-head--secondary">
-        <h2 className="schedule-section-head__title">Мастерские чаепития</h2>
+      <div className="schedule-section-head schedule-section-head--secondary" id="chef-teas">
+        <h2 className="schedule-section-head__title">Шеф-чаепития</h2>
       </div>
       <p className="schedule-head__lede schedule-section-lede">
         Лорем ипсум долор сит амет, консектетур адиписцинг элит. Приватные

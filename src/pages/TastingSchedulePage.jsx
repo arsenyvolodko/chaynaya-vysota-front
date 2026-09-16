@@ -61,7 +61,7 @@ function sortList(list, sortBy) {
   return sorted;
 }
 
-export default function TastingSchedulePage() {
+export default function TastingSchedulePage({ preview }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -114,15 +114,23 @@ export default function TastingSchedulePage() {
     [list, isTimeline]
   );
 
+  // В превью-режиме бэкенда нет: расписание собрано из моков, поэтому
+  // предстоящая дегустация открывается демо-страницей дегустации — так
+  // путь «карточка → страница дегустации → билет» проходится целиком.
+  const openUpcoming = (tasting) =>
+    navigate(preview ? `/design/tasting-preview` : `/tasting/${tasting.id}`);
+
   const openTasting = (tasting) => {
-    navigate(tab === "past" ? `/tasting/${tasting.id}/result` : `/tasting/${tasting.id}`);
+    if (tab === "past") navigate(`/tasting/${tasting.id}/result`);
+    else openUpcoming(tasting);
   };
 
   // Календарь в шапке не привязан к активной вкладке — сам решает по дате
   // конкретной дегустации, вести на дегустацию или на её отчёт.
   const openFromCalendar = (tasting) => {
     const isPast = new Date(tasting.date).getTime() < Date.now();
-    navigate(isPast ? `/tasting/${tasting.id}/result` : `/tasting/${tasting.id}`);
+    if (isPast) navigate(`/tasting/${tasting.id}/result`);
+    else openUpcoming(tasting);
   };
 
   const joinWaitlist = (id) => {
@@ -160,7 +168,7 @@ export default function TastingSchedulePage() {
       />
 
       <div className="schedule-head">
-        <h1 className="title-xl">Чаепития</h1>
+        <h1 className="title-xl">Мероприятия</h1>
         <p className="schedule-head__lede">
           Чайные и мороженые дегустации в одном расписании. Пробуем вслепую,
           оцениваем по шкалам и вместе выбираем фаворитов вечера.
@@ -169,7 +177,7 @@ export default function TastingSchedulePage() {
 
       <PromoCarousel
         nearestTasting={upcoming[0] || null}
-        onOpenNearest={(t) => navigate(`/tasting/${t.id}`)}
+        onOpenNearest={openUpcoming}
         onOpenChefTeas={() =>
           document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" })
         }
@@ -312,7 +320,7 @@ export default function TastingSchedulePage() {
       ) : (
         <div className="schedule-list schedule-list--flat">
           {ceremonies.map((c) => (
-            <TastingScheduleCard key={c.id} tasting={c} onOpen={(t) => navigate(`/tasting/${t.id}`)} />
+            <TastingScheduleCard key={c.id} tasting={c} onOpen={openUpcoming} />
           ))}
         </div>
       )}

@@ -28,7 +28,7 @@ export default function App() {
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="/schedule" element={<RequireAuth><TastingSchedulePage /></RequireAuth>} />
           <Route path="/design/tasting-preview" element={<TastingDetailPreviewPage />} />
-          <Route path="/design/schedule-preview" element={<TastingSchedulePage />} />
+          <Route path="/design/schedule-preview" element={<TastingSchedulePage preview />} />
           <Route path="/tasting/:id" element={<RequireAuth><MainPage /></RequireAuth>} />
           <Route path="/tasting/:id/product/:productId" element={<RequireAuth><KeyedDetailPage /></RequireAuth>} />
           <Route path="/tasting/:id/select-top" element={<RequireAuth><SelectTopPage /></RequireAuth>} />

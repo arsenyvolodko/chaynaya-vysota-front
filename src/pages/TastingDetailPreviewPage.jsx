@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
+import TicketPicker, { tierFor } from "../components/TicketPicker.jsx";
 import {
   IconCandy,
   IconCheck,
@@ -25,9 +26,15 @@ const DEMO_TASTING = {
   date: "2026-10-04T19:00:00",
   location_name: "Чайная высота / Винная глубина",
   location_address: "Тверская, 6 стр. 1",
-  // Цена — за одного гостя. По умолчанию выбрано 2 человека — совпадает с
-  // ценой билета «х2» на реальной странице (2750 × 2 = 5500 ₽).
-  price_per_person: 2750,
+  // Цена за гостя зависит от размера компании — как в «Чайной высоте», где
+  // чаепитие на двоих стоит дешевле в пересчёте на человека, чем на одного,
+  // а на компанию — ещё дешевле. Средний тариф совпадает с ценой билета «х2»
+  // на реальной странице (2750 × 2 = 5500 ₽).
+  price_tiers: [
+    { min: 1, max: 1, pricePerPerson: 3200 },
+    { min: 2, max: 3, pricePerPerson: 2750 },
+    { min: 4, max: 6, pricePerPerson: 2500 },
+  ],
   description:
     "Годовой цикл из 72 дегустаций — на каждой гости пробуют от 5 до 8 сортов чая, у каждой встречи свой тематический вектор. Билет на двоих.",
   includes: [
@@ -45,8 +52,6 @@ const FEATURES = [
   { icon: IconCandy, label: "Конфеты NAMAchaiCHOCO" },
   { icon: IconSparkles, label: "Закуски и шоты" },
 ];
-
-const MAX_GUESTS_PICKER = 6;
 
 const DEMO_PRODUCTS = [
   { id: 1, number: 1, name: "Улун Дун Дин", description: "Тайваньский высокогорный улун средней обжарки.", is_reviewed: true },
@@ -81,9 +86,10 @@ export default function TastingDetailPreviewPage() {
   const tasting = DEMO_TASTING;
   const products = DEMO_PRODUCTS;
   const [guests, setGuests] = useState(2);
-  const total = tasting.price_per_person * guests;
+  const total = tierFor(tasting.price_tiers, guests).pricePerPerson * guests;
 
   return (
+    <>
     <div className="main-scroll">
       <div className="preview-banner">Превью дизайна — демо-данные, не боевая страница</div>
       <PageHeader />
@@ -134,27 +140,7 @@ export default function TastingDetailPreviewPage() {
 
         {/* TODO: строка [текст от Александры] — вставить перед блоком билетов, как только пришлёте текст. */}
 
-        <div className="ticket-block">
-          <div className="section__label">Билет</div>
-          <div className="ticket-row">
-            <span className="ticket-row__icon"><IconUser size={15} stroke={1.8} /></span>
-            <div className="ticket-row__picker">
-              {Array.from({ length: MAX_GUESTS_PICKER }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`ticket-row__dot ${n <= guests ? "is-on" : ""}`}
-                  onClick={() => setGuests(n)}
-                  aria-label={`${n} чел.`}
-                  aria-pressed={n === guests}
-                >
-                  <IconUser size={12} stroke={2} />
-                </button>
-              ))}
-            </div>
-            <span className="ticket-row__price tabnum">{formatPrice(total)} ₽</span>
-          </div>
-        </div>
+        <TicketPicker tiers={tasting.price_tiers} guests={guests} onChange={setGuests} />
       </div>
 
       <div className="blocks">
@@ -194,5 +180,15 @@ export default function TastingDetailPreviewPage() {
       <AppFooter />
       <div className="main-footer-spacer" />
     </div>
+
+    <div className="footer buy-bar">
+      <div className="buy-bar__total">
+        <span className="buy-bar__label">Итого</span>
+        <span className="buy-bar__sum tabnum">{formatPrice(total)} ₽</span>
+      </div>
+      {/* TODO: заменить на реальное оформление билета, когда появится оплата */}
+      <button type="button" className="btn btn--primary buy-bar__btn">Купить билет</button>
+    </div>
+    </>
   );
 }

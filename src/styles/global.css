@@ -483,30 +483,71 @@ input, textarea { font: inherit; color: inherit; }
 /* Блок билета: иконка гостя + «фишечный» пикер числа персон + пересчитанная
    цена. Пикер — ряд кружков-гостей, заполняются по клику до выбранного
    числа (как рейтинг-звёзды, только людьми) — приятнее обычного степпера. */
-.ticket-block { margin-top: 20px; }
-.ticket-row {
-  margin-top: 8px; padding: 12px 14px;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 12px;
+.ticket-card {
+  margin-top: 20px; padding: 14px;
+  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 14px;
 }
-.ticket-row__icon {
-  flex-shrink: 0; width: 30px; height: 30px; border-radius: 999px;
+.ticket-card__head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  margin-bottom: 10px;
+}
+.ticket-card__note { font-size: 11.5px; color: var(--stone-400); text-align: right; }
+
+/* Сетка тарифов — все цены видно сразу, активный подсвечен. */
+.tariffs { display: flex; gap: 8px; }
+.tariff {
+  flex: 1; min-width: 0; padding: 10px 6px 9px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  background: white; border: 1px solid var(--stone-200); border-radius: 12px;
+  transition: border-color 140ms, background-color 140ms, transform 100ms;
+}
+.tariff:active { transform: translateY(1px); }
+.tariff.is-on {
+  border-color: var(--green-600); background: var(--green-50);
+  box-shadow: 0 0 0 1px var(--green-600) inset;
+}
+.tariff__guests { font-size: 11.5px; font-weight: 500; color: var(--stone-500); white-space: nowrap; }
+.tariff.is-on .tariff__guests { color: var(--green-800); }
+.tariff__price {
+  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.01em; white-space: nowrap;
+}
+.tariff.is-on .tariff__price { color: var(--green-800); }
+.tariff__per { font-size: 10px; color: var(--stone-400); }
+
+.ticket-count {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--stone-200);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.ticket-count__label { font-size: 13.5px; color: var(--stone-600); }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper__btn {
+  width: 34px; height: 34px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: white; border: 1px solid var(--stone-200); color: var(--stone-500);
+  background: white; border: 1px solid var(--stone-200); color: var(--stone-700);
+  transition: background-color 140ms, color 140ms, transform 100ms;
 }
-.ticket-row__picker { flex: 1; display: flex; justify-content: center; gap: 5px; }
-.ticket-row__dot {
-  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: white; border: 1px solid var(--stone-200); color: var(--stone-300);
-  transition: background-color 140ms, color 140ms, border-color 140ms, transform 100ms;
+.stepper__btn:hover:not(:disabled) { background: var(--green-50); color: var(--green-800); }
+.stepper__btn:active:not(:disabled) { transform: scale(0.92); }
+.stepper__value {
+  min-width: 34px; text-align: center;
+  font-size: 16px; font-weight: 600; color: var(--stone-900);
 }
-.ticket-row__dot.is-on { background: var(--green-600); border-color: var(--green-600); color: white; }
-.ticket-row__dot:active { transform: scale(0.9); }
-.ticket-row__price {
-  flex-shrink: 0; font-family: var(--sans); font-size: 15px; font-weight: 700;
-  color: var(--stone-900); letter-spacing: -0.005em;
+
+.ticket-card__nudge {
+  margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--green-700);
 }
+.ticket-card__break { margin-top: 8px; font-size: 12.5px; color: var(--stone-500); }
+
+/* Нижняя панель покупки — итог слева, кнопка справа. */
+.buy-bar { display: flex; align-items: center; gap: 12px; }
+.buy-bar__total { display: flex; flex-direction: column; flex-shrink: 0; }
+.buy-bar__label { font-size: 11px; color: var(--stone-500); }
+.buy-bar__sum {
+  font-family: var(--sans); font-size: 19px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.01em; line-height: 1.15;
+}
+.buy-bar__btn { flex: 1; padding: 15px; font-size: 15px; }
 
 /* Плашка «превью-дизайн» вверху страницы — чтобы не спутать со страницей боевой дегустации. */
 .preview-banner {
@@ -2774,7 +2815,7 @@ input, textarea { font: inherit; color: inherit; }
 .promo-carousel__track::-webkit-scrollbar { display: none; }
 
 .promo-carousel__cell {
-  flex: 0 0 96%; scroll-snap-align: start; margin-right: 8px;
+  flex: 0 0 98%; scroll-snap-align: start; margin-right: 6px;
 }
 .promo-carousel__cell:last-child { margin-right: 0; }
 
@@ -2849,8 +2890,11 @@ input, textarea { font: inherit; color: inherit; }
   margin: 4px 16px 28px; padding: 18px 16px 20px;
   background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 18px;
 }
-.info-block__intro { margin-bottom: 12px; }
+.info-block__intro { margin-bottom: 14px; }
 .info-block__title { margin-top: 4px; }
+.info-block__lede {
+  margin: 10px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--stone-600);
+}
 
 /* --- переключатель формата (чартерные / шеф) --- */
 .format-switch__tabs { margin: 0 0 14px; }
@@ -2892,16 +2936,9 @@ input, textarea { font: inherit; color: inherit; }
   background: linear-gradient(155deg, var(--green-700) 0%, var(--green-900) 100%);
   border-radius: 18px; color: white;
 }
-.plank__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .plank__title {
   margin: 0; font-family: var(--serif); font-size: 21px; line-height: 1.2;
   font-weight: 400; letter-spacing: -0.01em;
-}
-.plank__badge {
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
-  margin-top: 3px; padding: 4px 10px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
 }
 .plank__text {
   margin: 10px 0 0; font-size: 13.5px; line-height: 1.55; color: rgba(255, 255, 255, 0.82);

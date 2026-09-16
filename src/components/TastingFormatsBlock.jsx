@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IconArrowRight, IconTicket } from "./icons.jsx";
+import { IconArrowRight } from "./icons.jsx";
 
 // Блок под промо-листалкой: переключатель форматов чаепитий (чартерные /
 // шеф) с тизером дегустационного листа, плюс отдельная акцентная плашка
@@ -29,7 +29,13 @@ export default function TastingFormatsBlock({ onPickDate }) {
     <>
       <section className="info-block">
         <div className="info-block__intro">
-          <h2 className="title-lg info-block__title">Как устроены чаепития</h2>
+          <h2 className="title-lg info-block__title">Как устроены дегустации</h2>
+          <p className="info-block__lede">
+            Чаепитие здесь — не просто заваренный чай, а встреча на два-три
+            часа: ведут её старшие мастера и чайный шеф клуба, а гости сами
+            выбирают сорта и сценарий вечера. Собраться можно и общей компанией
+            по расписанию, и приватно — по предварительному заказу.
+          </p>
         </div>
 
         <div className="format-switch">
@@ -81,13 +87,7 @@ export default function TastingFormatsBlock({ onPickDate }) {
       </section>
 
       <div className="plank">
-        <div className="plank__head">
-          <h3 className="plank__title">Абонемент на чаепития</h3>
-          <span className="plank__badge">
-            <IconTicket size={13} stroke={2} />
-            Абонемент
-          </span>
-        </div>
+        <h3 className="plank__title">Абонемент на чаепития</h3>
         <p className="plank__text">
           Билет на свободную дату — без привязки к конкретному дню. Берите на
           одно посещение или сразу на несколько: расходуется постепенно, как

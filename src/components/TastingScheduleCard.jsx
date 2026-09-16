@@ -1,4 +1,4 @@
-import { IconCheck, IconIceCream, IconLeaf } from "./icons.jsx";
+import { IconArrowRight, IconCheck, IconIceCream, IconLeaf } from "./icons.jsx";
 import { formatTastingDateDots } from "../utils/date.js";
 import { getTastingCapacityStatus, seatsLeft } from "../utils/tastingCapacity.js";
 import { formatPrice } from "../utils/price.js";
@@ -177,6 +177,12 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
           {bottomStatus}
           <PriceTag tasting={tasting} />
         </div>
+
+        {/* Не <button>: карточка сама кнопка, вложенная кнопка невалидна. */}
+        <span className="schedule-card__cta">
+          {past ? "Смотреть результаты" : "Подробнее и запись"}
+          <IconArrowRight size={15} stroke={2} />
+        </span>
       </div>
     </button>
   );

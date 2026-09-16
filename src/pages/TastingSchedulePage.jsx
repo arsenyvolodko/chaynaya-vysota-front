@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import PromoCarousel from "../components/PromoCarousel.jsx";
 import TastingFormatsBlock from "../components/TastingFormatsBlock.jsx";
+import EveningStepsBlock from "../components/EveningStepsBlock.jsx";
 import TastingScheduleCard from "../components/TastingScheduleCard.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
@@ -128,6 +129,10 @@ export default function TastingSchedulePage() {
     setWaitlisted((prev) => new Set(prev).add(id));
   };
 
+  const scrollToSchedule = () => {
+    document.getElementById("schedule-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const renderCard = (tasting) => (
     <TastingScheduleCard
       key={tasting.id}
@@ -154,6 +159,14 @@ export default function TastingSchedulePage() {
         }
       />
 
+      <div className="schedule-head">
+        <h1 className="title-xl">Чаепития</h1>
+        <p className="schedule-head__lede">
+          Чайные и мороженые дегустации в одном расписании. Пробуем вслепую,
+          оцениваем по шкалам и вместе выбираем фаворитов вечера.
+        </p>
+      </div>
+
       <PromoCarousel
         nearestTasting={upcoming[0] || null}
         onOpenNearest={(t) => navigate(`/tasting/${t.id}`)}
@@ -162,18 +175,13 @@ export default function TastingSchedulePage() {
         }
       />
 
-      <TastingFormatsBlock />
+      <TastingFormatsBlock onPickDate={scrollToSchedule} />
 
-      <div className="schedule-head">
-        <h1 className="title-xl">Чаепития</h1>
-        <p className="schedule-head__lede">
-          Лорем ипсум долор сит амет, консектетур адиписцинг элит — чайные и
-          мороженые дегустации в одном расписании.
-        </p>
-      </div>
-
-      <div className="schedule-section-head">
-        <h2 className="schedule-section-head__title">Чартерные дегустации</h2>
+      <div className="section-head section-head--row" id="schedule-list">
+        <div>
+          <span className="section-head__eyebrow">Расписание</span>
+          <h2 className="section-head__title">Чартерные дегустации</h2>
+        </div>
         <div className="schedule-section-head__actions">
           <Dropdown
             trigger={({ open, toggle }) => (
@@ -267,13 +275,35 @@ export default function TastingSchedulePage() {
         <div className="schedule-list schedule-list--flat">{list.map(renderCard)}</div>
       )}
 
-      <div className="schedule-section-head schedule-section-head--secondary" id="chef-teas">
-        <h2 className="schedule-section-head__title">Шеф-чаепития</h2>
+      <div className="inline-cta">
+        <div className="inline-cta__body">
+          <span className="inline-cta__title">Не нашли подходящую дату?</span>
+          <span className="inline-cta__text">
+            Подскажем ближайшие свободные места или соберём чаепитие под вашу компанию.
+          </span>
+        </div>
+        {/* TODO: заменить на реальную ссылку на Telegram */}
+        <a
+          className="btn-outline inline-cta__btn"
+          href="https://t.me/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <IconTelegram size={16} />
+          <span>Спросить о датах</span>
+        </a>
       </div>
-      <p className="schedule-head__lede schedule-section-lede">
-        Лорем ипсум долор сит амет, консектетур адиписцинг элит. Приватные
-        чаепития с чайным шефом в церемониальной комнате «Чайной высоты».
-      </p>
+
+      <EveningStepsBlock onPickDate={scrollToSchedule} />
+
+      <div className="section-head" id="chef-teas">
+        <span className="section-head__eyebrow">Приватно</span>
+        <h2 className="section-head__title">Шеф-чаепития</h2>
+        <p className="section-head__lede">
+          Церемония с чайным шефом в отдельной комнате «Чайной высоты» — для
+          двоих или небольшой компании, по договорённости о дате.
+        </p>
+      </div>
 
       {ceremoniesLoading ? (
         <div className="fullscreen-center" style={{ position: "static", minHeight: 120 }}>
@@ -290,9 +320,8 @@ export default function TastingSchedulePage() {
       <div className="schedule-cta-block">
         <h2 className="schedule-cta-block__title">Индивидуальное мероприятие</h2>
         <p className="schedule-cta-block__text">
-          Лорем ипсум долор сит амет, консектетур адиписцинг элит. Организуем
-          дегустацию или чаепитие под ваш запрос — для компании, дня рождения
-          или корпоратива. Подберём формат, чай и программу.
+          Организуем дегустацию или чаепитие под ваш запрос — для компании,
+          дня рождения или корпоратива. Подберём формат, чай и программу.
         </p>
         {/* TODO: заменить на реальную ссылку на Telegram */}
         <a

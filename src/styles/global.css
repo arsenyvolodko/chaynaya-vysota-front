@@ -2684,6 +2684,80 @@ input, textarea { font: inherit; color: inherit; }
 /* ===== Страница «Чартерные дегустации» ===== */
 .schedule-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 
+/* Единая шапка секции: надзаголовок, заголовок и лид — всё по левому краю
+   и одной типографикой, чтобы секции читались как один ряд, а не набор
+   разношёрстных блоков. */
+.section-head { margin: 0 16px 14px; }
+.section-head--row {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+}
+.section-head__eyebrow {
+  display: block; margin-bottom: 5px;
+  font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-800); font-weight: 600;
+}
+.section-head__title {
+  margin: 0; font-family: var(--sans); font-size: 21px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.012em; line-height: 1.2;
+}
+.section-head__lede {
+  margin: 8px 0 0; font-size: 13.5px; line-height: 1.5;
+  color: var(--stone-500); max-width: 560px; text-wrap: pretty;
+}
+
+/* Полоса-призыв между секциями: закрывает вопрос «а если дата не подошла»
+   и заодно разделяет витрину расписания и следующий блок. */
+.inline-cta {
+  margin: 22px 16px 0; padding: 16px 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  background: linear-gradient(135deg, #f5f8ef 0%, #eef3e4 100%);
+  border: 1px solid #e3ead0; border-radius: 16px;
+}
+.inline-cta__body { display: flex; flex-direction: column; gap: 4px; }
+.inline-cta__title {
+  font-family: var(--sans); font-size: 15.5px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.005em;
+}
+.inline-cta__text { font-size: 13px; line-height: 1.45; color: var(--stone-600); }
+.inline-cta__btn { flex-shrink: 0; background: white; text-decoration: none; }
+
+/* «Как проходит вечер» — объясняет формат тем, кто ещё не был. */
+.steps-block { margin: 32px 0 0; padding: 26px 0 28px; background: var(--stone-50); }
+.steps-block .section-head { margin-bottom: 18px; }
+.steps {
+  margin: 0 16px; padding: 0; list-style: none;
+  display: grid; gap: 10px;
+}
+.step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "icon num" "icon title" "icon text";
+  align-items: center;
+  column-gap: 12px;
+  padding: 14px 16px;
+  background: white; border: 1px solid var(--stone-200); border-radius: 14px;
+}
+.step__icon {
+  grid-area: icon;
+  width: 40px; height: 40px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--green-50); color: var(--green-800); border: 1px solid var(--green-100);
+}
+.step__num {
+  grid-area: num;
+  font-family: var(--serif); font-size: 11px; letter-spacing: 0.1em;
+  color: var(--stone-400);
+}
+.step__title {
+  grid-area: title;
+  font-size: 14.5px; font-weight: 600; color: var(--stone-900); letter-spacing: -0.005em;
+}
+.step__text {
+  grid-area: text;
+  margin-top: 2px; font-size: 12.5px; line-height: 1.45; color: var(--stone-500);
+}
+.steps-block__cta { width: auto; margin: 20px 16px 0; padding: 14px 22px; }
+
 /* Промо-листалка — 2/3 экрана, три смысловых экрана со скролл-снапом:
    ближайшая дегустация / шеф-чаепития / пьючерсы и лучерсы. Карточки уже
    ширины трека — справа (и слева, кроме самой первой) виден край соседней,
@@ -2787,13 +2861,20 @@ input, textarea { font: inherit; color: inherit; }
 }
 .format-switch__text { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--stone-600); }
 
-.format-facts { display: flex; flex-direction: column; gap: 8px; }
+/* Факты формата — метка над значением: при растяжке на широкую колонку
+   разнесённые по краям пары читались как случайно разбросанный текст. */
+.format-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .format-fact {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  font-size: 13px;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 12px;
+  background: white; border: 1px solid var(--stone-200); border-radius: 12px;
 }
-.format-fact__label { color: var(--stone-500); }
-.format-fact__value { color: var(--stone-800); font-weight: 500; }
+.format-fact__label {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--stone-400); font-weight: 600;
+}
+.format-fact__value { font-size: 14px; color: var(--stone-900); font-weight: 500; }
+.format-switch__cta { margin-top: 14px; }
 
 /* --- тизер дегустационного листа --- */
 .sheet-teaser { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--stone-100); }
@@ -2836,7 +2917,6 @@ input, textarea { font: inherit; color: inherit; }
 .plank__btn:hover { background: var(--ivory-soft); }
 .plank__btn:active { transform: translateY(1px); }
 
-.schedule-head { padding: 8px 16px 0; }
 .schedule-head__lede { margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--stone-500); }
 
 .schedule-tabs {
@@ -3116,8 +3196,232 @@ button.cal__cell:hover { background: var(--stone-100); }
 }
 .schedule-card--compact .schedule-card__price { font-size: 14px; }
 
+/* Явный призыв на карточке: до него было неочевидно, что карточка кликабельна. */
+.schedule-card__cta {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--stone-100);
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--green-800);
+  transition: gap 140ms;
+}
+.schedule-card:hover .schedule-card__cta { gap: 10px; }
+.schedule-card--compact .schedule-card__cta { display: none; }
+
 .schedule-empty {
   margin: 8px 16px 0; padding: 16px 14px;
   background: var(--stone-50); border: 1px dashed var(--stone-200); border-radius: 10px;
   text-align: center; font-size: 13.5px; color: var(--stone-500); text-wrap: pretty;
+}
+
+/* ==========================================================================
+   Адаптация под ноутбук/десктоп (≥900px)
+   Раньше на широких экранах приложение показывалось как маленький «телефон»
+   420×880 по центру серого поля. Здесь превращаем его в обычный широкий
+   сайт: .phone растягивается на всю доступную ширину, а контентные секции
+   центрируются в удобной колонке через padding-calc (без изменения самих
+   значений внутренней вертикальной отбивки). Механику самих страниц не
+   трогаем — каждая страница по-прежнему является абсолютно
+   спозиционированным скролл-контейнером (.screen/.main-scroll/…), драг-н-дроп
+   подиума и свайп деталей считают координаты через getBoundingClientRect и
+   от ширины контейнера не зависят.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .stage { padding: 0; align-items: stretch; background: white; }
+  .phone {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Ширину колонки задаёт корень страницы, а все её секции считают отступ
+     от одной и той же переменной. Так внутри страницы шапка, заголовки,
+     табы и сетки карточек всегда имеют общий левый и правый край (разные
+     ширины контейнеров на одной странице и давали ощущение развала), но
+     страница-форма может быть узкой, а страница-витрина — широкой. */
+  .screen,
+  .main-scroll,
+  .detail-scroll,
+  .result-scroll,
+  .schedule-scroll { --col: 720px; --gutter: 40px; }
+  .schedule-scroll, .main-scroll { --col: 1200px; }
+  .screen { --col: 460px; }   /* .screen — это только экран авторизации */
+
+  .auth,
+  .hero,
+  .hero__date,
+  .blocks,
+  .podium-slots,
+  .pool-section,
+  .candidates,
+  .detail-body,
+  .page-header,
+  .app-header,
+  .result-scroll,
+  .schedule-head,
+  .schedule-timeline,
+  .schedule-list--flat,
+  .promo-carousel__track {
+    padding-left: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+    padding-right: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+  }
+  /* Снап учитывает padding трека, иначе со второго слайда левый край уезжает. */
+  .promo-carousel__track {
+    scroll-padding-left: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+    scroll-padding-right: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+  }
+  /* Отступ колонки задаём margin'ом там, где элементу нужен ещё и max-width:
+     при box-sizing:border-box padding входит в max-width и на широком экране
+     схлопывает контент в ноль (текст сыплется по одному слову в строку). */
+  .schedule-section-head,
+  .schedule-cta-block,
+  .schedule-tabs,
+  .schedule-empty,
+  .schedule-section-lede,
+  .info-block,
+  .plank,
+  .section-head,
+  .inline-cta,
+  .steps,
+  .steps-block__cta {
+    margin-left: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+    margin-right: max(var(--gutter, 40px), calc((100% - var(--col, 720px)) / 2));
+  }
+  .schedule-section-lede { padding-left: 0; padding-right: 0; }
+  /* .result-scroll сам несёт колонку — компенсирующий отрицательный margin
+     шапки под старый узкий padding больше не нужен. */
+  .result-scroll .page-header {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Колонка широкая, поэтому длинные абзацы ограничиваем по самому тексту,
+     а не сдвигом контейнера — иначе поедут края. */
+  .auth__lede,
+  .hero__lede,
+  .schedule-head__lede,
+  .schedule-cta-block__text { max-width: 640px; }
+
+  /* Промо-листалка: на телефоне слайд занимает почти всю ширину трека, на
+     ноутбуке в ту же ширину помещаются все три — листать нечего, показываем
+     их рядом и снижаем высоту, чтобы первый экран не был стеной из блоков. */
+  .promo-carousel__cell { flex-basis: calc((100% - 32px) / 3); margin-right: 16px; }
+  .promo-slide { height: 400px; max-height: none; padding: 26px; }
+  .promo-slide__title { font-size: 30px; }
+  .promo-slide__title--event { font-size: 26px; }
+  .promo-carousel__dots { display: none; }
+
+  /* «Как устроены чаепития»: переключатель форматов слева, тизер листа
+     справа — иначе три блока выстраиваются в одну узкую башню. */
+  .info-block {
+    padding: 30px 32px 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
+    align-items: start;
+    column-gap: 44px;
+  }
+  .info-block__intro { grid-column: 1 / -1; margin-bottom: 18px; }
+  .sheet-teaser { margin-top: 0; padding-top: 0; border-top: 0; }
+  .format-facts { gap: 10px; }
+
+  /* Больше воздуха между секциями: на широком экране прежние 18–28px
+     заставляли блоки слипаться в одну простыню. */
+  .schedule-head { padding-top: 40px; padding-bottom: 8px; }
+  .promo-carousel { margin-bottom: 56px; }
+  .info-block { margin-top: 0; margin-bottom: 56px; }
+  .plank { margin-bottom: 64px; }
+  .section-head { margin-bottom: 20px; }
+  .section-head__title { font-size: 27px; }
+  .section-head__lede { font-size: 15px; }
+  .schedule-timeline { padding-bottom: 8px; }
+
+  /* Табы — по содержимому, а не во всю колонку: растянутые на 1200px две
+     кнопки выглядели как полоса-переключатель, а не как фильтр списка. */
+  .schedule-tabs { display: inline-flex; margin-bottom: 20px; }
+  .schedule-tabs__tab { flex: 0 0 auto; padding: 7px 22px; }
+  .format-switch__tabs { display: flex; }
+
+  /* Месяц — якорь ритма в длинном списке, поэтому крупнее и с линией. */
+  .schedule-timeline__marker {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--stone-200);
+  }
+  .schedule-timeline__label { font-size: 15px; color: var(--stone-900); }
+  .schedule-timeline__group + .schedule-timeline__group { margin-top: 36px; }
+
+  /* Финальный призыв — кнопка по содержимому, текст в читаемой мере. */
+  .schedule-cta-block { padding: 26px 30px 28px; }
+  .schedule-cta-block__btn { width: auto; padding: 14px 24px; }
+
+  /* Шаги вечера — в ряд, полосой во всю ширину со своим фоном: это и есть
+     основной разделитель между витриной расписания и приватным форматом. */
+  .steps-block { margin-top: 64px; padding: 56px 0 60px; }
+  .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .step {
+    grid-template-columns: 1fr;
+    grid-template-areas: "num" "icon" "title" "text";
+    align-items: start;
+    padding: 22px 20px 24px;
+    border-radius: 18px;
+  }
+  .step__icon { margin: 10px 0 12px; width: 44px; height: 44px; }
+  .step__title { font-size: 16px; }
+  .step__text { font-size: 13px; }
+  .steps-block__cta { margin-top: 28px; }
+
+  .inline-cta {
+    margin-top: 36px;
+    padding: 22px 26px;
+    flex-direction: row; align-items: center; justify-content: space-between;
+    gap: 28px;
+  }
+  .inline-cta__title { font-size: 17px; }
+  .inline-cta__text { font-size: 14px; }
+
+  /* Абонемент — широкая плашка: текст слева, кнопка справа. */
+  .plank {
+    padding: 26px 30px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 40px;
+  }
+  .plank__head { grid-column: 1; }
+  .plank__text { grid-column: 1; margin-bottom: 0; max-width: 620px; }
+  .plank__btn { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; white-space: nowrap; }
+
+  /* Сетки карточек живут внутри той же колонки и заполняют её целиком,
+     поэтому их края совпадают с заголовками и табами над ними. */
+  .block__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .schedule-list--flat,
+  .schedule-timeline__group .schedule-list {
+    display: grid;
+    align-items: start;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 18px;
+  }
+  .schedule-timeline__group {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .schedule-timeline__dot { display: none; }
+  .schedule-card:not(.schedule-card--compact) { height: 320px; }
+
+  /* Нижний плавающий бар с CTA-кнопкой — не растягиваем на всю ширину. */
+  .footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .footer > * { width: 100%; max-width: 420px; }
 }

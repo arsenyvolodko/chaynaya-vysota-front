@@ -21,7 +21,7 @@ const FORMAT_INFO = {
   },
 };
 
-export default function TastingFormatsBlock() {
+export default function TastingFormatsBlock({ onPickDate }) {
   const [format, setFormat] = useState("charter");
   const current = FORMAT_INFO[format];
 
@@ -60,6 +60,12 @@ export default function TastingFormatsBlock() {
                 <span className="format-fact__value">{current.modeLabel}</span>
               </div>
             </div>
+            {onPickDate && (
+              <button type="button" className="btn-outline format-switch__cta" onClick={onPickDate}>
+                <span>Выбрать дату</span>
+                <IconArrowRight size={15} stroke={2} />
+              </button>
+            )}
           </div>
         </div>
 

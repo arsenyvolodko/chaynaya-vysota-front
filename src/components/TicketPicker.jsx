@@ -1,13 +1,14 @@
 import { IconMinus, IconPlus } from "./icons.jsx";
 import { formatPrice } from "../utils/price.js";
 
-// Выбор билета. Цена за гостя падает с размером компании (как в «Чайной
-// высоте»: на двоих дешевле, чем одному, компанией — ещё дешевле), поэтому
-// вся сетка тарифов показана сразу плитками — так видно и текущую цену, и
-// то, что дальше она ниже. Отдельного «выбора тарифа» нет: тариф всегда
-// следует за числом гостей, плитка лишь подсвечивается и по тапу ставит
-// своё минимальное число. Точное число (в том числе своё) набирается
-// степпером.
+// Выбор билета, свёрстанный как кассовый чек: плитки тарифов, линия отрыва
+// пунктиром, итог и счётчик гостей снизу, нижний край — волной.
+// Цена за гостя падает с размером компании (как в «Чайной высоте»: на
+// двоих дешевле, чем одному, компанией — ещё дешевле), поэтому вся сетка
+// тарифов показана сразу — видно и текущую цену, и то, что дальше ниже.
+// Отдельного «выбора тарифа» нет: тариф следует за числом гостей, плитка
+// лишь подсвечивается и по тапу ставит своё минимальное число. Точное
+// число (в том числе своё) набирается степпером.
 
 function plural(n, one, few, many) {
   const mod10 = n % 10;
@@ -17,7 +18,7 @@ function plural(n, one, few, many) {
   return many;
 }
 
-function guestsWord(n) {
+export function guestsWord(n) {
   return plural(n, "гость", "гостя", "гостей");
 }
 
@@ -34,17 +35,12 @@ export function tierFor(tiers, guests) {
 export default function TicketPicker({ tiers, guests, onChange }) {
   const maxGuests = tiers[tiers.length - 1].max;
   const current = tierFor(tiers, guests);
-  const next = tiers.find((t) => t.min === guests + 1);
+  const total = current.pricePerPerson * guests;
 
   const setGuests = (n) => onChange(Math.min(maxGuests, Math.max(1, n)));
 
   return (
     <div className="ticket-card">
-      <div className="ticket-card__head">
-        <span className="section__label">Билет</span>
-        <span className="ticket-card__note">чем больше компания, тем дешевле за гостя</span>
-      </div>
-
       <div className="tariffs">
         {tiers.map((t) => (
           <button
@@ -61,8 +57,10 @@ export default function TicketPicker({ tiers, guests, onChange }) {
         ))}
       </div>
 
-      <div className="ticket-count">
-        <span className="ticket-count__label">Гостей</span>
+      <div className="ticket-card__cut" aria-hidden="true" />
+
+      <div className="ticket-card__bottom">
+        <span className="ticket-card__total tabnum">{formatPrice(total)} ₽</span>
         <div className="stepper">
           <button
             type="button"
@@ -84,16 +82,6 @@ export default function TicketPicker({ tiers, guests, onChange }) {
             <IconPlus size={16} stroke={2.2} />
           </button>
         </div>
-      </div>
-
-      {next && (
-        <p className="ticket-card__nudge">
-          Ещё один гость — и билет выйдет по {formatPrice(next.pricePerPerson)} ₽ за человека
-        </p>
-      )}
-
-      <div className="ticket-card__break tabnum">
-        {formatPrice(current.pricePerPerson)} ₽ × {guests} {guestsWord(guests)}
       </div>
     </div>
   );

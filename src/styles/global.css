@@ -483,21 +483,31 @@ input, textarea { font: inherit; color: inherit; }
 /* Блок билета: иконка гостя + «фишечный» пикер числа персон + пересчитанная
    цена. Пикер — ряд кружков-гостей, заполняются по клику до выбранного
    числа (как рейтинг-звёзды, только людьми) — приятнее обычного степпера. */
+/* Билет свёрстан как кассовый чек: плитки тарифов, линия отрыва пунктиром,
+   итог и счётчик гостей снизу. Нижний край выгрызаем маской в полукруги —
+   рамки поэтому нет, она бы рвалась по волне. */
 .ticket-card {
-  margin-top: 20px; padding: 14px;
-  background: var(--stone-50); border: 1px solid var(--stone-100); border-radius: 14px;
+  --scallop: 9px;
+  margin-top: 20px;
+  padding: 14px 14px calc(14px + var(--scallop));
+  background: var(--stone-50);
+  border-radius: 14px 14px 0 0;
+  -webkit-mask:
+    radial-gradient(circle var(--scallop) at var(--scallop) 100%, #0000 98%, #000 100%)
+      0 100% / calc(2 * var(--scallop)) var(--scallop) repeat-x,
+    linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--scallop)) no-repeat;
+  mask:
+    radial-gradient(circle var(--scallop) at var(--scallop) 100%, #0000 98%, #000 100%)
+      0 100% / calc(2 * var(--scallop)) var(--scallop) repeat-x,
+    linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--scallop)) no-repeat;
 }
-.ticket-card__head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  margin-bottom: 10px;
-}
-.ticket-card__note { font-size: 11.5px; color: var(--stone-400); text-align: right; }
 
-/* Сетка тарифов — все цены видно сразу, активный подсвечен. */
-.tariffs { display: flex; gap: 8px; }
+/* Сетка тарифов — все цены видно сразу, активный подсвечен. Та же сетка
+   у нижней строки чека, чтобы итог встал ровно под ценой первого тарифа. */
+.tariffs, .ticket-card__bottom { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tariff {
-  flex: 1; min-width: 0; padding: 10px 6px 9px;
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  min-width: 0; padding: 11px 6px 10px;
+  display: flex; flex-direction: column; align-items: center;
   background: white; border: 1px solid var(--stone-200); border-radius: 12px;
   transition: border-color 140ms, background-color 140ms, transform 100ms;
 }
@@ -506,48 +516,73 @@ input, textarea { font: inherit; color: inherit; }
   border-color: var(--green-600); background: var(--green-50);
   box-shadow: 0 0 0 1px var(--green-600) inset;
 }
-.tariff__guests { font-size: 11.5px; font-weight: 500; color: var(--stone-500); white-space: nowrap; }
+.tariff__guests {
+  margin-bottom: 4px;
+  font-size: 11.5px; font-weight: 500; color: var(--stone-500); white-space: nowrap;
+}
 .tariff.is-on .tariff__guests { color: var(--green-800); }
 .tariff__price {
-  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.05;
   color: var(--stone-900); letter-spacing: -0.01em; white-space: nowrap;
 }
 .tariff.is-on .tariff__price { color: var(--green-800); }
-.tariff__per { font-size: 10px; color: var(--stone-400); }
+.tariff__per { font-size: 10px; line-height: 1.2; color: var(--stone-400); }
 
-.ticket-count {
-  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--stone-200);
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+/* Линия отрыва — свой пунктир, чтобы штрихи были длиннее браузерных. */
+.ticket-card__cut {
+  height: 2px; margin: 13px 0;
+  background-image: repeating-linear-gradient(
+    to right, var(--stone-300) 0 9px, transparent 9px 17px
+  );
 }
-.ticket-count__label { font-size: 13.5px; color: var(--stone-600); }
-.stepper { display: flex; align-items: center; gap: 4px; }
+
+.ticket-card__bottom { align-items: center; }
+.ticket-card__total {
+  grid-column: 1; text-align: center; white-space: nowrap;
+  font-family: var(--sans); font-size: 22px; font-weight: 700;
+  color: var(--stone-900); letter-spacing: -0.015em;
+}
+
+.stepper {
+  grid-column: 2 / -1; justify-self: end;
+  display: flex; align-items: center; gap: 6px;
+}
 .stepper__btn {
-  width: 34px; height: 34px; border-radius: 999px;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  background: white; border: 1px solid var(--stone-200); color: var(--stone-700);
-  transition: background-color 140ms, color 140ms, transform 100ms;
+  background: transparent; border: 1px solid var(--stone-400); color: var(--stone-700);
+  transition: background-color 140ms, border-color 140ms, color 140ms, transform 100ms;
 }
-.stepper__btn:hover:not(:disabled) { background: var(--green-50); color: var(--green-800); }
+.stepper__btn:hover:not(:disabled) {
+  background: white; border-color: var(--green-600); color: var(--green-800);
+}
 .stepper__btn:active:not(:disabled) { transform: scale(0.92); }
 .stepper__value {
   min-width: 34px; text-align: center;
   font-size: 16px; font-weight: 600; color: var(--stone-900);
 }
 
-.ticket-card__nudge {
-  margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--green-700);
+/* Прилипшая панель покупки: слева итог, справа кнопка. Подложка матовая
+   с размытием — контент проезжает под ней, а не обрывается по краю. */
+.buy-bar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--stone-200);
+  box-shadow: 0 -12px 28px -20px rgba(20, 28, 24, 0.4);
 }
-.ticket-card__break { margin-top: 8px; font-size: 12.5px; color: var(--stone-500); }
-
-/* Нижняя панель покупки — итог слева, кнопка справа. */
-.buy-bar { display: flex; align-items: center; gap: 12px; }
-.buy-bar__total { display: flex; flex-direction: column; flex-shrink: 0; }
-.buy-bar__label { font-size: 11px; color: var(--stone-500); }
+.buy-bar__total { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
 .buy-bar__sum {
-  font-family: var(--sans); font-size: 19px; font-weight: 700;
-  color: var(--stone-900); letter-spacing: -0.01em; line-height: 1.15;
+  font-family: var(--sans); font-size: 20px; font-weight: 700; line-height: 1.15;
+  color: var(--stone-900); letter-spacing: -0.015em; white-space: nowrap;
 }
-.buy-bar__btn { flex: 1; padding: 15px; font-size: 15px; }
+.buy-bar__note { font-size: 11.5px; color: var(--stone-500); }
+.buy-bar__btn {
+  flex: 1; width: auto; padding: 15px 18px; border-radius: 999px; font-size: 15px;
+}
+.buy-bar__btn svg { transition: transform 160ms; }
+.buy-bar__btn:hover svg { transform: translateX(2px); }
 
 /* Плашка «превью-дизайн» вверху страницы — чтобы не спутать со страницей боевой дегустации. */
 .preview-banner {

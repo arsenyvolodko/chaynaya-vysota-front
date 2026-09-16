@@ -1,15 +1,13 @@
 import { useState } from "react";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
-import TicketPicker, { tierFor } from "../components/TicketPicker.jsx";
+import TicketPicker, { guestsWord, tierFor } from "../components/TicketPicker.jsx";
 import {
+  IconArrowRight,
   IconCandy,
-  IconCheck,
-  IconChevronRight,
   IconIceCream,
   IconLeaf,
   IconMapPin,
-  IconMedal,
   IconSparkles,
   IconUser,
 } from "../components/icons.jsx";
@@ -53,13 +51,6 @@ const FEATURES = [
   { icon: IconSparkles, label: "Закуски и шоты" },
 ];
 
-const DEMO_PRODUCTS = [
-  { id: 1, number: 1, name: "Улун Дун Дин", description: "Тайваньский высокогорный улун средней обжарки.", is_reviewed: true },
-  { id: 2, number: 2, name: "Да Хун Пао", description: "Уишаньский утёсный чай, ореховый и минеральный.", is_reviewed: true },
-  { id: 3, number: 3, name: "Шу Пуэр 2018", description: "Выдержанный тёмный пуэр, плотный и сладковатый.", is_reviewed: false },
-  { id: 4, number: 4, name: "Тегуаньинь осень", description: "Свежий улун с молочно-цветочным характером.", is_reviewed: false, is_nominated: true },
-];
-
 // Бейдж-«календарик» у даты — по образцу карточки события на luma.com,
 // в нашей цветовой стилистике.
 function DateBadge({ date }) {
@@ -84,7 +75,6 @@ function TastingCoverPhoto() {
 
 export default function TastingDetailPreviewPage() {
   const tasting = DEMO_TASTING;
-  const products = DEMO_PRODUCTS;
   const [guests, setGuests] = useState(2);
   const total = tierFor(tasting.price_tiers, guests).pricePerPerson * guests;
 
@@ -143,51 +133,20 @@ export default function TastingDetailPreviewPage() {
         <TicketPicker tiers={tasting.price_tiers} guests={guests} onChange={setGuests} />
       </div>
 
-      <div className="blocks">
-        <section>
-          <div className="block__list">
-            {products.map((p) => (
-              <div key={p.id} className="card" style={{ cursor: "default" }}>
-                <div className="card__num tabnum">№{p.number}</div>
-                <div className="card__body">
-                  <div className="card__title-row">
-                    <span className="card__title">{p.name}</span>
-                    {p.is_reviewed && (
-                      <span className="card__check">
-                        <IconCheck size={13} stroke={2.5} />
-                      </span>
-                    )}
-                  </div>
-                  {p.description && <div className="card__line">{p.description}</div>}
-                </div>
-                <div className="card__rating-slot">
-                  {p.is_nominated ? (
-                    <span className="card__finalist">
-                      <IconMedal size={16} filled stroke={1.8} />
-                    </span>
-                  ) : (
-                    <span className="card__chev">
-                      <IconChevronRight size={16} />
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
       <AppFooter />
       <div className="main-footer-spacer" />
     </div>
 
     <div className="footer buy-bar">
       <div className="buy-bar__total">
-        <span className="buy-bar__label">Итого</span>
         <span className="buy-bar__sum tabnum">{formatPrice(total)} ₽</span>
+        <span className="buy-bar__note">{guests} {guestsWord(guests)}</span>
       </div>
       {/* TODO: заменить на реальное оформление билета, когда появится оплата */}
-      <button type="button" className="btn btn--primary buy-bar__btn">Купить билет</button>
+      <button type="button" className="btn btn--primary buy-bar__btn">
+        <span>Купить билет</span>
+        <IconArrowRight size={17} stroke={2} />
+      </button>
     </div>
     </>
   );

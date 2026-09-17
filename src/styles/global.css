@@ -2796,6 +2796,46 @@ input, textarea { font: inherit; color: inherit; }
 #chef-teas,
 [id^="schedule-month-"] { scroll-margin-top: 86px; }
 
+/* Дегустация всплывает панелью поверх расписания: список остаётся позади,
+   сверху видна его полоска — понятно, что это слой, а не новая страница. */
+.sheet-backdrop {
+  position: absolute; inset: 0; z-index: 55;
+  background: rgba(20, 28, 24, 0.35);
+  animation: sheet-backdrop-in 220ms ease;
+}
+.sheet {
+  position: absolute; inset: 14px 0 0; z-index: 56;
+  background: white; border-radius: 22px 22px 0 0; overflow: hidden;
+  box-shadow: 0 -18px 50px -20px rgba(20, 28, 24, 0.45);
+  animation: sheet-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet__grip {
+  position: absolute; top: 7px; left: 50%; transform: translateX(-50%); z-index: 70;
+  width: 38px; height: 4px; border-radius: 999px; background: var(--stone-300);
+}
+.sheet__close {
+  position: absolute; top: 14px; right: 14px; z-index: 70;
+  width: 34px; height: 34px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.92); color: var(--stone-700);
+  box-shadow: 0 6px 18px -10px rgba(20, 28, 24, 0.5);
+  transition: background-color 140ms, color 140ms, transform 100ms;
+}
+.sheet__close:hover { background: white; color: var(--stone-900); }
+.sheet__close:active { transform: scale(0.94); }
+/* Контент дегустации внутри панели начинается ниже язычка; плашка «превью»
+   тут лишняя — она про отдельный демо-маршрут, а не про этот слой. */
+.sheet .main-scroll { top: 12px; }
+.sheet .preview-banner { display: none; }
+@keyframes sheet-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheet-backdrop { animation: none; }
+}
+
 /* Возврат наверх: появляется, когда список ушёл достаточно далеко. */
 .to-top {
   position: fixed; right: 18px; bottom: 18px; z-index: 40;

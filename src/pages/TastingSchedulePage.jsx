@@ -8,7 +8,8 @@ import EveningStepsBlock from "../components/EveningStepsBlock.jsx";
 import TastingScheduleCard from "../components/TastingScheduleCard.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
-import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSearch, IconSort, IconTelegram } from "../components/icons.jsx";
+import TastingDetailPreviewPage from "./TastingDetailPreviewPage.jsx";
+import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSearch, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
 import { getCeremonies } from "../api/ceremony.js";
@@ -83,6 +84,7 @@ export default function TastingSchedulePage({ preview }) {
 
   const scrollRef = useRef(null);
   const [showToTop, setShowToTop] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,10 +126,12 @@ export default function TastingSchedulePage({ preview }) {
   );
 
   // В превью-режиме бэкенда нет: расписание собрано из моков, поэтому
-  // предстоящая дегустация открывается демо-страницей дегустации — так
-  // путь «карточка → страница дегустации → билет» проходится целиком.
-  const openUpcoming = (tasting) =>
-    navigate(preview ? `/design/tasting-preview` : `/tasting/${tasting.id}`);
+  // предстоящая дегустация всплывает панелью поверх расписания — список
+  // остаётся под ней, и возврат не перезагружает страницу.
+  const openUpcoming = (tasting) => {
+    if (preview) setSheetOpen(true);
+    else navigate(`/tasting/${tasting.id}`);
+  };
 
   const openTasting = (tasting) => {
     if (tab === "past") navigate(`/tasting/${tasting.id}/result`);
@@ -166,6 +170,13 @@ export default function TastingSchedulePage({ preview }) {
     return () => scroller.removeEventListener("scroll", update);
   }, [loading, ceremoniesLoading]);
 
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e) => e.key === "Escape" && setSheetOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [sheetOpen]);
+
   const scrollToTop = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -182,6 +193,7 @@ export default function TastingSchedulePage({ preview }) {
   );
 
   return (
+    <>
     <div className="schedule-scroll" ref={scrollRef}>
       <PageHeader
         right={
@@ -379,5 +391,24 @@ export default function TastingSchedulePage({ preview }) {
         <IconChevronUp size={20} stroke={2} />
       </button>
     </div>
+
+    {sheetOpen && (
+      <>
+        <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} />
+        <div className="sheet" role="dialog" aria-modal="true" aria-label="Дегустация">
+          <span className="sheet__grip" aria-hidden="true" />
+          <button
+            type="button"
+            className="sheet__close"
+            onClick={() => setSheetOpen(false)}
+            aria-label="Закрыть"
+          >
+            <IconX size={18} stroke={2.2} />
+          </button>
+          <TastingDetailPreviewPage />
+        </div>
+      </>
+    )}
+    </>
   );
 }

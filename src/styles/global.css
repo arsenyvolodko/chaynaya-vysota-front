@@ -501,6 +501,23 @@ input, textarea { font: inherit; color: inherit; }
       0 100% / calc(2 * var(--scallop)) var(--scallop) repeat-x,
     linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--scallop)) no-repeat;
 }
+.ticket-card__title {
+  margin-bottom: 11px;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 600;
+  color: var(--stone-900); letter-spacing: -0.005em;
+}
+/* Билет в первый ряд — тот же чек, только на нежно-зелёной бумаге; чтобы
+   выбранный тариф на ней читался, он тонируется на ступень глубже. */
+.ticket-card--front { background: var(--green-50); }
+.ticket-card--front .ticket-card__title { color: var(--green-900); }
+.ticket-card--front .tariff { border-color: var(--green-100); }
+.ticket-card--front .tariff.is-on { background: var(--green-100); }
+.ticket-card--front .ticket-card__cut {
+  background-image: repeating-linear-gradient(
+    to right, var(--green-200) 0 9px, transparent 9px 17px
+  );
+}
+.ticket-card--front .stepper__btn { border-color: var(--green-300); }
 
 /* Сетка тарифов — все цены видно сразу, активный подсвечен. Та же сетка
    у нижней строки чека, чтобы итог встал ровно под ценой первого тарифа. */
@@ -542,6 +559,7 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--sans); font-size: 22px; font-weight: 700;
   color: var(--stone-900); letter-spacing: -0.015em;
 }
+.ticket-card__total.is-empty { color: var(--stone-300); }
 
 .stepper {
   grid-column: 2 / -1; justify-self: end;
@@ -560,6 +578,12 @@ input, textarea { font: inherit; color: inherit; }
 .stepper__value {
   min-width: 34px; text-align: center;
   font-size: 16px; font-weight: 600; color: var(--stone-900);
+}
+
+/* Описание дегустации под билетом. */
+.tasting-about { margin-top: 26px; }
+.tasting-about__text {
+  margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: var(--stone-600);
 }
 
 /* Прилипшая панель покупки: слева итог, справа кнопка. Подложка матовая
@@ -2815,7 +2839,11 @@ input, textarea { font: inherit; color: inherit; }
 .section-head__title {
   margin: 0; font-family: var(--sans); font-size: 23px; font-weight: 700;
   color: var(--stone-900); letter-spacing: -0.014em; line-height: 1.2;
+  text-wrap: nowrap;
 }
+/* В строке с иконками заголовок не должен переноситься — ужимаем кегль,
+   но только там, где рядом действия. */
+.section-head--row .section-head__title { font-size: 21px; }
 .section-head__lede {
   margin: 9px 0 0; font-size: 15px; line-height: 1.5;
   color: var(--stone-600); max-width: 560px; text-wrap: pretty;
@@ -2823,11 +2851,10 @@ input, textarea { font: inherit; color: inherit; }
 
 /* Полоса-призыв между секциями: закрывает вопрос «а если дата не подошла»
    и заодно разделяет витрину расписания и следующий блок. */
+/* Без подложки: строка-предложение прямо на странице, кнопка справа. */
 .inline-cta {
-  margin: 22px 16px 0; padding: 16px 18px;
+  margin: 22px 16px 0;
   display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
-  background: linear-gradient(135deg, #f5f8ef 0%, #eef3e4 100%);
-  border: 1px solid #e3ead0; border-radius: 16px;
 }
 .inline-cta__body { display: flex; flex-direction: column; gap: 4px; }
 .inline-cta__title {
@@ -2835,7 +2862,7 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--stone-900); letter-spacing: -0.008em;
 }
 .inline-cta__text { font-size: 14.5px; line-height: 1.45; color: var(--stone-700); }
-.inline-cta__btn { flex-shrink: 0; background: white; text-decoration: none; }
+.inline-cta__btn { flex-shrink: 0; align-self: flex-end; background: white; text-decoration: none; }
 
 /* «Как проходит вечер» — объясняет формат тем, кто ещё не был. */
 .steps-block { margin: 32px 0 0; padding: 26px 0 28px; background: var(--stone-50); }
@@ -2895,7 +2922,7 @@ input, textarea { font: inherit; color: inherit; }
 .promo-carousel__cell:last-child { margin-right: 0; }
 
 .promo-slide {
-  height: 46dvh; max-height: 400px;
+  height: 60dvh; max-height: 540px;
   border-radius: 20px;
   display: flex; flex-direction: column; align-items: flex-start;
   text-align: left; overflow: hidden;
@@ -2917,15 +2944,25 @@ input, textarea { font: inherit; color: inherit; }
 .promo-slide--photo .promo-slide__eyebrow { color: rgba(255, 255, 255, 0.85); opacity: 1; }
 .promo-slide--photo .promo-slide__title,
 .promo-slide--photo .promo-slide__event-when { color: white; }
-.promo-slide--photo .promo-slide__event-link { color: white; }
 
+/* Ближайшее событие: весь текст собран внизу лесенкой «надзаголовок —
+   название — дата», кнопка уходит вправо. */
 .promo-slide--event {
-  justify-content: flex-end; gap: 6px;
+  justify-content: flex-end;
   background: linear-gradient(160deg, #eef3e4 0%, #dfe9d0 55%, #cfdfbb 100%);
   color: var(--sage-warm-deep);
   transition: background-color 140ms;
 }
 .promo-slide--event:active { transform: translateY(1px); }
+.promo-slide__event-body {
+  width: 100%; display: flex; flex-direction: column; align-items: flex-start;
+}
+/* Дата и кнопка — одной строкой, поэтому дата короткая: с днём недели она
+   не умещается рядом с кнопкой на телефоне. */
+.promo-slide__event-row {
+  width: 100%; margin-top: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
 .promo-slide--chef {
   justify-content: flex-end; gap: 10px;
   background: linear-gradient(160deg, #3c4633 0%, #2a3223 65%, #1e241a 100%);
@@ -2946,19 +2983,26 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--serif); font-size: 26px; line-height: 1.12;
   letter-spacing: -0.012em; font-weight: 400; margin-top: 4px;
 }
-.promo-slide__title--event { font-size: 22px; margin-top: 2px; }
+.promo-slide__title--event { font-size: 22px; margin-top: 8px; }
 .promo-slide__text {
   margin: 0; font-size: 13.5px; line-height: 1.55; opacity: 0.82; max-width: 30ch;
 }
 .promo-slide__event-when {
-  font-size: 13px; font-variant-numeric: tabular-nums lining-nums; opacity: 0.8;
+  min-width: 0;
+  font-size: 14.5px; font-weight: 700; letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums lining-nums; color: var(--green-800);
 }
-.promo-slide__event-link {
-  margin-top: 10px; display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13.5px; font-weight: 600; color: var(--green-800);
+.promo-slide__event-cta {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 11px 16px 11px 18px; border-radius: 999px;
+  background: white; color: var(--green-800);
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 20px -14px rgba(20, 28, 24, 0.55);
 }
+.promo-slide--event:hover .promo-slide__event-cta { background: var(--ivory-soft); }
 .promo-slide__cta {
-  margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px; align-self: flex-end; display: inline-flex; align-items: center; gap: 8px;
   padding: 12px 18px; border-radius: 999px; text-decoration: none;
   font-size: 14px; font-weight: 500; color: var(--stone-900);
   background: rgba(255, 255, 255, 0.92);
@@ -3004,12 +3048,8 @@ input, textarea { font: inherit; color: inherit; }
   background: linear-gradient(155deg, #3c4633 0%, #2a3223 65%, #1e241a 100%);
   border: 1px solid #2a3223; color: var(--ivory-soft);
 }
-.format-card__head {
-  width: 100%; margin-bottom: 14px;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
 .format-card__badge {
-  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 11px; border-radius: 999px;
   font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
 }
@@ -3038,11 +3078,17 @@ input, textarea { font: inherit; color: inherit; }
 .format-card--charter .format-card__fact {
   background: rgba(255, 255, 255, 0.7); color: var(--stone-700);
 }
+.format-card--charter .format-card__fact svg { color: var(--green-700); }
+.format-card--charter .format-card__fact:first-child svg { fill: currentColor; }
 .format-card--chef .format-card__fact {
   background: rgba(255, 255, 255, 0.1); color: var(--ivory-soft);
 }
+/* Низ карточки: цена слева, переход справа — на одной линии. */
+.format-card__bottom {
+  width: 100%; margin-top: auto; padding-top: 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
 .format-card__btn {
-  margin-top: auto; padding-top: 18px;
   display: inline-flex; align-items: center; gap: 7px;
   font-size: 14px; font-weight: 600;
   transition: gap 140ms;
@@ -3076,8 +3122,6 @@ input, textarea { font: inherit; color: inherit; }
 }
 .plank__btn:hover { background: var(--ivory-soft); }
 .plank__btn:active { transform: translateY(1px); }
-
-.schedule-head__lede { margin-top: 6px; font-size: 15px; line-height: 1.5; color: var(--stone-600); }
 
 .schedule-tabs {
   margin: 0 16px 8px; padding: 3px;
@@ -3363,16 +3407,6 @@ button.cal__cell:hover { background: var(--stone-100); }
 .schedule-card--compact .schedule-card__price { font-size: 14px; }
 
 /* Явный призыв на карточке: до него было неочевидно, что карточка кликабельна. */
-.schedule-card__cta {
-  margin-top: 12px; padding-top: 12px;
-  border-top: 1px solid var(--stone-100);
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 14.5px; font-weight: 700; color: var(--green-800);
-  transition: gap 140ms;
-}
-.schedule-card:hover .schedule-card__cta { gap: 10px; }
-.schedule-card--compact .schedule-card__cta { display: none; }
-
 .schedule-empty {
   margin: 8px 16px 0; padding: 16px 14px;
   background: var(--stone-50); border: 1px dashed var(--stone-200); border-radius: 10px;
@@ -3412,7 +3446,6 @@ button.cal__cell:hover { background: var(--stone-100); }
   .page-header,
   .app-header,
   .result-scroll,
-  .schedule-head,
   .schedule-timeline,
   .schedule-list--flat,
   .promo-carousel__track {
@@ -3481,7 +3514,6 @@ button.cal__cell:hover { background: var(--stone-100); }
   .page-header,
   .app-header,
   .result-scroll,
-  .schedule-head,
   .schedule-timeline,
   .schedule-list--flat,
   .promo-carousel__track {
@@ -3524,7 +3556,6 @@ button.cal__cell:hover { background: var(--stone-100); }
      а не сдвигом контейнера — иначе поедут края. */
   .auth__lede,
   .hero__lede,
-  .schedule-head__lede,
   .schedule-cta-block__text { max-width: 640px; }
 
   /* Промо-листалка: на телефоне слайд занимает почти всю ширину трека, на
@@ -3548,7 +3579,6 @@ button.cal__cell:hover { background: var(--stone-100); }
 
   /* Больше воздуха между секциями: на широком экране прежние 18–28px
      заставляли блоки слипаться в одну простыню. */
-  .schedule-head { padding-top: 40px; padding-bottom: 8px; }
   .promo-carousel { margin-bottom: 56px; }
   .info-block { margin-top: 0; margin-bottom: 56px; }
   .plank { margin-bottom: 64px; }

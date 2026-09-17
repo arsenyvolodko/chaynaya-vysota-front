@@ -224,14 +224,6 @@ export default function TastingSchedulePage({ preview }) {
         <span className="section-bar__title">{activeSection}</span>
       </div>
 
-      <div className="schedule-head">
-        <h1 className="title-xl">Мероприятия</h1>
-        <p className="schedule-head__lede">
-          Чайные и мороженые дегустации в одном расписании. Пробуем вслепую,
-          оцениваем по шкалам и вместе выбираем фаворитов вечера.
-        </p>
-      </div>
-
       <PromoCarousel
         nearestTasting={upcoming[0] || null}
         onOpenNearest={openUpcoming}
@@ -358,7 +350,7 @@ export default function TastingSchedulePage({ preview }) {
           rel="noopener noreferrer"
         >
           <IconTelegram size={16} />
-          <span>Спросить о датах</span>
+          <span>Связаться с нами</span>
         </a>
       </div>
 

@@ -28,19 +28,28 @@ function tierLabel(tier) {
     : `${tier.min}–${tier.max} ${guestsWord(tier.max)}`;
 }
 
+// Ноль гостей — валидное состояние: билеты двух видов, и любой из них
+// можно не брать вовсе, поэтому тариф тогда не подсвечен, а сумма нулевая.
 export function tierFor(tiers, guests) {
-  return tiers.find((t) => guests >= t.min && guests <= t.max) || tiers[tiers.length - 1];
+  return tiers.find((t) => guests >= t.min && guests <= t.max) || null;
 }
 
-export default function TicketPicker({ tiers, guests, onChange }) {
+export function ticketTotal(tiers, guests) {
+  const tier = tierFor(tiers, guests);
+  return tier ? tier.pricePerPerson * guests : 0;
+}
+
+export default function TicketPicker({ title, tone, tiers, guests, onChange }) {
   const maxGuests = tiers[tiers.length - 1].max;
   const current = tierFor(tiers, guests);
-  const total = current.pricePerPerson * guests;
+  const total = ticketTotal(tiers, guests);
 
-  const setGuests = (n) => onChange(Math.min(maxGuests, Math.max(1, n)));
+  const setGuests = (n) => onChange(Math.min(maxGuests, Math.max(0, n)));
 
   return (
-    <div className="ticket-card">
+    <div className={`ticket-card ${tone ? `ticket-card--${tone}` : ""}`}>
+      <div className="ticket-card__title">{title}</div>
+
       <div className="tariffs">
         {tiers.map((t) => (
           <button
@@ -60,13 +69,15 @@ export default function TicketPicker({ tiers, guests, onChange }) {
       <div className="ticket-card__cut" aria-hidden="true" />
 
       <div className="ticket-card__bottom">
-        <span className="ticket-card__total tabnum">{formatPrice(total)} ₽</span>
+        <span className={`ticket-card__total tabnum ${total ? "" : "is-empty"}`}>
+          {formatPrice(total)} ₽
+        </span>
         <div className="stepper">
           <button
             type="button"
             className="stepper__btn"
             onClick={() => setGuests(guests - 1)}
-            disabled={guests <= 1}
+            disabled={guests <= 0}
             aria-label="Меньше гостей"
           >
             <IconMinus size={16} stroke={2.2} />

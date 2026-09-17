@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { IconArrowRight, IconChevronRight, IconLeaf, IconTicket } from "./icons.jsx";
-import { formatTastingTime, formatWeekdayDate } from "../utils/date.js";
+import { formatTastingDateShort, formatTastingTime } from "../utils/date.js";
 
 // Промо-листалка на странице расписания — 2/3 экрана, три смысловых экрана:
 // ближайшая дегустация (переход к ней), шеф-чаепития (якорь ниже на этой же
@@ -57,15 +57,20 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
             {nearestTasting.cover_url && (
               <img className="promo-slide__photo" src={nearestTasting.cover_url} alt="" />
             )}
-            <span className="promo-slide__eyebrow">Ближайшая дегустация</span>
-            <span className="promo-slide__title promo-slide__title--event">{nearestTasting.title}</span>
-            <span className="promo-slide__event-when">
-              {formatWeekdayDate(nearestTasting.date)}
-              {nearestTasting.date && `, ${formatTastingTime(nearestTasting.date)}`}
-            </span>
-            <span className="promo-slide__event-link">
-              Смотреть дегустацию
-              <IconChevronRight size={15} stroke={2} />
+            <span className="promo-slide__event-body">
+              <span className="promo-slide__eyebrow">Совсем скоро</span>
+              <span className="promo-slide__title promo-slide__title--event">{nearestTasting.title}</span>
+              <span className="promo-slide__event-row">
+                <span className="promo-slide__event-when">
+                  {formatTastingDateShort(nearestTasting.date)}
+                  {nearestTasting.date && `, ${formatTastingTime(nearestTasting.date)}`}
+                </span>
+                {/* Не <button>: слайд сам кнопка, вложенная кнопка невалидна. */}
+                <span className="promo-slide__event-cta">
+                  Я приду!
+                  <IconChevronRight size={15} stroke={2.2} />
+                </span>
+              </span>
             </span>
           </button>
         )}

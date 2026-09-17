@@ -1,4 +1,4 @@
-import { IconArrowRight, IconCalendar, IconLeaf, IconUser } from "./icons.jsx";
+import { IconArrowRight, IconCalendar, IconUser } from "./icons.jsx";
 import { formatPrice } from "../utils/price.js";
 
 // Блок под промо-листалкой: два формата чаепитий рядом — общий стол по
@@ -9,22 +9,20 @@ const FORMATS = [
   {
     key: "charter",
     tone: "charter",
-    badge: "По расписанию",
+    badge: "Каждую неделю",
     title: "Чартерные дегустации",
     text: "Общий стол на несколько гостей: дата и программа известны заранее. Чай и мороженое подают вслепую — вы оцениваете по шкалам, а в конце вечера стол собирает общий подиум фаворитов.",
-    icon: IconLeaf,
     facts: [
-      { icon: IconUser, label: "до 12 гостей" },
-      { icon: IconCalendar, label: "фиксированная дата" },
+      { icon: IconUser, label: "12–23 гостя" },
+      { icon: IconCalendar, label: "по расписанию" },
     ],
   },
   {
     key: "chef",
     tone: "chef",
-    badge: "Приватно",
+    badge: "По записи",
     title: "Шеф-чаепития",
     text: "Церемониальная комната и чайный шеф, который ведёт встречу от первой заварки до финала. У каждой — свой сценарий: тематические чаи, варка по древнему методу Лу Юя и перерывы на мороженое подходящих вкусов.",
-    icon: IconLeaf,
     facts: [
       { icon: IconUser, label: "1–6 гостей" },
       { icon: IconCalendar, label: "резерв за 3–5 дней" },
@@ -33,18 +31,9 @@ const FORMATS = [
 ];
 
 function FormatCard({ format, priceFrom, onGo }) {
-  const Icon = format.icon;
   return (
     <article className={`format-card format-card--${format.tone}`}>
-      <div className="format-card__head">
-        <span className="format-card__badge">
-          <Icon size={13} stroke={1.8} />
-          {format.badge}
-        </span>
-        {priceFrom != null && (
-          <span className="format-card__price tabnum">от {formatPrice(priceFrom)} ₽</span>
-        )}
-      </div>
+      <span className="format-card__badge">{format.badge}</span>
 
       <h3 className="format-card__title">{format.title}</h3>
       <p className="format-card__text">{format.text}</p>
@@ -58,10 +47,15 @@ function FormatCard({ format, priceFrom, onGo }) {
         ))}
       </ul>
 
-      <button type="button" className="format-card__btn" onClick={onGo}>
-        Перейти
-        <IconArrowRight size={16} stroke={2} />
-      </button>
+      <div className="format-card__bottom">
+        {priceFrom != null && (
+          <span className="format-card__price tabnum">от {formatPrice(priceFrom)} ₽</span>
+        )}
+        <button type="button" className="format-card__btn" onClick={onGo}>
+          Перейти
+          <IconArrowRight size={16} stroke={2} />
+        </button>
+      </div>
     </article>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
-import TicketPicker, { guestsWord, tierFor } from "../components/TicketPicker.jsx";
+import TicketPicker, { guestsWord, ticketTotal } from "../components/TicketPicker.jsx";
 import {
   IconArrowRight,
   IconCandy,
@@ -24,17 +24,40 @@ const DEMO_TASTING = {
   date: "2026-10-04T19:00:00",
   location_name: "Чайная высота / Винная глубина",
   location_address: "Тверская, 6 стр. 1",
-  // Цена за гостя зависит от размера компании — как в «Чайной высоте», где
-  // чаепитие на двоих стоит дешевле в пересчёте на человека, чем на одного,
-  // а на компанию — ещё дешевле. Средний тариф совпадает с ценой билета «х2»
-  // на реальной странице (2750 × 2 = 5500 ₽).
-  price_tiers: [
-    { min: 1, max: 1, pricePerPerson: 3200 },
-    { min: 2, max: 3, pricePerPerson: 2750 },
-    { min: 4, max: 6, pricePerPerson: 2500 },
+  // Два вида билета, у каждого своя сетка тарифов: цена за гостя падает с
+  // размером компании — как в «Чайной высоте», где чаепитие на двоих стоит
+  // дешевле в пересчёте на человека, чем на одного, а на компанию — ещё
+  // дешевле. Средний тариф зала совпадает с ценой билета «х2» на реальной
+  // странице (2750 × 2 = 5500 ₽); первый ряд дороже.
+  tickets: [
+    {
+      id: "hall",
+      title: "Билет в зал",
+      tiers: [
+        { min: 1, max: 1, pricePerPerson: 3200 },
+        { min: 2, max: 3, pricePerPerson: 2750 },
+        { min: 4, max: 6, pricePerPerson: 2500 },
+      ],
+    },
+    {
+      id: "front",
+      title: "Билет в первый ряд",
+      tone: "front",
+      tiers: [
+        { min: 1, max: 1, pricePerPerson: 4200 },
+        { min: 2, max: 3, pricePerPerson: 3700 },
+        { min: 4, max: 6, pricePerPerson: 3400 },
+      ],
+    },
   ],
   description:
     "Годовой цикл из 72 дегустаций — на каждой гости пробуют от 5 до 8 сортов чая, у каждой встречи свой тематический вектор. Билет на двоих.",
+  // Текст со страницы дегустации на teatix.com (product/dega_х2_namachocolate).
+  about: [
+    "72 — годовой план из семидесяти двух дегустаций, на каждой из которых гости попробуют от 5 до 8 сортов чая.",
+    "Царь обезьян Сунь Укун — очень близкий нам персонаж китайского эпоса, нарушитель спокойствия, герой, хитрец и доблестный воин. Его называют мастером 72 превращений.",
+    "Каждая встреча раскроет высокую чайную традицию с нового ракурса, а тот, кто пройдёт весь курс чайных отражений вместе с «Чайной высотой» и Укуном, попробует за год не меньше 365 чаёв.",
+  ],
   includes: [
     "6–7 сортов чая",
     "2 шарика чайного мороженого",
@@ -75,8 +98,13 @@ function TastingCoverPhoto() {
 
 export default function TastingDetailPreviewPage() {
   const tasting = DEMO_TASTING;
-  const [guests, setGuests] = useState(2);
-  const total = tierFor(tasting.price_tiers, guests).pricePerPerson * guests;
+  const [guestsByTicket, setGuestsByTicket] = useState({ hall: 2, front: 0 });
+  const setTicketGuests = (id, n) => setGuestsByTicket((prev) => ({ ...prev, [id]: n }));
+  const guests = tasting.tickets.reduce((sum, t) => sum + guestsByTicket[t.id], 0);
+  const total = tasting.tickets.reduce(
+    (sum, t) => sum + ticketTotal(t.tiers, guestsByTicket[t.id]),
+    0
+  );
 
   return (
     <>
@@ -130,7 +158,23 @@ export default function TastingDetailPreviewPage() {
 
         {/* TODO: строка [текст от Александры] — вставить перед блоком билетов, как только пришлёте текст. */}
 
-        <TicketPicker tiers={tasting.price_tiers} guests={guests} onChange={setGuests} />
+        {tasting.tickets.map((ticket) => (
+          <TicketPicker
+            key={ticket.id}
+            title={ticket.title}
+            tone={ticket.tone}
+            tiers={ticket.tiers}
+            guests={guestsByTicket[ticket.id]}
+            onChange={(n) => setTicketGuests(ticket.id, n)}
+          />
+        ))}
+
+        <div className="tasting-about">
+          <div className="section__label">Описание</div>
+          {tasting.about.map((paragraph, i) => (
+            <p className="tasting-about__text" key={i}>{paragraph}</p>
+          ))}
+        </div>
       </div>
 
       <AppFooter />
@@ -143,7 +187,7 @@ export default function TastingDetailPreviewPage() {
         <span className="buy-bar__note">{guests} {guestsWord(guests)}</span>
       </div>
       {/* TODO: заменить на реальное оформление билета, когда появится оплата */}
-      <button type="button" className="btn btn--primary buy-bar__btn">
+      <button type="button" className="btn btn--primary buy-bar__btn" disabled={total === 0}>
         <span>Купить билет</span>
         <IconArrowRight size={17} stroke={2} />
       </button>

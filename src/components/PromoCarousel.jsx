@@ -78,7 +78,7 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
         <div className="promo-carousel__cell promo-slide promo-slide--chef" ref={registerSlide}>
           <span className="promo-slide__eyebrow">Шеф-чаепития</span>
           <IconLeaf className="promo-slide__mark" size={26} stroke={1.3} />
-          <span className="promo-slide__title">Чаепитие без спешки</span>
+          <span className="promo-slide__title">Чайные церемонии</span>
           <p className="promo-slide__text">
             Приватная церемония с чайным шефом в тихой комнате «Чайной высоты» —
             для двоих или небольшой компании.

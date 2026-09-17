@@ -1,13 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import Logomark from "./Logomark.jsx";
-import { CONTACTS_URL } from "../utils/links.js";
 
 /**
  * Шапка, общая для всех внутренних страниц.
  *
  * Раскладок две:
- *  • без `back`: лого+«Контакты» слева, `right`-слот (аватар и т.п.) справа;
- *  • с `back`:   кнопка «Назад» слева, лого+«Контакты» справа.
+ *  • без `back`: лого слева, `right`-слот (аватар и т.п.) справа;
+ *  • с `back`:   кнопка «Назад» слева, лого справа.
  *
  * `center` — опциональный слот, абсолютно центрируется по ширине шапки
  * (например, индикатор «Шаг N» на странице сорта).
@@ -38,14 +37,6 @@ export default function PageHeader({ right, back, center, transparent }) {
         >
           <Logomark />
         </button>
-        <a
-          className="page-header__contacts"
-          href={CONTACTS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Контакты
-        </a>
       </div>
       {center != null && center !== false && (
         <div className="page-header__center">{center}</div>

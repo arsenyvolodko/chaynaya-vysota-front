@@ -1,5 +1,5 @@
 import { IconCheck, IconIceCream, IconLeaf } from "./icons.jsx";
-import { formatTastingDateDots } from "../utils/date.js";
+import { formatTastingDateDots, formatWeekdayShort } from "../utils/date.js";
 import { getTastingCapacityStatus, seatsLeft } from "../utils/tastingCapacity.js";
 import { formatPrice } from "../utils/price.js";
 
@@ -95,6 +95,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
   const dateLabel = tasting.date
     ? formatTastingDateDots(tasting.date)
     : tasting.dateLabel || null;
+  const weekdayLabel = formatWeekdayShort(tasting.date);
 
   // Мест нет и это предстоящая — вся карточка кликом ставит в лист ожидания
   // (кнопка внутри — просто акцентная подпись, а не отдельный контрол).
@@ -144,6 +145,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
         <div className="schedule-card__main">
           <div className="schedule-card__top">
             <span className="schedule-card__date">{dateLabel}</span>
+            {weekdayLabel && <span className="schedule-card__weekday">{weekdayLabel}</span>}
             <div className="schedule-card__tags">
               {(tasting.tags || []).map((t) => <TagIcon key={t} tag={t} />)}
             </div>
@@ -175,10 +177,14 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
     <button type="button" className="schedule-card" onClick={handleClick}>
       <Cover tasting={tasting} isIceCream={isIceCream}>
         <div className="schedule-card__cover-overlay">
-          <span className="schedule-card__date">{dateLabel}</span>
           <div className="schedule-card__tags">
             {(tasting.tags || []).map((t) => <TagIcon key={t} tag={t} chip />)}
           </div>
+        </div>
+
+        <div className="schedule-card__cover-date">
+          <span className="schedule-card__date">{dateLabel}</span>
+          {weekdayLabel && <span className="schedule-card__weekday">{weekdayLabel}</span>}
         </div>
       </Cover>
 

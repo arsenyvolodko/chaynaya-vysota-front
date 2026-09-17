@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
@@ -9,6 +9,7 @@ import TastingScheduleCard from "../components/TastingScheduleCard.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
 import TastingDetailPreviewPage from "./TastingDetailPreviewPage.jsx";
+import AuthPrompt from "../components/AuthPrompt.jsx";
 import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSearch, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
@@ -18,6 +19,14 @@ import { initialsOf } from "../utils/initials.js";
 import { seatsLeft } from "../utils/tastingCapacity.js";
 
 const TAG_ORDER = { tea: 0, ice_cream: 1 };
+
+// Предложение войти показываем, когда гость долистал до третьей карточки —
+// к этому моменту интерес уже виден, а на первом экране просьба выглядела бы
+// как шлагбаум. Один показ на сессию: второй раз это уже навязчивость.
+// Гостевой вход выдаёт токен, но аккаунта у человека нет — таким предлагаем
+// тоже, иначе «просто посмотреть» навсегда отключает регистрацию.
+const AUTH_PROMPT_AFTER_CARDS = 3;
+const AUTH_PROMPT_SEEN_KEY = "cv.authPrompt.seen";
 
 const SORT_OPTIONS = [
   { key: "date", label: "По дате" },
@@ -70,7 +79,7 @@ function sortList(list, sortBy) {
 
 export default function TastingSchedulePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated, wasSkipped } = useAuth();
 
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +97,8 @@ export default function TastingSchedulePage() {
   const [showToTop, setShowToTop] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTasting, setSelectedTasting] = useState(null);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const authGateRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -161,12 +172,38 @@ export default function TastingSchedulePage() {
     document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Кнопка возврата наверх появляется, когда список уже заметно пролистан.
+  const needsAccount = !isAuthenticated || wasSkipped;
+
+  // Один обработчик прокрутки на две задачи: кнопка «наверх» и предложение
+  // войти. Актуальные значения читаем из рефа — иначе обработчик пришлось бы
+  // переподписывать на каждый рендер.
+  const promptStateRef = useRef({ needsAccount: false, opened: false });
+  promptStateRef.current.needsAccount = needsAccount && !sheetOpen;
+
   useEffect(() => {
     const scroller = scrollRef.current;
     if (!scroller) return;
 
-    const update = () => setShowToTop(scroller.scrollTop > 700);
+    const update = () => {
+      setShowToTop(scroller.scrollTop > 700);
+
+      const state = promptStateRef.current;
+      if (state.opened || !state.needsAccount) return;
+      // Предложение ждёт, пока список реально пролистан: на первом экране
+      // карточки ещё грузят фото и якорь может оказаться в зоне видимости,
+      // хотя гость ничего не листал.
+      if (scroller.scrollTop < 400) return;
+      const anchor = authGateRef.current;
+      if (!anchor) return;
+      if (anchor.getBoundingClientRect().top > scroller.getBoundingClientRect().bottom) return;
+
+      let seen = false;
+      try { seen = sessionStorage.getItem(AUTH_PROMPT_SEEN_KEY) === "1"; } catch (_) {}
+      state.opened = true;
+      if (seen) return;
+      setAuthPromptOpen(true);
+      try { sessionStorage.setItem(AUTH_PROMPT_SEEN_KEY, "1"); } catch (_) {}
+    };
 
     scroller.addEventListener("scroll", update, { passive: true });
     update();
@@ -271,15 +308,19 @@ export default function TastingSchedulePage() {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const renderCard = (tasting) => (
-    <TastingScheduleCard
-      key={tasting.id}
-      tasting={tasting}
-      past={tab === "past"}
-      onOpen={openTasting}
-      waitlisted={waitlisted.has(tasting.id)}
-      onJoinWaitlist={joinWaitlist}
-    />
+  const renderCard = (tasting, index) => (
+    <Fragment key={tasting.id}>
+      <TastingScheduleCard
+        tasting={tasting}
+        past={tab === "past"}
+        onOpen={openTasting}
+        waitlisted={waitlisted.has(tasting.id)}
+        onJoinWaitlist={joinWaitlist}
+      />
+      {index === Math.min(AUTH_PROMPT_AFTER_CARDS, list.length) - 1 && (
+        <div className="auth-gate-anchor" ref={authGateRef} aria-hidden="true" />
+      )}
+    </Fragment>
   );
 
   return (
@@ -395,15 +436,22 @@ export default function TastingSchedulePage() {
         </div>
       ) : isTimeline ? (
         <div className="schedule-timeline">
-          {monthGroups.map((group) => (
-            <div className="schedule-timeline__group" id={`schedule-month-${group.key}`} key={group.key}>
-              <div className="schedule-timeline__marker">
-                <span className="schedule-timeline__dot" />
-                <span className="schedule-timeline__label">{group.label}</span>
+          {monthGroups.map((group, gi) => {
+            // Нумерация карточек сквозная по всем месяцам — иначе якорь
+            // предложения войти встанет в каждой группе.
+            const offset = monthGroups.slice(0, gi).reduce((n, g) => n + g.items.length, 0);
+            return (
+              <div className="schedule-timeline__group" id={`schedule-month-${group.key}`} key={group.key}>
+                <div className="schedule-timeline__marker">
+                  <span className="schedule-timeline__dot" />
+                  <span className="schedule-timeline__label">{group.label}</span>
+                </div>
+                <div className="schedule-list">
+                  {group.items.map((t, i) => renderCard(t, offset + i))}
+                </div>
               </div>
-              <div className="schedule-list">{group.items.map(renderCard)}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="schedule-list schedule-list--flat">{list.map(renderCard)}</div>
@@ -481,6 +529,13 @@ export default function TastingSchedulePage() {
         <IconChevronUp size={20} stroke={2} />
       </button>
     </div>
+
+    {authPromptOpen && !sheetOpen && (
+      <AuthPrompt
+        onClose={() => setAuthPromptOpen(false)}
+        onRegister={() => navigate(`/auth?return=${encodeURIComponent(window.location.pathname)}`)}
+      />
+    )}
 
     {sheetOpen && (
       <>

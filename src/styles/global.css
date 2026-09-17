@@ -265,20 +265,6 @@ input, textarea { font: inherit; color: inherit; }
   cursor: pointer;
   display: inline-flex;
 }
-.page-header__contacts {
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--stone-500);
-  font-weight: 500;
-  padding: 2px 0;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-  transition: color 140ms;
-}
-.page-header__contacts:hover { color: var(--green-800); }
-.page-header__contacts:visited { color: var(--stone-500); }
 .page-header__right { flex-shrink: 0; }
 
 /* Слот по центру шапки (например, «Шаг N» на детальной).
@@ -2998,6 +2984,75 @@ input, textarea { font: inherit; color: inherit; }
 #chef-teas,
 [id^="schedule-month-"] { scroll-margin-top: 86px; }
 
+/* Якорь, по которому ловим «долистал до N-й карточки». Нулевая высота не
+   годится: IntersectionObserver не считает пересечением пустой прямоугольник. */
+.auth-gate-anchor { height: 1px; }
+
+/* Окно-приглашение войти: по центру экрана, с крестиком и короткой формой.
+   Затемнение с размытием — список позади остаётся узнаваемым, но не тянет
+   внимание на себя. */
+.modal__backdrop {
+  position: absolute; inset: 0; z-index: 57;
+  background: rgba(20, 28, 24, 0.38);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: sheet-backdrop-in 200ms ease;
+}
+.modal {
+  position: absolute; z-index: 58;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: calc(100% - 32px); max-width: 360px;
+  max-height: calc(100% - 40px); overflow-y: auto;
+  padding: 26px 22px 20px;
+  background: white; border-radius: 22px;
+  box-shadow: 0 30px 70px -28px rgba(20, 28, 24, 0.55);
+  animation: modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal__close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--stone-400);
+  transition: background-color 140ms, color 140ms, transform 100ms;
+}
+.modal__close:hover { background: var(--stone-100); color: var(--stone-800); }
+.modal__close:active { transform: scale(0.94); }
+.modal__title {
+  margin: 0 28px 0 0; font-family: var(--serif); font-size: 22px; line-height: 1.18;
+  font-weight: 400; color: var(--stone-900); letter-spacing: -0.014em;
+}
+.modal__text {
+  margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: var(--stone-600);
+}
+.modal__form { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+.modal__form .btn { margin-top: 4px; }
+.modal__error {
+  margin: 0; font-size: 13px; line-height: 1.4; color: #b4432b;
+}
+.modal__switch {
+  margin: 14px 0 0; text-align: center;
+  font-size: 13.5px; color: var(--stone-500);
+}
+.modal__link {
+  font-size: 13.5px; font-weight: 600; color: var(--green-700);
+  text-decoration: underline; text-underline-offset: 3px;
+  transition: color 140ms;
+}
+.modal__link:hover { color: var(--green-900); }
+.modal__skip {
+  width: 100%; margin-top: 12px; padding-top: 14px;
+  border-top: 1px solid var(--stone-100);
+  font-size: 13.5px; color: var(--stone-400);
+  transition: color 140ms;
+}
+.modal__skip:hover { color: var(--stone-700); }
+@keyframes modal-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal__backdrop { animation: none; }
+}
+
 /* Дегустация всплывает панелью поверх расписания: список остаётся позади,
    сверху видна его полоска — понятно, что это слой, а не новая страница. */
 .sheet-backdrop {
@@ -3558,8 +3613,15 @@ button.cal__cell:hover { background: var(--stone-100); }
 .schedule-card__cover-overlay {
   position: absolute; inset: 0 0 auto 0;
   padding: 14px 16px;
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  display: flex; align-items: flex-start; justify-content: flex-end; gap: 8px;
   background: linear-gradient(180deg, rgba(20, 24, 20, 0.4) 0%, rgba(20, 24, 20, 0) 70%);
+}
+/* Дата — внизу снимка: так она рядом с названием и не спорит с тегами. */
+.schedule-card__cover-date {
+  position: absolute; inset: auto 0 0 0;
+  padding: 16px;
+  display: flex; align-items: baseline; gap: 8px;
+  background: linear-gradient(0deg, rgba(20, 24, 20, 0.6) 0%, rgba(20, 24, 20, 0) 100%);
 }
 /* Дата: в компактной карточке — обычная тёмная строка над заголовком;
    поверх фото (в оверлее большой карточки) — крупная белая с тенью. */
@@ -3568,9 +3630,15 @@ button.cal__cell:hover { background: var(--stone-100); }
   color: var(--stone-900); letter-spacing: -0.003em;
   font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
 }
-.schedule-card__cover-overlay .schedule-card__date {
-  font-size: 18px; color: white; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  display: inline-flex; align-items: baseline; gap: 8px;
+.schedule-card__cover-date .schedule-card__date {
+  font-size: 18px; color: white; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.schedule-card__weekday {
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  color: var(--stone-500); white-space: nowrap;
+}
+.schedule-card__cover-date .schedule-card__weekday {
+  color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 .schedule-card__full-label {
   font-family: var(--sans); font-size: 11px; font-weight: 600;

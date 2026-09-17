@@ -17,6 +17,8 @@ const WEEKDAYS_NOM = [
   "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота",
 ];
 
+const WEEKDAYS_SHORT = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+
 export function formatTastingDate(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -74,6 +76,14 @@ export function formatWeekdayDate(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
   return `${WEEKDAYS_NOM[d.getDay()]}, ${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`;
+}
+
+// «вс» — день недели строчными, рядом с датой на карточке расписания.
+export function formatWeekdayShort(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return WEEKDAYS_SHORT[d.getDay()];
 }
 
 // «СЕН» — короткое название месяца для бейджа-«календарика».

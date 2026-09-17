@@ -15,6 +15,7 @@ function daysFromNow(days, hours = 15, minutes = 0) {
 export const SCHEDULE_MOCK = [
   {
     id: "sch-1",
+    cover_url: "/photos/tasting-1.jpg",
     title: "Улуны высокогорного Тайваня",
     date: daysFromNow(3, 18, 30),
     price_from: 1900,
@@ -26,6 +27,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-2",
+    cover_url: "/photos/tasting-11.jpg",
     title: "Мороженое ручной работы: осенняя линейка",
     date: daysFromNow(6, 19, 0),
     price_from: 1400,
@@ -37,6 +39,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-3",
+    cover_url: "/photos/tasting-9.jpg",
     title: "Чай и мороженое: неожиданные пары",
     date: daysFromNow(9, 17, 0),
     price_from: 2200,
@@ -48,6 +51,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-4",
+    cover_url: "/photos/tasting-4.jpg",
     title: "Пуэры: молодые и выдержанные",
     date: daysFromNow(24, 18, 0),
     price_from: 2100,
@@ -59,6 +63,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-5",
+    cover_url: "/photos/tasting-6.jpg",
     title: "Ремесленное мороженое: базовый курс",
     date: daysFromNow(41, 16, 0),
     price_from: 1600,
@@ -69,6 +74,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-6",
+    cover_url: "/photos/tasting-5.jpg",
     title: "Красные чаи провинции Юньнань",
     date: daysFromNow(68, 18, 30),
     price_from: 1800,
@@ -80,6 +86,7 @@ export const SCHEDULE_MOCK = [
   // Прошедшие
   {
     id: "sch-7",
+    cover_url: "/photos/tasting-3.jpg",
     title: "Белые чаи нового урожая",
     date: daysFromNow(-6, 18, 0),
     price_from: 1700,
@@ -90,6 +97,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-8",
+    cover_url: "/photos/tasting-8.jpg",
     title: "Мороженое и чай: летний сезон",
     date: daysFromNow(-19, 19, 0),
     price_from: 2000,
@@ -100,6 +108,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-9",
+    cover_url: "/photos/tasting-7.jpg",
     title: "Зелёные чаи Китая",
     date: daysFromNow(-33, 17, 30),
     price_from: 1500,
@@ -110,6 +119,7 @@ export const SCHEDULE_MOCK = [
   },
   {
     id: "sch-10",
+    cover_url: "/photos/tasting-2.jpg",
     title: "Сорбеты против пломбиров",
     date: daysFromNow(-58, 16, 0),
     price_from: 1300,

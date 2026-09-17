@@ -50,10 +50,13 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
         {nearestTasting && (
           <button
             type="button"
-            className="promo-carousel__cell promo-slide promo-slide--event"
+            className={`promo-carousel__cell promo-slide promo-slide--event ${nearestTasting.cover_url ? "promo-slide--photo" : ""}`}
             ref={registerSlide}
             onClick={() => onOpenNearest?.(nearestTasting)}
           >
+            {nearestTasting.cover_url && (
+              <img className="promo-slide__photo" src={nearestTasting.cover_url} alt="" />
+            )}
             <span className="promo-slide__eyebrow">Ближайшая дегустация</span>
             <span className="promo-slide__title promo-slide__title--event">{nearestTasting.title}</span>
             <span className="promo-slide__event-when">

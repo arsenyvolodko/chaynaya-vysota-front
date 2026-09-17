@@ -6,6 +6,7 @@
 export const CEREMONY_MOCK = [
   {
     id: "cer-1",
+    cover_url: "/photos/tasting-10.jpg",
     title: "Полезные ископаемые",
     price_from: 18800,
     price_to: 29800,
@@ -16,6 +17,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-2",
+    cover_url: "/photos/tasting-7.jpg",
     title: "Троеварствие",
     price_from: 17700,
     price_to: 27000,
@@ -26,6 +28,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-3",
+    cover_url: "/photos/tasting-2.jpg",
     title: "Три чая, три способа",
     price_from: 18000,
     price_to: 28000,
@@ -36,6 +39,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-4",
+    cover_url: "/photos/tasting-5.jpg",
     title: "Переходим на красный",
     price_from: 16000,
     price_to: 24000,
@@ -46,6 +50,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-5",
+    cover_url: "/photos/tasting-8.jpg",
     title: "Вверх! За облака!",
     price_from: 18800,
     price_to: 29000,
@@ -56,6 +61,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-6",
+    cover_url: "/photos/tasting-11.jpg",
     title: "Вершины",
     price_from: 16000,
     price_to: 25000,
@@ -66,6 +72,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-7",
+    cover_url: "/photos/tasting-6.jpg",
     title: "Высоты",
     price_from: 15000,
     price_to: 20000,
@@ -76,6 +83,7 @@ export const CEREMONY_MOCK = [
   },
   {
     id: "cer-8",
+    cover_url: "/photos/tasting-4.jpg",
     title: "Восхождение к вершинам",
     price_from: 16000,
     price_to: 25000,

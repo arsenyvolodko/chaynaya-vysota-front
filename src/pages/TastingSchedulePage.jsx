@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
@@ -8,7 +8,7 @@ import EveningStepsBlock from "../components/EveningStepsBlock.jsx";
 import TastingScheduleCard from "../components/TastingScheduleCard.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
-import { IconCalendar, IconCart, IconCheck, IconSearch, IconSort, IconTelegram } from "../components/icons.jsx";
+import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSearch, IconSort, IconTelegram } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
 import { getCeremonies } from "../api/ceremony.js";
@@ -45,6 +45,18 @@ function groupByMonth(items) {
   return groups;
 }
 
+// Секции, название которых подхватывает шапка при прокрутке.
+const SPY_SECTIONS = [
+  { id: "schedule-list", label: "Чартерные дегустации" },
+  { id: "chef-teas", label: "Шеф-чаепития" },
+];
+
+// «от N ₽» на карточке формата — по самой доступной встрече этого формата.
+function minPriceFrom(items) {
+  const prices = (items || []).map((t) => t.price_from).filter((p) => Number.isFinite(p));
+  return prices.length ? Math.min(...prices) : null;
+}
+
 function sortList(list, sortBy) {
   const sorted = [...list];
   if (sortBy === "type") {
@@ -74,6 +86,10 @@ export default function TastingSchedulePage({ preview }) {
 
   const [ceremonies, setCeremonies] = useState([]);
   const [ceremoniesLoading, setCeremoniesLoading] = useState(true);
+
+  const scrollRef = useRef(null);
+  const [activeSection, setActiveSection] = useState(null);
+  const [showToTop, setShowToTop] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +157,41 @@ export default function TastingSchedulePage({ preview }) {
     document.getElementById("schedule-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const scrollToChefTeas = () => {
+    document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Пока секция уехала под шапку, её название висит в шапке — иначе в длинном
+  // списке теряется, к какому формату относятся карточки. Заодно считаем,
+  // пора ли показывать кнопку возврата наверх.
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const update = () => {
+      const header = scroller.querySelector(".page-header");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      // Полоса с названием секции висит fixed сразу под шапкой, а высота
+      // шапки зависит от вёрстки — отдаём её в CSS.
+      scroller.style.setProperty("--header-h", `${Math.round(headerBottom)}px`);
+      let current = null;
+      for (const section of SPY_SECTIONS) {
+        const node = document.getElementById(section.id);
+        if (node && node.getBoundingClientRect().top <= headerBottom + 8) current = section.label;
+      }
+      setActiveSection(current);
+      setShowToTop(scroller.scrollTop > 700);
+    };
+
+    scroller.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => scroller.removeEventListener("scroll", update);
+  }, [loading, ceremoniesLoading]);
+
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const renderCard = (tasting) => (
     <TastingScheduleCard
       key={tasting.id}
@@ -153,7 +204,7 @@ export default function TastingSchedulePage({ preview }) {
   );
 
   return (
-    <div className="schedule-scroll">
+    <div className="schedule-scroll" ref={scrollRef}>
       <PageHeader
         right={
           <div className="page-header__icons">
@@ -167,6 +218,12 @@ export default function TastingSchedulePage({ preview }) {
         }
       />
 
+      {/* Отдельная полоса под шапкой: пока секция прокручивается, её название
+          остаётся на виду, но не теснит лого и иконки в самой шапке. */}
+      <div className={`section-bar ${activeSection ? "is-on" : ""}`} aria-hidden={!activeSection}>
+        <span className="section-bar__title">{activeSection}</span>
+      </div>
+
       <div className="schedule-head">
         <h1 className="title-xl">Мероприятия</h1>
         <p className="schedule-head__lede">
@@ -178,12 +235,15 @@ export default function TastingSchedulePage({ preview }) {
       <PromoCarousel
         nearestTasting={upcoming[0] || null}
         onOpenNearest={openUpcoming}
-        onOpenChefTeas={() =>
-          document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
+        onOpenChefTeas={scrollToChefTeas}
       />
 
-      <TastingFormatsBlock onPickDate={scrollToSchedule} />
+      <TastingFormatsBlock
+        onPickCharter={scrollToSchedule}
+        onPickChef={scrollToChefTeas}
+        charterPriceFrom={minPriceFrom(upcoming)}
+        chefPriceFrom={minPriceFrom(ceremonies)}
+      />
 
       <div className="section-head section-head--row" id="schedule-list">
         <div>
@@ -344,6 +404,16 @@ export default function TastingSchedulePage({ preview }) {
       </div>
 
       <AppFooter />
+
+      <button
+        type="button"
+        className={`to-top ${showToTop ? "is-on" : ""}`}
+        onClick={scrollToTop}
+        aria-label="Наверх"
+        tabIndex={showToTop ? 0 : -1}
+      >
+        <IconChevronUp size={20} stroke={2} />
+      </button>
     </div>
   );
 }

@@ -47,8 +47,28 @@ function TagIcon({ tag, chip }) {
   );
 }
 
-function CoverPlaceholder({ isIceCream, size = 56 }) {
-  return isIceCream ? <IconIceCream size={size} stroke={1.2} /> : <IconLeaf size={size} stroke={1.2} />;
+// Есть фото — показываем его, нет — прежняя иконка-заглушка.
+function Cover({ tasting, isIceCream, compact, children }) {
+  const compactClass = compact ? "schedule-card__cover--compact" : "";
+
+  if (tasting.cover_url) {
+    return (
+      <div className={`schedule-card__cover schedule-card__cover--photo ${compactClass}`}>
+        <img className="schedule-card__img" src={tasting.cover_url} alt="" loading="lazy" />
+        {children}
+      </div>
+    );
+  }
+
+  const toneClass = isIceCream ? "schedule-card__cover--ice-cream" : "schedule-card__cover--tea";
+  const size = compact ? 26 : 56;
+  return (
+    <div className={`schedule-card__cover ${toneClass} ${compactClass}`}>
+      {isIceCream ? <IconIceCream size={size} stroke={1.2} /> : <IconLeaf size={size} stroke={1.2} />}
+      <span className="schedule-card__cover-label">фото</span>
+      {children}
+    </div>
+  );
 }
 
 function PriceTag({ tasting }) {
@@ -145,10 +165,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
           )}
         </div>
 
-        <div className={`schedule-card__cover schedule-card__cover--compact ${isIceCream ? "schedule-card__cover--ice-cream" : "schedule-card__cover--tea"}`}>
-          <CoverPlaceholder isIceCream={isIceCream} size={26} />
-          <span className="schedule-card__cover-label">фото</span>
-        </div>
+        <Cover tasting={tasting} isIceCream={isIceCream} compact />
       </button>
     );
   }
@@ -156,16 +173,14 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
   // Обычная карточка — большая, фото на 2/3 высоты, дата/теги поверх фото.
   return (
     <button type="button" className="schedule-card" onClick={handleClick}>
-      <div className={`schedule-card__cover ${isIceCream ? "schedule-card__cover--ice-cream" : "schedule-card__cover--tea"}`}>
-        <CoverPlaceholder isIceCream={isIceCream} />
-        <span className="schedule-card__cover-label">фото</span>
+      <Cover tasting={tasting} isIceCream={isIceCream}>
         <div className="schedule-card__cover-overlay">
           <span className="schedule-card__date">{dateLabel}</span>
           <div className="schedule-card__tags">
             {(tasting.tags || []).map((t) => <TagIcon key={t} tag={t} chip />)}
           </div>
         </div>
-      </div>
+      </Cover>
 
       <div className="schedule-card__main">
         <div className="schedule-card__title">{tasting.title}</div>

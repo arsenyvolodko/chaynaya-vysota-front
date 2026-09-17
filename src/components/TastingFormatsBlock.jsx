@@ -1,88 +1,97 @@
-import { useState } from "react";
-import { IconArrowRight } from "./icons.jsx";
+import { IconArrowRight, IconCalendar, IconLeaf, IconUser } from "./icons.jsx";
+import { formatPrice } from "../utils/price.js";
 
-// Блок под промо-листалкой: переключатель форматов чаепитий (чартерные /
-// шеф) с тизером дегустационного листа, плюс отдельная акцентная плашка
-// про абонементы (структура — заголовок + бейдж, текст, кнопка на всю
-// ширину, по образцу спеки).
+// Блок под промо-листалкой: два формата чаепитий рядом — общий стол по
+// расписанию и приватная церемония с шефом. Каждая карточка ведёт к своему
+// списку ниже по странице. Отдельной плашкой — абонемент.
 
-const FORMAT_INFO = {
-  charter: {
-    tab: "Чартерные дегустации",
-    text: "Общий стол на несколько гостей — по расписанию, дата фиксирована заранее.",
-    capacityLabel: "до 12 гостей",
-    modeLabel: "общий стол",
+const FORMATS = [
+  {
+    key: "charter",
+    tone: "charter",
+    badge: "По расписанию",
+    title: "Чартерные дегустации",
+    text: "Общий стол на несколько гостей: дата и программа известны заранее. Чай и мороженое подают вслепую — вы оцениваете по шкалам, а в конце вечера стол собирает общий подиум фаворитов.",
+    icon: IconLeaf,
+    facts: [
+      { icon: IconUser, label: "до 12 гостей" },
+      { icon: IconCalendar, label: "фиксированная дата" },
+    ],
   },
-  chef: {
-    tab: "Шеф-чаепития",
-    text: "Приватная церемония с чайным шефом — дата и программа по договорённости.",
-    capacityLabel: "2–6 гостей",
-    modeLabel: "только ваша компания",
+  {
+    key: "chef",
+    tone: "chef",
+    badge: "Приватно",
+    title: "Шеф-чаепития",
+    text: "Церемониальная комната и чайный шеф, который ведёт встречу от первой заварки до финала. У каждой — свой сценарий: тематические чаи, варка по древнему методу Лу Юя и перерывы на мороженое подходящих вкусов.",
+    icon: IconLeaf,
+    facts: [
+      { icon: IconUser, label: "1–6 гостей" },
+      { icon: IconCalendar, label: "резерв за 3–5 дней" },
+    ],
   },
-};
+];
 
-export default function TastingFormatsBlock({ onPickDate }) {
-  const [format, setFormat] = useState("charter");
-  const current = FORMAT_INFO[format];
+function FormatCard({ format, priceFrom, onGo }) {
+  const Icon = format.icon;
+  return (
+    <article className={`format-card format-card--${format.tone}`}>
+      <div className="format-card__head">
+        <span className="format-card__badge">
+          <Icon size={13} stroke={1.8} />
+          {format.badge}
+        </span>
+        {priceFrom != null && (
+          <span className="format-card__price tabnum">от {formatPrice(priceFrom)} ₽</span>
+        )}
+      </div>
+
+      <h3 className="format-card__title">{format.title}</h3>
+      <p className="format-card__text">{format.text}</p>
+
+      <ul className="format-card__facts">
+        {format.facts.map(({ icon: FactIcon, label }) => (
+          <li className="format-card__fact" key={label}>
+            <FactIcon size={14} stroke={1.7} />
+            {label}
+          </li>
+        ))}
+      </ul>
+
+      <button type="button" className="format-card__btn" onClick={onGo}>
+        Перейти
+        <IconArrowRight size={16} stroke={2} />
+      </button>
+    </article>
+  );
+}
+
+export default function TastingFormatsBlock({ onPickCharter, onPickChef, charterPriceFrom, chefPriceFrom }) {
+  const priceByKey = { charter: charterPriceFrom, chef: chefPriceFrom };
+  const goByKey = { charter: onPickCharter, chef: onPickChef };
 
   return (
     <>
       <section className="info-block">
         <div className="info-block__intro">
-          <h2 className="title-lg info-block__title">Как устроены дегустации</h2>
+          <span className="section-head__eyebrow">Форматы</span>
+          <h2 className="info-block__title">Как устроены дегустации</h2>
           <p className="info-block__lede">
             Чаепитие здесь — не просто заваренный чай, а встреча на два-три
             часа: ведут её старшие мастера и чайный шеф клуба, а гости сами
-            выбирают сорта и сценарий вечера. Собраться можно и общей компанией
-            по расписанию, и приватно — по предварительному заказу.
+            выбирают сорта и сценарий вечера.
           </p>
         </div>
 
-        <div className="format-switch">
-          <div className="schedule-tabs format-switch__tabs" role="tablist">
-            {Object.entries(FORMAT_INFO).map(([key, meta]) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={format === key}
-                className={`schedule-tabs__tab ${format === key ? "is-on" : ""}`}
-                onClick={() => setFormat(key)}
-              >
-                {meta.tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="format-switch__panel" key={format}>
-            <p className="format-switch__text">{current.text}</p>
-            <div className="format-facts">
-              <div className="format-fact">
-                <span className="format-fact__label">Вместимость</span>
-                <span className="format-fact__value">{current.capacityLabel}</span>
-              </div>
-              <div className="format-fact">
-                <span className="format-fact__label">Формат встречи</span>
-                <span className="format-fact__value">{current.modeLabel}</span>
-              </div>
-            </div>
-            {onPickDate && (
-              <button type="button" className="btn-outline format-switch__cta" onClick={onPickDate}>
-                <span>Выбрать дату</span>
-                <IconArrowRight size={15} stroke={2} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="sheet-teaser">
-          <span className="eyebrow">На самой дегустации</span>
-          <h3 className="sheet-teaser__title">Пробуете чай — сразу оцениваете</h3>
-          <p className="sheet-teaser__text">
-            Дегустационный лист открывается прямо на встрече: ставите оценку
-            каждому чаю и коротко фиксируете впечатления — всё сохраняется, можно
-            вернуться позже.
-          </p>
+        <div className="format-cards">
+          {FORMATS.map((f) => (
+            <FormatCard
+              key={f.key}
+              format={f}
+              priceFrom={priceByKey[f.key]}
+              onGo={goByKey[f.key]}
+            />
+          ))}
         </div>
       </section>
 

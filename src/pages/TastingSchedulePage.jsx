@@ -45,12 +45,6 @@ function groupByMonth(items) {
   return groups;
 }
 
-// Секции, название которых подхватывает шапка при прокрутке.
-const SPY_SECTIONS = [
-  { id: "schedule-list", label: "Чартерные дегустации" },
-  { id: "chef-teas", label: "Шеф-чаепития" },
-];
-
 // «от N ₽» на карточке формата — по самой доступной встрече этого формата.
 function minPriceFrom(items) {
   const prices = (items || []).map((t) => t.price_from).filter((p) => Number.isFinite(p));
@@ -88,7 +82,6 @@ export default function TastingSchedulePage({ preview }) {
   const [ceremoniesLoading, setCeremoniesLoading] = useState(true);
 
   const scrollRef = useRef(null);
-  const [activeSection, setActiveSection] = useState(null);
   const [showToTop, setShowToTop] = useState(false);
 
   useEffect(() => {
@@ -161,27 +154,12 @@ export default function TastingSchedulePage({ preview }) {
     document.getElementById("chef-teas")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Пока секция уехала под шапку, её название висит в шапке — иначе в длинном
-  // списке теряется, к какому формату относятся карточки. Заодно считаем,
-  // пора ли показывать кнопку возврата наверх.
+  // Кнопка возврата наверх появляется, когда список уже заметно пролистан.
   useEffect(() => {
     const scroller = scrollRef.current;
     if (!scroller) return;
 
-    const update = () => {
-      const header = scroller.querySelector(".page-header");
-      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-      // Полоса с названием секции висит fixed сразу под шапкой, а высота
-      // шапки зависит от вёрстки — отдаём её в CSS.
-      scroller.style.setProperty("--header-h", `${Math.round(headerBottom)}px`);
-      let current = null;
-      for (const section of SPY_SECTIONS) {
-        const node = document.getElementById(section.id);
-        if (node && node.getBoundingClientRect().top <= headerBottom + 8) current = section.label;
-      }
-      setActiveSection(current);
-      setShowToTop(scroller.scrollTop > 700);
-    };
+    const update = () => setShowToTop(scroller.scrollTop > 700);
 
     scroller.addEventListener("scroll", update, { passive: true });
     update();
@@ -217,12 +195,6 @@ export default function TastingSchedulePage({ preview }) {
           </div>
         }
       />
-
-      {/* Отдельная полоса под шапкой: пока секция прокручивается, её название
-          остаётся на виду, но не теснит лого и иконки в самой шапке. */}
-      <div className={`section-bar ${activeSection ? "is-on" : ""}`} aria-hidden={!activeSection}>
-        <span className="section-bar__title">{activeSection}</span>
-      </div>
 
       <PromoCarousel
         nearestTasting={upcoming[0] || null}

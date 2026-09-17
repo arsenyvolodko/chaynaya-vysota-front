@@ -115,7 +115,7 @@ export default function TastingDetailPreviewPage() {
       <TastingCoverPhoto />
 
       <div className="hero">
-        <h1 className="title-xl hero__title">{tasting.title}</h1>
+        <h1 className="hero__title hero__title--tasting">{tasting.title}</h1>
 
         <div className="hero-meta-row">
           <span className="hero-meta-row__icon"><IconUser size={14} stroke={1.8} /></span>

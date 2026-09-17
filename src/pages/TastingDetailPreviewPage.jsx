@@ -2,6 +2,7 @@ import { useState } from "react";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import TicketPicker, { guestsWord, ticketTotal } from "../components/TicketPicker.jsx";
+import TicketCheckoutFlow from "../components/TicketCheckoutFlow.jsx";
 import {
   IconArrowRight,
   IconCandy,
@@ -19,6 +20,7 @@ import { formatPrice } from "../utils/price.js";
 // Бэкенд пока не отдаёт ни фото, ни ведущего, ни место, ни цену, ни состав —
 // эта страница нужна только чтобы показать дизайн, без реальных данных.
 const DEMO_TASTING = {
+  ticket_kind: "dated",
   title: "«72 чайных отражения Сунь Укуна»: дегустация х2 с NAMAchaiCHOCO",
   host: "Виктор Енин",
   date: "2026-10-04T19:00:00",
@@ -87,20 +89,46 @@ function DateBadge({ date }) {
 
 // Фото дегустации — бэкенд пока не отдаёт cover_image, поэтому заглушка,
 // как в карточках расписания.
-function TastingCoverPhoto() {
+function TastingCoverPhoto({ tasting }) {
+  if (tasting.cover_url) {
+    return (
+      <div className="tasting-cover">
+        <img
+          className="tasting-cover__img"
+          src={tasting.cover_url}
+          alt={`Обложка: ${tasting.title}`}
+        />
+      </div>
+    );
+  }
+
+  const isIceCream = tasting.cover === "ice_cream" || tasting.tags?.includes("ice_cream");
   return (
-    <div className="tasting-cover tasting-cover--ph tasting-cover--tea">
-      <IconLeaf size={40} stroke={1.4} />
+    <div className={`tasting-cover tasting-cover--ph ${isIceCream ? "tasting-cover--ice-cream" : "tasting-cover--tea"}`}>
+      {isIceCream
+        ? <IconIceCream size={40} stroke={1.4} />
+        : <IconLeaf size={40} stroke={1.4} />}
       <span className="tasting-cover__label">фото</span>
     </div>
   );
 }
 
-export default function TastingDetailPreviewPage() {
-  const tasting = DEMO_TASTING;
+export default function TastingDetailPreviewPage({ tastingOverride = null }) {
+  // Детали билетов пока демонстрационные, но основные данные и обложку берём
+  // с выбранной карточки — при открытии шторки контекст события не теряется.
+  const tasting = { ...DEMO_TASTING, ...(tastingOverride || {}) };
   const [guestsByTicket, setGuestsByTicket] = useState({ hall: 2, front: 0 });
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const setTicketGuests = (id, n) => setGuestsByTicket((prev) => ({ ...prev, [id]: n }));
   const guests = tasting.tickets.reduce((sum, t) => sum + guestsByTicket[t.id], 0);
+  const selections = tasting.tickets
+    .filter((ticket) => guestsByTicket[ticket.id] > 0)
+    .map((ticket) => ({
+      id: ticket.id,
+      title: ticket.title,
+      guests: guestsByTicket[ticket.id],
+      total: ticketTotal(ticket.tiers, guestsByTicket[ticket.id]),
+    }));
   const total = tasting.tickets.reduce(
     (sum, t) => sum + ticketTotal(t.tiers, guestsByTicket[t.id]),
     0
@@ -112,7 +140,7 @@ export default function TastingDetailPreviewPage() {
       <div className="preview-banner">Превью дизайна — демо-данные, не боевая страница</div>
       <PageHeader />
 
-      <TastingCoverPhoto />
+      <TastingCoverPhoto tasting={tasting} />
 
       <div className="hero">
         <h1 className="hero__title hero__title--tasting">{tasting.title}</h1>
@@ -186,12 +214,25 @@ export default function TastingDetailPreviewPage() {
         <span className="buy-bar__sum tabnum">{formatPrice(total)} ₽</span>
         <span className="buy-bar__note">{guests} {guestsWord(guests)}</span>
       </div>
-      {/* TODO: заменить на реальное оформление билета, когда появится оплата */}
-      <button type="button" className="btn btn--primary buy-bar__btn" disabled={total === 0}>
-        <span>Купить билет</span>
+      <button
+        type="button"
+        className="btn btn--primary buy-bar__btn"
+        disabled={total === 0}
+        onClick={() => setCheckoutOpen(true)}
+      >
+        <span>Оплатить билет</span>
         <IconArrowRight size={17} stroke={2} />
       </button>
     </div>
+
+    {checkoutOpen && (
+      <TicketCheckoutFlow
+        tasting={tasting}
+        selections={selections}
+        total={total}
+        onClose={() => setCheckoutOpen(false)}
+      />
+    )}
     </>
   );
 }

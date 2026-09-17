@@ -68,7 +68,7 @@ function sortList(list, sortBy) {
   return sorted;
 }
 
-export default function TastingSchedulePage({ preview }) {
+export default function TastingSchedulePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -83,8 +83,11 @@ export default function TastingSchedulePage({ preview }) {
   const [ceremoniesLoading, setCeremoniesLoading] = useState(true);
 
   const scrollRef = useRef(null);
+  const sheetRef = useRef(null);
+  const sheetBackdropRef = useRef(null);
   const [showToTop, setShowToTop] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedTasting, setSelectedTasting] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,12 +128,12 @@ export default function TastingSchedulePage({ preview }) {
     [list, isTimeline]
   );
 
-  // В превью-режиме бэкенда нет: расписание собрано из моков, поэтому
-  // предстоящая дегустация всплывает панелью поверх расписания — список
-  // остаётся под ней, и возврат не перезагружает страницу.
+  // Расписание пока целиком собрано из моков, поэтому его ID отсутствуют в
+  // боевом API. До появления эндпоинта деталей показываем готовую демо-страницу
+  // шторкой поверх списка и в обычном расписании, и в дизайн-превью.
   const openUpcoming = (tasting) => {
-    if (preview) setSheetOpen(true);
-    else navigate(`/tasting/${tasting.id}`);
+    setSelectedTasting(tasting || null);
+    setSheetOpen(true);
   };
 
   const openTasting = (tasting) => {
@@ -175,6 +178,93 @@ export default function TastingSchedulePage({ preview }) {
     const onKey = (e) => e.key === "Escape" && setSheetOpen(false);
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [sheetOpen]);
+
+  // Свайп вниз закрывает шторку из любой точки её содержимого, даже если
+  // внутренняя страница уже прокручена. Свайп вверх остаётся обычным скроллом.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const sheet = sheetRef.current;
+    const backdrop = sheetBackdropRef.current;
+    if (!sheet) return;
+
+    let gesture = null;
+    let closeTimer = null;
+
+    const resetPosition = () => {
+      sheet.classList.remove("is-dragging");
+      sheet.style.removeProperty("--sheet-drag-y");
+      backdrop?.style.removeProperty("--sheet-backdrop-opacity");
+    };
+
+    const onTouchStart = (event) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      gesture = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startedAt: performance.now(),
+        distance: 0,
+        dragging: false,
+        cancelled: false,
+      };
+    };
+
+    const onTouchMove = (event) => {
+      if (!gesture || gesture.cancelled || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - gesture.startX;
+      const dy = touch.clientY - gesture.startY;
+
+      if (!gesture.dragging) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+        if (dy <= 0 || Math.abs(dx) > Math.abs(dy)) {
+          gesture.cancelled = true;
+          return;
+        }
+        gesture.dragging = true;
+        sheet.classList.add("is-dragging");
+      }
+
+      event.preventDefault();
+      gesture.distance = Math.max(0, dy);
+      sheet.style.setProperty("--sheet-drag-y", `${gesture.distance}px`);
+      const opacity = Math.max(0, 1 - gesture.distance / (sheet.clientHeight * 0.75));
+      backdrop?.style.setProperty("--sheet-backdrop-opacity", String(opacity));
+    };
+
+    const finishGesture = () => {
+      if (!gesture) return;
+      const elapsed = Math.max(1, performance.now() - gesture.startedAt);
+      const velocity = gesture.distance / elapsed;
+      const shouldClose = gesture.dragging && (
+        gesture.distance >= Math.min(120, sheet.clientHeight * 0.18)
+        || (gesture.distance >= 44 && velocity > 0.55)
+      );
+      gesture = null;
+
+      if (shouldClose) {
+        sheet.classList.remove("is-dragging");
+        sheet.classList.add("is-dismissing");
+        backdrop?.classList.add("is-dismissing");
+        closeTimer = window.setTimeout(() => setSheetOpen(false), 220);
+      } else {
+        resetPosition();
+      }
+    };
+
+    sheet.addEventListener("touchstart", onTouchStart, { passive: true });
+    sheet.addEventListener("touchmove", onTouchMove, { passive: false });
+    sheet.addEventListener("touchend", finishGesture, { passive: true });
+    sheet.addEventListener("touchcancel", finishGesture, { passive: true });
+
+    return () => {
+      window.clearTimeout(closeTimer);
+      sheet.removeEventListener("touchstart", onTouchStart);
+      sheet.removeEventListener("touchmove", onTouchMove);
+      sheet.removeEventListener("touchend", finishGesture);
+      sheet.removeEventListener("touchcancel", finishGesture);
+    };
   }, [sheetOpen]);
 
   const scrollToTop = () => {
@@ -394,8 +484,8 @@ export default function TastingSchedulePage({ preview }) {
 
     {sheetOpen && (
       <>
-        <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} />
-        <div className="sheet" role="dialog" aria-modal="true" aria-label="Дегустация">
+        <div ref={sheetBackdropRef} className="sheet-backdrop" onClick={() => setSheetOpen(false)} />
+        <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-label="Дегустация">
           <span className="sheet__grip" aria-hidden="true" />
           <button
             type="button"
@@ -405,7 +495,7 @@ export default function TastingSchedulePage({ preview }) {
           >
             <IconX size={18} stroke={2.2} />
           </button>
-          <TastingDetailPreviewPage />
+          <TastingDetailPreviewPage tastingOverride={selectedTasting} />
         </div>
       </>
     )}

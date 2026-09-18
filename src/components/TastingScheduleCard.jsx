@@ -85,7 +85,7 @@ function PriceTag({ tasting }) {
   );
 }
 
-export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted, onJoinWaitlist }) {
+export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted, onJoinWaitlist, nonInteractive = false }) {
   // Прошедшие не показывают вместимость/цену вовсе (см. ниже) — статус мест
   // им попросту не нужен, поэтому и не считаем его для прошедших.
   const hasCapacity = !past && tasting.guests_count != null;
@@ -100,6 +100,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
   // Мест нет и это предстоящая — вся карточка кликом ставит в лист ожидания
   // (кнопка внутри — просто акцентная подпись, а не отдельный контрол).
   const isWaitlistCta = full && !past;
+  const CardTag = nonInteractive ? "article" : "button";
 
   const handleClick = () => {
     if (isWaitlistCta) {
@@ -136,11 +137,11 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
   // (кликабельна как обычно, в отличие от «нет мест» у предстоящих).
   if (past || full) {
     return (
-      <button
-        type="button"
-        className={`schedule-card schedule-card--compact ${full && !past ? "schedule-card--full" : ""}`}
-        onClick={handleClick}
-        disabled={isWaitlistCta && waitlisted}
+      <CardTag
+        type={nonInteractive ? undefined : "button"}
+        className={`schedule-card schedule-card--compact ${full && !past ? "schedule-card--full" : ""} ${nonInteractive ? "schedule-card--static" : ""}`}
+        onClick={nonInteractive ? undefined : handleClick}
+        disabled={nonInteractive ? undefined : isWaitlistCta && waitlisted}
       >
         <div className="schedule-card__main">
           <div className="schedule-card__top">
@@ -175,13 +176,17 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
         </div>
 
         <Cover tasting={tasting} isIceCream={isIceCream} compact />
-      </button>
+      </CardTag>
     );
   }
 
   // Обычная карточка — большая, фото на 2/3 высоты, дата/теги поверх фото.
   return (
-    <button type="button" className="schedule-card" onClick={handleClick}>
+    <CardTag
+      type={nonInteractive ? undefined : "button"}
+      className={`schedule-card ${nonInteractive ? "schedule-card--static" : ""}`}
+      onClick={nonInteractive ? undefined : handleClick}
+    >
       <Cover tasting={tasting} isIceCream={isIceCream}>
         <div className="schedule-card__cover-overlay">
           {dateLabel && (
@@ -207,6 +212,6 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
           <PriceTag tasting={tasting} />
         </div>
       </div>
-    </button>
+    </CardTag>
   );
 }

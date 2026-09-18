@@ -517,7 +517,7 @@ export default function TastingSchedulePage() {
       ) : (
         <div className="schedule-list schedule-list--flat">
           {ceremonies.map((c) => (
-            <TastingScheduleCard key={c.id} tasting={c} onOpen={openUpcoming} />
+            <TastingScheduleCard key={c.id} tasting={c} nonInteractive />
           ))}
         </div>
       )}

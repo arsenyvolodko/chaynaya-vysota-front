@@ -3498,7 +3498,7 @@ input, textarea { font: inherit; color: inherit; }
 .promo-carousel__cell:last-child { margin-right: 0; }
 
 .promo-slide {
-  height: 60dvh; max-height: 540px;
+  height: 66.667dvh; max-height: 600px;
   border-radius: 20px;
   display: flex; flex-direction: column; align-items: flex-start;
   text-align: left; overflow: hidden;
@@ -3858,6 +3858,9 @@ button.cal__cell:hover { background: var(--stone-100); }
 }
 .schedule-card:hover { background: white; border-color: var(--stone-200); }
 .schedule-card:active { transform: translateY(1px); }
+.schedule-card--static { cursor: default; }
+.schedule-card--static:hover { background: var(--stone-50); border-color: var(--stone-100); }
+.schedule-card--static:hover .schedule-card__img { transform: none; }
 
 /* Компактный вариант — как обычная карточка списка (для «мест нет»). */
 .schedule-card--compact {

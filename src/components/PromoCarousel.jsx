@@ -58,7 +58,7 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
               <img className="promo-slide__photo" src={nearestTasting.cover_url} alt="" />
             )}
             <span className="promo-slide__event-body">
-              <span className="promo-slide__eyebrow">Совсем скоро</span>
+              <span className="promo-slide__eyebrow">Ближайшая дегустация</span>
               <span className="promo-slide__title promo-slide__title--event">{nearestTasting.title}</span>
               <span className="promo-slide__event-row">
                 <span className="promo-slide__event-when">

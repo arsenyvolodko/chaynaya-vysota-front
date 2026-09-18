@@ -157,13 +157,20 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
           )}
 
           {!past && (
-            <div className="schedule-card__bottom">
-              <span className="schedule-card__bottom-left">
+            full ? (
+              <div className="schedule-card__bottom schedule-card__bottom--full">
+                <div className="schedule-card__full-summary">
+                  <span className="schedule-card__full-label">Мест нет</span>
+                  <PriceTag tasting={tasting} />
+                </div>
                 {bottomStatus}
-                {full && <span className="schedule-card__full-label">Мест нет</span>}
-              </span>
-              <PriceTag tasting={tasting} />
-            </div>
+              </div>
+            ) : (
+              <div className="schedule-card__bottom">
+                <span className="schedule-card__bottom-left">{bottomStatus}</span>
+                <PriceTag tasting={tasting} />
+              </div>
+            )
           )}
         </div>
 
@@ -177,14 +184,15 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
     <button type="button" className="schedule-card" onClick={handleClick}>
       <Cover tasting={tasting} isIceCream={isIceCream}>
         <div className="schedule-card__cover-overlay">
+          {dateLabel && (
+            <div className="schedule-card__cover-date">
+              <span className="schedule-card__date">{dateLabel}</span>
+              {weekdayLabel && <span className="schedule-card__weekday">{weekdayLabel}</span>}
+            </div>
+          )}
           <div className="schedule-card__tags">
             {(tasting.tags || []).map((t) => <TagIcon key={t} tag={t} chip />)}
           </div>
-        </div>
-
-        <div className="schedule-card__cover-date">
-          <span className="schedule-card__date">{dateLabel}</span>
-          {weekdayLabel && <span className="schedule-card__weekday">{weekdayLabel}</span>}
         </div>
       </Cover>
 

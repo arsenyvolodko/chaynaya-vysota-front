@@ -15,7 +15,7 @@ const COLORS = [
   "#5E8C3E", "#C99A3A", "#C2693E", "#4F7CAC",
   "#8A5FB0", "#3F8F8A", "#7E9A6C", "#57534e",
 ];
-const FONT = "Inter, system-ui, -apple-system, sans-serif";
+const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif';
 
 function colorFor(name) {
   const s = String(name || "");
@@ -43,9 +43,9 @@ export default function WordCloud({ words }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(0);
   const [laid, setLaid] = useState(null); // { items, vb }
-  // d3-cloud меряет ширину слов canvas-ом по шрифту. Пока веб-шрифт (Inter) не
-  // загружен, метрики берутся от фолбэка → рендер в Inter не совпадает и слова
-  // налезают. Ждём document.fonts.ready и пересчитываем раскладку.
+  // d3-cloud меряет ширину слов canvas-ом по шрифту. Пока шрифты не готовы,
+  // метрики могут прийти от фолбэка и слова наложатся. Ждём
+  // document.fonts.ready и пересчитываем раскладку.
   const [fontsReady, setFontsReady] = useState(
     typeof document === "undefined" || !document.fonts
       ? true

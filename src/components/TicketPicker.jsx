@@ -26,23 +26,25 @@ export function ticketTotal(tiers, guests) {
   return tier ? tier.pricePerPerson * guests : 0;
 }
 
-export default function TicketPicker({ tickets, selectedId, guests, onSelect, onChange, onCheckout }) {
+export default function TicketPicker({ tickets, selectedId, guests, availableSeats, onSelect, onChange, onCheckout }) {
   const selected = tickets.find((ticket) => ticket.id === selectedId) || tickets[0];
-  const maxGuests = selected.tiers[selected.tiers.length - 1].max;
+  const ticketMaxGuests = selected.tiers[selected.tiers.length - 1].max;
+  const maxGuests = Math.min(ticketMaxGuests, availableSeats ?? ticketMaxGuests);
+  const availableSeatsLabel = availableSeats ?? ticketMaxGuests;
   const currentTier = tierFor(selected.tiers, guests);
   const total = ticketTotal(selected.tiers, guests);
   const setGuests = (count) => onChange(Math.min(maxGuests, Math.max(1, count)));
 
   const selectTicket = (ticket) => {
     const ticketMax = ticket.tiers[ticket.tiers.length - 1].max;
+    const nextMaxGuests = Math.min(ticketMax, availableSeats ?? ticketMax);
     onSelect(ticket.id);
-    if (guests > ticketMax) onChange(ticketMax);
+    if (guests > nextMaxGuests) onChange(nextMaxGuests);
   };
 
   return (
     <section className="ticket-picker">
       <div className="ticket-picker__head">
-        <span className="ticket-picker__eyebrow">Билеты</span>
         <h2>Выберите место</h2>
         <p>Цена за гостя становится ниже, если вы приходите компанией.</p>
       </div>
@@ -78,7 +80,7 @@ export default function TicketPicker({ tickets, selectedId, guests, onSelect, on
       <div className="ticket-picker__quantity">
         <div>
           <strong>Сколько гостей?</strong>
-          <span>Можно оформить до {maxGuests} мест одним заказом</span>
+          <span>Можно оформить до {availableSeatsLabel} мест одним заказом</span>
         </div>
         <div className="ticket-stepper">
           <button type="button" onClick={() => setGuests(guests - 1)} disabled={guests <= 1} aria-label="Меньше гостей">

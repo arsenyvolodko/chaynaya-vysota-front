@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import PassCheckoutSheet from "../components/PassCheckoutSheet.jsx";
-import { IconArrowRight, IconCalendar, IconChevronLeft, IconTicket, IconUser } from "../components/icons.jsx";
+import { IconCalendar, IconChevronLeft, IconTicket, IconUser } from "../components/icons.jsx";
 import { formatPrice } from "../utils/price.js";
 import { PASS_BASE_VISIT_PRICE, PASS_PLANS } from "../data/passPlans.js";
 import { useAuth } from "../auth/AuthContext.jsx";
@@ -70,20 +70,17 @@ export default function PassPage() {
         </section>
 
         <section className="pass-section">
-          <span className="pass-section__eyebrow">Выберите объём</span>
           <h2>Чем больше встреч, тем выгоднее</h2>
           <div className="pass-plans">
             {PASS_PLANS.map((plan) => {
               const perVisit = Math.round(plan.price / plan.visits);
               const fullPrice = PASS_BASE_VISIT_PRICE * plan.visits;
               return (
-                <button type="button" className={`pass-plan-card ${plan.popular ? "is-popular" : ""}`} onClick={() => openCheckout(plan)} key={plan.id}>
-                  {plan.popular && <span className="pass-plan-card__badge">Оптимальный</span>}
+                <button type="button" className="pass-plan-card" onClick={() => openCheckout(plan)} key={plan.id}>
                   <span className="pass-plan-card__count"><strong>{plan.visits}</strong> посещений</span>
                   <span className="pass-plan-card__old-price">{formatPrice(fullPrice)} ₽</span>
                   <span className="pass-plan-card__price">{formatPrice(plan.price)} ₽</span>
                   <span className="pass-plan-card__per">{formatPrice(perVisit)} ₽ за место</span>
-                  <span className="pass-plan-card__arrow"><IconArrowRight size={17} /></span>
                 </button>
               );
             })}
@@ -114,15 +111,7 @@ export default function PassPage() {
         </section>
 
         <AppFooter />
-        <div className="pass-page__spacer" />
       </main>
-
-      <div className="footer pass-buy-bar">
-        <div><span>от</span><strong>{formatPrice(PASS_PLANS[0].price)} ₽</strong></div>
-        <button type="button" className="btn btn--primary" onClick={() => openCheckout()}>
-          Оформить абонемент <IconArrowRight size={17} stroke={2} />
-        </button>
-      </div>
 
       {checkoutOpen && (
         <PassCheckoutSheet plans={PASS_PLANS} initialPlan={initialPlan} onClose={() => setCheckoutOpen(false)} />

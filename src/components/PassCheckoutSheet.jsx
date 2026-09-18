@@ -7,9 +7,9 @@ import { PASS_BASE_VISIT_PRICE } from "../data/passPlans.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function PassPreview({ plan, holder, orderId, success = false }) {
+function PassPreview({ plan, holder, orderId }) {
   return (
-    <article className={`pass-card ${success ? "pass-card--success" : ""}`}>
+    <article className="pass-card">
       <div className="pass-card__top">
         <span className="pass-card__brand">Чайная высота</span>
         <span className="pass-card__type"><IconTicket size={14} /> Абонемент</span>
@@ -152,16 +152,15 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
                       }}
                       key={item.id}
                     >
-                      {item.popular && <span className="pass-plan-slide__badge">Оптимальный</span>}
                       <span className="pass-plan-slide__eyebrow">Абонемент</span>
                       <span className="pass-plan-slide__visits"><strong>{item.visits}</strong> посещений</span>
                       <span className="pass-plan-slide__tokens" aria-hidden="true">
                         {Array.from({ length: item.visits }, (_, index) => <i key={index}><IconTicket size={11} stroke={1.8} /></i>)}
                       </span>
                       <span className="pass-plan-slide__price-block">
-                        <span className="pass-plan-slide__old">обычно {formatPrice(fullPrice)} ₽</span>
+                        <span className="pass-plan-slide__old">{formatPrice(fullPrice)} ₽</span>
                         <span className="pass-plan-slide__price">{formatPrice(item.price)} ₽</span>
-                        <span className="pass-plan-slide__per">{formatPrice(Math.round(item.price / item.visits))} ₽ за стандартное место</span>
+                        <span className="pass-plan-slide__per">{formatPrice(Math.round(item.price / item.visits))} ₽ за место</span>
                       </span>
                       <span className="pass-plan-slide__conditions-title">Условия абонемента</span>
                       <span className="pass-plan-slide__conditions">
@@ -172,8 +171,8 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
                         </span>
                         <span>
                           <i><IconTicket size={17} stroke={1.7} /></i>
-                          <b>Стандарт</b>
-                          <small>обычное место</small>
+                          <b>Место</b>
+                          <small>на дегустации</small>
                         </span>
                         <span>
                           <i><IconUser size={17} stroke={1.7} /></i>
@@ -197,10 +196,6 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
               <div className="pass-plan-dots" aria-hidden="true">
                 {plans.map((item) => <i className={plan.id === item.id ? "is-on" : ""} key={item.id} />)}
               </div>
-
-              <button type="button" className="btn btn--primary checkout-primary" onClick={() => setStep("contact")}>
-                Продолжить · {formatPrice(plan.price)} ₽ <IconArrowRight size={17} stroke={2} />
-              </button>
             </div>
           )}
 
@@ -214,12 +209,12 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
 
               <div className="checkout-fields">
                 <label className={`checkout-field ${errors.name ? "has-error" : ""}`}>
-                  <span>Имя владельца</span>
+                  <span>Имя</span>
                   <input value={name} onChange={(event) => { setName(event.target.value); setErrors((prev) => ({ ...prev, name: "" })); }} autoComplete="name" placeholder="Как к вам обращаться" />
                   {errors.name && <small>{errors.name}</small>}
                 </label>
                 <label className={`checkout-field ${errors.email ? "has-error" : ""}`}>
-                  <span>Email для абонемента и чека</span>
+                  <span>Email</span>
                   <input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setErrors((prev) => ({ ...prev, email: "" })); }} autoComplete="email" inputMode="email" placeholder="you@example.com" />
                   {errors.email && <small>{errors.email}</small>}
                 </label>
@@ -267,7 +262,7 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
               <span className="checkout-success__eyebrow">Оплата прошла</span>
               <h2 className="checkout-title">Абонемент активен</h2>
               <p className="checkout-lede">{plan.visits} посещений уже доступны. Копию отправили на {email.trim()}.</p>
-              <PassPreview plan={plan} holder={name.trim()} orderId={orderId} success />
+              <PassPreview plan={plan} holder={name.trim()} orderId={orderId} />
               <div className="pass-success-note">
                 <strong>Как использовать</strong>
                 Выберите чартерную дегустацию и укажите нужное число гостей — посещения спишутся из баланса после подтверждения записи.
@@ -276,6 +271,14 @@ export default function PassCheckoutSheet({ plans, initialPlan, onClose }) {
             </div>
           )}
         </div>
+
+        {step === "plan" && (
+          <div className="pass-checkout-action">
+            <button type="button" className="btn btn--primary checkout-primary" onClick={() => setStep("contact")}>
+              Продолжить · {formatPrice(plan.price)} ₽ <IconArrowRight size={17} stroke={2} />
+            </button>
+          </div>
+        )}
       </section>
     </div>,
     portalTarget

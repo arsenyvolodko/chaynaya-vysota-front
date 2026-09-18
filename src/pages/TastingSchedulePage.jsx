@@ -493,16 +493,16 @@ export default function TastingSchedulePage() {
           href="https://t.me/"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Написать нам в Telegram"
+          title="Написать в Telegram"
         >
-          <IconTelegram size={16} />
-          <span>Связаться с нами</span>
+          <IconTelegram size={18} />
         </a>
       </div>
 
       <EveningStepsBlock onPickDate={openScheduleCalendar} />
 
       <div className="section-head" id="chef-teas">
-        <span className="section-head__eyebrow">Приватно</span>
         <h2 className="section-head__title">Шеф-чаепития</h2>
         <p className="section-head__lede">
           Церемония с чайным шефом в отдельной комнате «Чайной высоты» — для

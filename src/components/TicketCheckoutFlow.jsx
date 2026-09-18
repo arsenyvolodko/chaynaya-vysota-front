@@ -16,7 +16,7 @@ import { formatTastingTime, formatWeekdayDate } from "../utils/date.js";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const TICKET_KIND_LABELS = {
-  dated: "Билет на дату",
+  dated: "Билет на дегустацию",
   "open-date": "Открытая дата",
   pass: "Абонемент",
 };
@@ -213,7 +213,7 @@ export default function TicketCheckoutFlow({ tasting, selections, total, onClose
 
               <div className="checkout-fields">
                 <label className={`checkout-field ${errors.name ? "has-error" : ""}`}>
-                  <span>Имя гостя</span>
+                  <span>Имя</span>
                   <input
                     value={name}
                     onChange={(event) => { setName(event.target.value); setErrors((prev) => ({ ...prev, name: "" })); }}

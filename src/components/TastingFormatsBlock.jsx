@@ -9,9 +9,8 @@ const FORMATS = [
   {
     key: "charter",
     tone: "charter",
-    badge: "Каждую неделю",
     title: "Чартерные дегустации",
-    text: "Общий стол на несколько гостей: дата и программа известны заранее. Чай и мороженое подают вслепую — вы оцениваете по шкалам, а в конце вечера стол собирает общий подиум фаворитов.",
+    text: "Общий стол на несколько гостей: дата и программа известны заранее. Вы пробуете чай и мороженое, оцениваете по шкалам, а в конце вечера стол собирает общий подиум фаворитов.",
     facts: [
       { icon: IconUser, label: "12–23 гостя" },
       { icon: IconCalendar, label: "по расписанию" },
@@ -20,7 +19,6 @@ const FORMATS = [
   {
     key: "chef",
     tone: "chef",
-    badge: "По записи",
     title: "Шеф-чаепития",
     text: "Церемониальная комната и чайный шеф, который ведёт встречу от первой заварки до финала. У каждой — свой сценарий: тематические чаи, варка по древнему методу Лу Юя и перерывы на мороженое подходящих вкусов.",
     facts: [
@@ -33,8 +31,6 @@ const FORMATS = [
 function FormatCard({ format, priceFrom, onGo }) {
   return (
     <article className={`format-card format-card--${format.tone}`}>
-      <span className="format-card__badge">{format.badge}</span>
-
       <h3 className="format-card__title">{format.title}</h3>
       <p className="format-card__text">{format.text}</p>
 
@@ -68,12 +64,12 @@ export default function TastingFormatsBlock({ onPickCharter, onPickChef, onOpenP
     <>
       <section className="info-block">
         <div className="info-block__intro">
-          <span className="section-head__eyebrow">Форматы</span>
           <h2 className="info-block__title">Как устроены дегустации</h2>
           <p className="info-block__lede">
-            Чаепитие здесь — не просто заваренный чай, а встреча на два-три
-            часа: ведут её старшие мастера и чайный шеф клуба, а гости сами
-            выбирают сорта и сценарий вечера.
+            В церемониальной комнате «Чайной высоты» чаепитие разворачивается
+            на два-три часа: старший мастер или чайный шеф ведёт гостей по
+            чаям и способам заваривания. Начните с любимой части коллекции —
+            дальше вместе найдёте свой вкус, ритм и маршрут вечера.
           </p>
         </div>
 
@@ -95,15 +91,10 @@ export default function TastingFormatsBlock({ onPickCharter, onPickChef, onOpenP
           <i /><i /><i /><i />
         </span>
         <span className="plank__content">
-          <span className="plank__eyebrow">Для себя и компании</span>
           <span className="plank__title">Абонемент на дегустации</span>
           <span className="plank__text">
             От 4 до 10 стандартных мест на чартерные дегустации. Ходите сами,
             приглашайте друзей и распределяйте посещения между разными датами.
-          </span>
-          <span className="plank__facts">
-            <span><IconCalendar size={13} /> 12 месяцев</span>
-            <span><IconUser size={13} /> можно делиться</span>
           </span>
         </span>
         <span className="plank__btn">

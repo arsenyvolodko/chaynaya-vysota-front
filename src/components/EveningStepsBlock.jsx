@@ -6,8 +6,8 @@ import { IconArrowRight, IconLeaf, IconMedal, IconShare, IconSparkles } from "./
 const STEPS = [
   {
     icon: IconLeaf,
-    title: "Пробуете вслепую",
-    text: "Чай и мороженое подают без названий — вкус ничем не подсказан заранее.",
+    title: "Пробуете и сравниваете",
+    text: "Чай и мороженое раскрываются в своём ритме — делитесь впечатлениями и отмечайте любимые вкусы.",
   },
   {
     icon: IconSparkles,

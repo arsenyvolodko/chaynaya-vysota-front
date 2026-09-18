@@ -1,5 +1,4 @@
 import { useState } from "react";
-import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import TicketPicker, { guestsWord, ticketTotal } from "../components/TicketPicker.jsx";
 import TicketCheckoutFlow from "../components/TicketCheckoutFlow.jsx";
@@ -11,10 +10,10 @@ import {
   IconLeaf,
   IconMapPin,
   IconSparkles,
-  IconUser,
 } from "../components/icons.jsx";
 import { formatDayNumber, formatMonthAbbr, formatTastingTime, formatWeekdayDate } from "../utils/date.js";
 import { formatPrice } from "../utils/price.js";
+import { seatsLeft } from "../utils/tastingCapacity.js";
 
 // Демо-данные — по карточке teatix.com/product/dega_х2_namachocolate
 // (цикл дегустаций «72 чайных отражения Сунь Укуна», «Чайная высота»).
@@ -125,6 +124,7 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
   const selectedTicket = tasting.tickets.find((ticket) => ticket.id === ticketId) || tasting.tickets[0];
+  const availableSeats = tasting.guests_count == null ? null : seatsLeft(tasting.guests_count);
   const total = ticketTotal(selectedTicket.tiers, guests);
   const selections = [{ id: selectedTicket.id, title: selectedTicket.title, guests, total }];
 
@@ -132,12 +132,10 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
     <>
     <div className="main-scroll">
       <div className="preview-banner">Превью дизайна — демо-данные, не боевая страница</div>
-      <PageHeader />
 
       <TastingCoverPhoto tasting={tasting} />
 
       <div className="hero">
-        <span className="tasting-kind">Чартерная дегустация</span>
         <h1 className="hero__title hero__title--tasting">{tasting.title}</h1>
 
         <div className="tasting-meta-card">
@@ -156,16 +154,10 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
             </div>
             <IconArrowRight className="hero-meta-row__arrow" size={16} stroke={2} />
           </button>
-          <div className="hero-meta-row">
-            <span className="hero-meta-row__icon"><IconUser size={16} stroke={1.8} /></span>
-            <div className="hero-meta-row__text">
-              <div className="hero-meta-row__main">{tasting.host}</div>
-              <div className="hero-meta-row__sub">Ведущий дегустации</div>
-            </div>
-          </div>
         </div>
 
         <p className="hero__lede">{tasting.description}</p>
+        <p className="tasting-host">Ведущие: {tasting.host}</p>
 
         <div className="tasting-program-title">В программе</div>
         <div className="hero-features">
@@ -183,13 +175,13 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
           tickets={tasting.tickets}
           selectedId={selectedTicket.id}
           guests={guests}
+          availableSeats={availableSeats}
           onSelect={setTicketId}
           onChange={setGuests}
           onCheckout={() => setCheckoutOpen(true)}
         />
 
         <section className="tasting-about">
-          <span className="tasting-about__eyebrow">История встречи</span>
           <h2>О дегустации</h2>
           <div className="tasting-about__body">
             {tasting.about.map((paragraph, i) => (
@@ -214,8 +206,7 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
         disabled={total === 0}
         onClick={() => setCheckoutOpen(true)}
       >
-        <span>Оплатить билет</span>
-        <IconArrowRight size={17} stroke={2} />
+        <span>Купить билет</span>
       </button>
     </div>
 

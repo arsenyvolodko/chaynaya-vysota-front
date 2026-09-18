@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconPhone, IconUser, IconX } from "./icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { formatRuPhone, isRuPhoneComplete, normalizeToE164 } from "../utils/phone.js";
@@ -7,12 +8,25 @@ import { formatRuPhone, isRuPhoneComplete, normalizeToE164 } from "../utils/phon
 // Форма короткая — имя и телефон, этого достаточно и для входа, и для
 // регистрации (бэкенд сам решает, что делать с номером). Полная анкета с
 // телеграмом и почтой живёт на отдельной странице — туда ведёт «Зарегистрироваться».
-export default function AuthPrompt({ onClose, onRegister }) {
+export default function AuthPrompt({ onClose }) {
   const { login } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const portalTarget = document.querySelector(".phone") || document.body;
+
+  useEffect(() => {
+    const onKeyDown = (event) => event.key === "Escape" && onClose?.();
+    const scheduleScroller = document.querySelector(".schedule-scroll");
+    const previousOverflow = scheduleScroller?.style.overflowY || "";
+    if (scheduleScroller) scheduleScroller.style.overflowY = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (scheduleScroller) scheduleScroller.style.overflowY = previousOverflow;
+    };
+  }, [onClose]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -39,69 +53,62 @@ export default function AuthPrompt({ onClose, onRegister }) {
     }
   };
 
-  return (
-    <>
-      <div className="modal__backdrop" onClick={onClose} />
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="auth-prompt-title">
-        <button type="button" className="modal__close" onClick={onClose} aria-label="Закрыть">
+  return createPortal(
+    <div className="auth-prompt-layer">
+      <button
+        type="button"
+        className="auth-prompt-layer__backdrop"
+        onClick={onClose}
+        aria-label="Закрыть приглашение"
+      />
+      <section className="auth-prompt" role="dialog" aria-modal="true" aria-labelledby="auth-prompt-title">
+        <span className="auth-prompt__grip" aria-hidden="true" />
+        <button type="button" className="auth-prompt__close" onClick={onClose} aria-label="Закрыть">
           <IconX size={17} stroke={2.2} />
         </button>
 
-        <h3 className="modal__title" id="auth-prompt-title">Сохраним записи и оценки?</h3>
-        <p className="modal__text">
-          С аккаунтом место на дегустации бронируется в пару касаний, а оценки
-          чаёв и итоги вечера остаются с вами.
+        <h2 className="auth-prompt__title" id="auth-prompt-title">Войти в аккаунт</h2>
+        <p className="auth-prompt__text">
+          Чтобы сохранять записи на дегустации и свои оценки.
         </p>
 
-        <form className="modal__form" onSubmit={onSubmit}>
-          <label className="field">
-            <span className="field__label">Имя</span>
-            <div className="field__wrap">
-              <span className="field__icon"><IconUser size={16} /></span>
+        <form className="auth-prompt__form" onSubmit={onSubmit}>
+          <label className="auth-prompt__field">
+            <div>
+              <i aria-hidden="true"><IconUser size={17} /></i>
               <input
-                className="field__input field__input--with-icon"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Как к вам обращаться"
+                placeholder="Имя"
                 autoComplete="given-name"
+                aria-label="Имя"
               />
             </div>
           </label>
 
-          <label className="field">
-            <span className="field__label">Телефон</span>
-            <div className="field__wrap">
-              <span className="field__icon"><IconPhone size={16} /></span>
+          <label className="auth-prompt__field">
+            <div>
+              <i aria-hidden="true"><IconPhone size={17} /></i>
               <input
-                className="field__input field__input--with-icon"
                 value={phone}
                 onChange={(e) => setPhone(formatRuPhone(e.target.value))}
                 type="tel"
                 inputMode="tel"
                 placeholder="+7 999 123-45-67"
                 autoComplete="tel"
+                aria-label="Телефон"
               />
             </div>
           </label>
 
-          {error && <p className="modal__error">{error}</p>}
+          {error && <p className="auth-prompt__error">{error}</p>}
 
-          <button type="submit" className="btn btn--primary" disabled={submitting}>
-            {submitting ? "Входим…" : "Войти"}
+          <button type="submit" className="btn btn--primary auth-prompt__submit" disabled={submitting}>
+            {submitting ? "Входим…" : "Авторизоваться"}
           </button>
         </form>
-
-        <p className="modal__switch">
-          Нет аккаунта?{" "}
-          <button type="button" className="modal__link" onClick={onRegister}>
-            Зарегистрироваться
-          </button>
-        </p>
-
-        <button type="button" className="modal__skip" onClick={onClose}>
-          Пока просто посмотрю
-        </button>
-      </div>
-    </>
+      </section>
+    </div>,
+    portalTarget
   );
 }

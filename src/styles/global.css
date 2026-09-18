@@ -138,6 +138,14 @@ input, textarea { font: inherit; color: inherit; }
 .logomark__dot--lg { width: 28px; height: 28px; }
 
 .auth { display: flex; flex-direction: column; min-height: 100%; padding: 60px 28px 32px; }
+.auth__back {
+  align-self: flex-start; min-height: 36px; margin: -42px 0 22px -8px; padding: 0 10px 0 7px;
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 999px;
+  color: var(--stone-600); font-size: 13px; font-weight: 600;
+  transition: color 140ms, background-color 140ms, transform 100ms;
+}
+.auth__back:hover { color: var(--stone-900); background: var(--stone-50); }
+.auth__back:active { transform: scale(.97); }
 .auth__hero-line { color: var(--green-700); }
 .auth__lede { margin-top: 16px; font-size: 15px; line-height: 1.55; color: var(--stone-500); max-width: 300px; }
 .auth__form { margin-top: 44px; display: flex; flex-direction: column; gap: 14px; }
@@ -150,6 +158,7 @@ input, textarea { font: inherit; color: inherit; }
   text-transform: uppercase; color: var(--stone-400);
   font-weight: 500; margin-bottom: 6px;
 }
+.field__required { margin-left: 2px; color: #c34f3f; }
 .field__wrap { position: relative; }
 .field__icon {
   position: absolute; left: 16px; top: 50%;
@@ -381,8 +390,13 @@ input, textarea { font: inherit; color: inherit; }
 /* Название дегустации длинное, с кавычками, цифрами и латиницей — акцентный
    шрифт остаётся, но кегль меньше обычного title-xl, иначе строки рвутся. */
 .hero__title--tasting {
-  margin: 0; font-family: var(--serif); font-size: 26px; font-weight: 400;
-  line-height: 1.18; letter-spacing: -0.015em; color: var(--stone-900);
+  margin: 0; font-family: var(--serif); font-size: 28px; font-weight: 550;
+  line-height: 1.16; letter-spacing: -0.022em; color: var(--stone-900);
+}
+.tasting-kind {
+  display: inline-flex; margin-bottom: 10px; padding: 5px 9px; border-radius: 999px;
+  color: var(--green-800); background: var(--green-50);
+  font-size: 9.5px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase;
 }
 .hero__title-flourish {
   font-family: var(--serif); font-weight: 400; color: var(--green-700);
@@ -401,7 +415,7 @@ input, textarea { font: inherit; color: inherit; }
 /* Превью-дизайн страницы дегустации (design/tasting-preview) — фото, по
    образцу модалки события на luma.com, квадратное, с инсетом по краям. */
 .tasting-cover {
-  margin: 4px 20px 0;
+  width: calc(100% - 40px); max-width: 720px; margin: 4px auto 0;
   aspect-ratio: 1 / 1; border-radius: 20px; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
@@ -424,7 +438,7 @@ input, textarea { font: inherit; color: inherit; }
    карточки события на luma.com, в нашей типографике и палитре. */
 .hero-meta-row {
   display: flex; align-items: center; gap: 10px;
-  margin-top: 10px; font-size: 13.5px; color: var(--stone-700);
+  font-size: 13.5px; color: var(--stone-700);
 }
 .hero-meta-row__icon {
   flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px;
@@ -434,6 +448,18 @@ input, textarea { font: inherit; color: inherit; }
 .hero-meta-row__text { min-width: 0; }
 .hero-meta-row__main { font-weight: 500; color: var(--stone-900); line-height: 1.3; }
 .hero-meta-row__sub { font-size: 12px; color: var(--stone-500); margin-top: 1px; }
+.tasting-meta-card {
+  margin-top: 18px; padding: 5px 14px; border-radius: 17px;
+  background: var(--stone-50); border: 1px solid var(--stone-100);
+}
+.tasting-meta-card .hero-meta-row { padding: 10px 0; }
+.tasting-meta-card .hero-meta-row + .hero-meta-row { border-top: 1px solid var(--stone-100); }
+.tasting-meta-card .hero-meta-row__icon { width: 40px; height: 40px; background: white; color: var(--green-800); }
+.hero-meta-row--place { width: 100%; text-align: left; border-radius: 10px; transition: background-color 140ms; }
+.hero-meta-row--place:hover { background: rgba(255,255,255,.72); }
+.hero-meta-row--place:active { background: white; }
+.hero-meta-row__arrow { margin-left: auto; flex: 0 0 auto; color: var(--stone-400); transition: transform 140ms, color 140ms; }
+.hero-meta-row--place:hover .hero-meta-row__arrow { color: var(--green-700); transform: translateX(2px); }
 
 /* Бейдж-«календарик»: месяц на зелёной плашке сверху, число — крупно снизу. */
 .tasting-datebadge {
@@ -459,18 +485,21 @@ input, textarea { font: inherit; color: inherit; }
 .hero-includes__list li { margin-top: 2px; }
 
 /* «Что входит в дегустацию» — 4 мини-блока в ряд: иконка + короткая подпись. */
-.hero-features { margin-top: 20px; display: flex; gap: 8px; }
+.tasting-program-title {
+  margin-top: 23px; color: var(--stone-800); font-size: 14px; font-weight: 700;
+}
+.hero-features { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .hero-features__item {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  text-align: center;
+  min-width: 0; padding: 10px;
+  display: flex; flex-direction: row; align-items: center; gap: 8px;
+  text-align: left; border-radius: 13px; background: var(--stone-50); border: 1px solid var(--stone-100);
 }
 .hero-features__icon {
-  width: 40px; height: 40px; border-radius: 999px; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--green-50); color: var(--green-800);
 }
-.hero-features__label { font-size: 10.5px; line-height: 1.3; color: var(--stone-600); }
+.hero-features__label { font-size: 11px; line-height: 1.3; color: var(--stone-700); font-weight: 550; }
 
 /* Блок билета: иконка гостя + «фишечный» пикер числа персон + пересчитанная
    цена. Пикер — ряд кружков-гостей, заполняются по клику до выбранного
@@ -572,11 +601,122 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 16px; font-weight: 600; color: var(--stone-900);
 }
 
-/* Описание дегустации под билетом. */
-.tasting-about { margin-top: 26px; }
-.tasting-about__text {
-  margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: var(--stone-600);
+/* Единый конфигуратор билета: тип места выбирается один раз, а количество
+   гостей и групповой тариф пересчитываются в общей панели. */
+.ticket-picker {
+  margin-top: 30px; padding: 21px 18px 18px; border-radius: 21px;
+  background: linear-gradient(155deg, #f8faf5, #f1f5eb);
+  border: 1px solid #e2e9d6; box-shadow: 0 20px 42px -36px rgba(38, 58, 42, .8);
 }
+.ticket-picker__eyebrow {
+  color: var(--green-700); font-size: 9.5px; font-weight: 750;
+  letter-spacing: .15em; text-transform: uppercase;
+}
+.ticket-picker__head h2 {
+  margin: 5px 0 0; font-family: var(--serif); font-size: 24px;
+  line-height: 1.15; font-weight: 600; letter-spacing: -.015em;
+}
+.ticket-picker__head p { margin: 6px 0 0; color: var(--stone-500); font-size: 12.5px; line-height: 1.45; }
+.seat-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 17px; }
+.seat-option {
+  position: relative; min-width: 0; min-height: 126px; padding: 13px 12px;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  border: 1px solid var(--stone-200); border-radius: 16px; background: rgba(255,255,255,.74);
+  transition: border-color 150ms, background-color 150ms, box-shadow 150ms, transform 100ms;
+}
+.seat-option:hover { border-color: var(--sage-warm); }
+.seat-option:active { transform: translateY(1px); }
+.seat-option.is-on { border-color: var(--green-600); background: white; box-shadow: 0 0 0 2px rgba(5,150,105,.08); }
+.seat-option--front { background: linear-gradient(145deg, rgba(255,249,232,.9), rgba(248,243,220,.75)); }
+.seat-option--front.is-on { border-color: #bd912f; box-shadow: 0 0 0 2px rgba(189,145,47,.09); }
+.seat-option__icon {
+  width: 34px; height: 34px; margin-bottom: 11px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-800); background: var(--green-50);
+}
+.seat-option--front .seat-option__icon { color: #956d19; background: #fff4cf; }
+.seat-option__body { display: flex; flex-direction: column; min-width: 0; }
+.seat-option__body strong { color: var(--stone-900); font-size: 13px; line-height: 1.2; }
+.seat-option__body small { margin-top: 2px; color: var(--stone-500); font-size: 9.5px; line-height: 1.25; }
+.seat-option__price { margin-top: auto; padding-top: 9px; color: var(--stone-700); font-size: 11px; font-weight: 700; }
+.seat-option__check {
+  position: absolute; top: 10px; right: 10px; width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  color: transparent; border: 1px solid var(--stone-300); background: white;
+}
+.seat-option.is-on .seat-option__check { color: white; background: var(--green-700); border-color: var(--green-700); }
+.seat-option--front.is-on .seat-option__check { background: #a8781b; border-color: #a8781b; }
+.ticket-picker__quantity {
+  margin-top: 17px; padding: 14px 0; border-top: 1px solid rgba(120,113,108,.12);
+  display: flex; align-items: center; justify-content: space-between; gap: 13px;
+}
+.ticket-picker__quantity > div:first-child { display: flex; flex-direction: column; }
+.ticket-picker__quantity > div:first-child strong { color: var(--stone-800); font-size: 13px; }
+.ticket-picker__quantity > div:first-child span { max-width: 180px; margin-top: 2px; color: var(--stone-400); font-size: 9.5px; line-height: 1.3; }
+.ticket-stepper { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.ticket-stepper > button {
+  width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--stone-700); background: white; border: 1px solid var(--stone-200);
+  transition: color 140ms, border-color 140ms, transform 100ms;
+}
+.ticket-stepper > button:hover:not(:disabled) { color: var(--green-800); border-color: var(--green-600); }
+.ticket-stepper > button:active:not(:disabled) { transform: scale(.93); }
+.ticket-stepper > span { min-width: 43px; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.ticket-stepper > span strong { color: var(--stone-900); font-size: 19px; }
+.ticket-stepper > span small { margin-top: 3px; color: var(--stone-400); font-size: 8.5px; }
+.ticket-picker__tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.ticket-picker__tiers button {
+  min-width: 0; padding: 9px 4px; display: flex; flex-direction: column; align-items: center;
+  border: 1px solid transparent; border-radius: 11px; color: var(--stone-500); background: rgba(255,255,255,.46);
+  transition: border-color 140ms, background-color 140ms;
+}
+.ticket-picker__tiers button.is-on { border-color: #c9d9bb; color: var(--green-800); background: white; }
+.ticket-picker__tiers span { font-size: 9px; white-space: nowrap; }
+.ticket-picker__tiers strong { margin-top: 2px; color: var(--stone-800); font-size: 13px; white-space: nowrap; }
+.ticket-picker__tiers button.is-on strong { color: var(--green-800); }
+.ticket-picker__tiers small { color: var(--stone-400); font-size: 8px; }
+.ticket-picker__result {
+  width: 100%; margin-top: 15px; padding: 13px 14px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: #293825; color: white;
+  text-align: left; box-shadow: 0 12px 24px -20px rgba(27,44,31,.9);
+  transition: background-color 150ms, transform 100ms, box-shadow 150ms;
+}
+.ticket-picker__result:hover { background: #34492f; box-shadow: 0 15px 28px -19px rgba(27,44,31,.9); }
+.ticket-picker__result:active { transform: translateY(1px); }
+.ticket-picker__result > span { color: rgba(255,255,255,.78); font-size: 10.5px; }
+.ticket-picker__result small { display: block; margin-top: 2px; color: rgba(255,255,255,.52); font-size: 8.5px; }
+.ticket-picker__result-total { display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+.ticket-picker__result-total strong { color: white; font-size: 21px; }
+.ticket-picker__result-total i {
+  width: 27px; height: 27px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--green-900); background: white; font-style: normal;
+}
+
+/* Описание дегустации под билетом. */
+.tasting-about {
+  position: relative; margin-top: 27px; padding: 20px 4px 2px 19px;
+  border-left: 2px solid #b9cba8;
+}
+.tasting-about::before {
+  content: ""; position: absolute; left: -5px; top: 0;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--sage-warm-deep);
+}
+.tasting-about__eyebrow {
+  display: block; color: var(--green-700); font-size: 9.5px; font-weight: 750;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.tasting-about h2 {
+  margin: 5px 0 0; font-family: var(--serif); font-size: 23px;
+  line-height: 1.2; font-weight: 600; letter-spacing: -.015em;
+}
+.tasting-about__body { margin-top: 13px; }
+.tasting-about__text {
+  margin: 0; max-width: 56ch; font-size: 14px; line-height: 1.68;
+  color: var(--stone-600); text-align: left; text-wrap: pretty;
+}
+.tasting-about__text + .tasting-about__text { margin-top: 13px; }
+.tasting-about__text:first-child { color: var(--stone-700); font-size: 15px; }
 
 /* Прилипшая панель покупки: слева итог, справа кнопка. Подложка матовая
    с размытием — контент проезжает под ней, а не обрывается по краю. */
@@ -800,6 +940,108 @@ input, textarea { font: inherit; color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .checkout-modal, .checkout-layer__backdrop, .checkout-spinner { animation: none; }
+}
+
+/* Выбор карт для адреса дегустации — короткая action-sheet поверх страницы. */
+.map-choice-layer { position: absolute; inset: 0; z-index: 110; }
+.map-choice-layer__backdrop {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  background: rgba(20,28,24,.46); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: checkout-fade-in 180ms ease;
+}
+.map-choice {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  width: min(460px, calc(100% - 24px)); padding: 27px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px; background: white; box-shadow: 0 28px 70px -25px rgba(20,28,24,.65);
+  animation: checkout-rise-in 280ms cubic-bezier(.16,1,.3,1);
+}
+.map-choice__grip {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+  width: 36px; height: 4px; border-radius: 99px; background: var(--stone-300);
+}
+.map-choice__close {
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; color: var(--stone-600); background: var(--stone-50);
+}
+.map-choice__icon {
+  width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  color: var(--green-800); background: var(--green-50);
+}
+.map-choice h2 { margin: 13px 0 0; font-family: var(--serif); font-size: 24px; line-height: 1.15; }
+.map-choice > p { margin: 8px 0 0; color: var(--stone-700); font-size: 13px; }
+.map-choice > p strong,
+.map-choice > p small { display: block; }
+.map-choice > p small { margin-top: 2px; color: var(--stone-500); font-size: 11px; }
+.map-choice__links { display: grid; gap: 9px; margin-top: 18px; }
+.map-choice__links a {
+  min-height: 62px; padding: 10px 12px; display: grid;
+  grid-template-columns: 40px 1fr 20px; align-items: center; gap: 11px;
+  text-decoration: none; color: var(--stone-800); background: var(--stone-50);
+  border: 1px solid var(--stone-100); border-radius: 15px;
+  transition: background-color 140ms, border-color 140ms, transform 100ms;
+}
+.map-choice__links a:hover { background: white; border-color: var(--stone-200); }
+.map-choice__links a:active { transform: translateY(1px); }
+.map-choice__brand {
+  width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; font-weight: 800;
+}
+.map-choice__brand--ya { background: #ef3124; }
+.map-choice__brand--gis { background: #37ad5d; }
+.map-choice__links strong { display: block; font-size: 13px; }
+.map-choice__links small { display: block; margin-top: 2px; color: var(--stone-400); font-size: 10px; }
+.map-choice__links svg { color: var(--stone-400); }
+
+@media (max-width: 480px) {
+  .map-choice { bottom: 0; width: 100%; border-radius: 24px 24px 0 0; }
+}
+
+/* Лист ожидания — короткая обязательная форма поверх расписания. */
+.waitlist-layer { position: absolute; inset: 0; z-index: 110; }
+.waitlist-layer__backdrop {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+  background: rgba(20,28,24,.48); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: checkout-fade-in 180ms ease;
+}
+.waitlist-sheet {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  width: min(460px, calc(100% - 24px)); max-height: calc(100% - 36px); overflow-y: auto;
+  padding: 28px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px; background: white; box-shadow: 0 28px 70px -25px rgba(20,28,24,.65);
+  animation: checkout-rise-in 280ms cubic-bezier(.16,1,.3,1);
+}
+.waitlist-sheet__grip {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+  width: 36px; height: 4px; border-radius: 99px; background: var(--stone-300);
+}
+.waitlist-sheet__close {
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; color: var(--stone-600); background: var(--stone-50);
+}
+.waitlist-sheet__icon {
+  width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+  border-radius: 13px; color: var(--green-800); background: var(--green-50);
+}
+.waitlist-sheet__eyebrow {
+  display: block; margin-top: 13px; color: var(--green-700);
+  font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+}
+.waitlist-sheet h2 {
+  margin: 6px 34px 0 0; font-family: var(--serif); font-size: 25px; line-height: 1.14;
+  font-weight: 500; letter-spacing: -.018em; color: var(--stone-900); text-wrap: balance;
+}
+.waitlist-sheet__event { margin: 10px 0 0; color: var(--stone-800); font-size: 13px; font-weight: 650; }
+.waitlist-sheet__text { margin: 5px 0 0; color: var(--stone-500); font-size: 12.5px; line-height: 1.45; }
+.waitlist-sheet__form { display: grid; gap: 12px; margin-top: 20px; }
+.waitlist-sheet__required { color: #c34f3f; font: inherit; }
+.waitlist-sheet__submit { min-height: 50px; margin-top: 4px; border-radius: 999px; }
+
+@media (max-width: 480px) {
+  .waitlist-sheet { bottom: 0; width: 100%; border-radius: 24px 24px 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waitlist-sheet, .waitlist-layer__backdrop { animation: none; }
 }
 
 /* Плашка «превью-дизайн» вверху страницы — чтобы не спутать со страницей боевой дегустации. */
@@ -2988,69 +3230,67 @@ input, textarea { font: inherit; color: inherit; }
    годится: IntersectionObserver не считает пересечением пустой прямоугольник. */
 .auth-gate-anchor { height: 1px; }
 
-/* Окно-приглашение войти: по центру экрана, с крестиком и короткой формой.
-   Затемнение с размытием — список позади остаётся узнаваемым, но не тянет
-   внимание на себя. */
-.modal__backdrop {
-  position: absolute; inset: 0; z-index: 57;
-  background: rgba(20, 28, 24, 0.38);
+/* Приглашение войти после просмотра расписания. Нижняя шторка продолжает
+   паттерн оформления билета, но остаётся легче и короче полноценного чекаута. */
+.auth-prompt-layer { position: absolute; inset: 0; z-index: 90; }
+.auth-prompt-layer__backdrop {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+  background: rgba(20, 28, 24, 0.48);
+  touch-action: none;
   -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   animation: sheet-backdrop-in 200ms ease;
 }
-.modal {
-  position: absolute; z-index: 58;
-  top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: calc(100% - 32px); max-width: 360px;
-  max-height: calc(100% - 40px); overflow-y: auto;
-  padding: 26px 22px 20px;
-  background: white; border-radius: 22px;
-  box-shadow: 0 30px 70px -28px rgba(20, 28, 24, 0.55);
-  animation: modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+.auth-prompt {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  max-height: calc(100% - 36px); overflow-y: auto;
+  overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+  padding: 30px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+  background: #fff; border: 1px solid rgba(255,255,255,.72); border-radius: 26px;
+  box-shadow: 0 28px 80px -24px rgba(20, 28, 24, 0.62);
+  animation: auth-prompt-in 300ms cubic-bezier(.16,1,.3,1);
 }
-.modal__close {
-  position: absolute; top: 14px; right: 14px;
-  width: 32px; height: 32px; border-radius: 999px;
+.auth-prompt__grip {
+  position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 4px; border-radius: 99px; background: var(--stone-200);
+}
+.auth-prompt__close {
+  position: absolute; top: 16px; right: 16px; z-index: 1;
+  width: 34px; height: 34px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  color: var(--stone-400);
+  color: var(--stone-500); background: var(--stone-50);
   transition: background-color 140ms, color 140ms, transform 100ms;
 }
-.modal__close:hover { background: var(--stone-100); color: var(--stone-800); }
-.modal__close:active { transform: scale(0.94); }
-.modal__title {
-  margin: 0 28px 0 0; font-family: var(--serif); font-size: 22px; line-height: 1.18;
-  font-weight: 400; color: var(--stone-900); letter-spacing: -0.014em;
+.auth-prompt__close:hover { color: var(--stone-900); background: var(--stone-100); }
+.auth-prompt__close:active { transform: scale(.94); }
+.auth-prompt__title {
+  margin: 0 40px 0 0; font-family: var(--serif); font-size: 25px; line-height: 1.12;
+  font-weight: 500; letter-spacing: -.018em; color: var(--stone-900); text-wrap: balance;
 }
-.modal__text {
-  margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: var(--stone-600);
+.auth-prompt__text { margin: 9px 36px 0 0; color: var(--stone-500); font-size: 13.5px; line-height: 1.5; text-wrap: pretty; }
+.auth-prompt__form { display: grid; gap: 11px; margin-top: 18px; }
+.auth-prompt__field { display: block; }
+.auth-prompt__field > div { position: relative; }
+.auth-prompt__field i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; color: var(--stone-400); pointer-events: none;
 }
-.modal__form { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
-.modal__form .btn { margin-top: 4px; }
-.modal__error {
-  margin: 0; font-size: 13px; line-height: 1.4; color: #b4432b;
+.auth-prompt__field input {
+  width: 100%; height: 48px; padding: 0 14px 0 42px; outline: 0;
+  border: 1px solid var(--stone-200); border-radius: 13px;
+  background: var(--stone-50); color: var(--stone-900); font-size: 15px;
+  transition: background-color 140ms, border-color 140ms, box-shadow 140ms;
 }
-.modal__switch {
-  margin: 14px 0 0; text-align: center;
-  font-size: 13.5px; color: var(--stone-500);
+.auth-prompt__field input:focus {
+  background: white; border-color: var(--green-600); box-shadow: 0 0 0 3px rgba(5,150,105,.1);
 }
-.modal__link {
-  font-size: 13.5px; font-weight: 600; color: var(--green-700);
-  text-decoration: underline; text-underline-offset: 3px;
-  transition: color 140ms;
-}
-.modal__link:hover { color: var(--green-900); }
-.modal__skip {
-  width: 100%; margin-top: 12px; padding-top: 14px;
-  border-top: 1px solid var(--stone-100);
-  font-size: 13.5px; color: var(--stone-400);
-  transition: color 140ms;
-}
-.modal__skip:hover { color: var(--stone-700); }
-@keyframes modal-in {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.auth-prompt__error { margin: 0; color: #a94636; font-size: 12px; line-height: 1.4; }
+.auth-prompt__submit { width: 100%; min-height: 49px; margin-top: 3px; border-radius: 999px; }
+@keyframes auth-prompt-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .modal, .modal__backdrop { animation: none; }
+  .auth-prompt, .auth-prompt-layer__backdrop { animation: none; }
 }
 
 /* Дегустация всплывает панелью поверх расписания: список остаётся позади,
@@ -3095,6 +3335,12 @@ input, textarea { font: inherit; color: inherit; }
    тут лишняя — она про отдельный демо-маршрут, а не про этот слой. */
 .sheet .main-scroll { top: 12px; }
 .sheet .preview-banner { display: none; }
+.sheet .main-scroll > .page-header { display: none; }
+.sheet .tasting-cover {
+  width: calc(100% - 28px); margin-top: 18px; aspect-ratio: 4 / 3;
+  border-radius: 21px; box-shadow: 0 18px 34px -28px rgba(20,28,24,.75);
+}
+.sheet .hero { padding-top: 20px; }
 @keyframes sheet-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sheet-in {
   from { transform: translateY(100%); }
@@ -3162,13 +3408,16 @@ input, textarea { font: inherit; color: inherit; }
 /* «Как проходит вечер» — объясняет формат тем, кто ещё не был. */
 .steps-block { margin: 32px 0 0; padding: 26px 0 28px; background: var(--stone-50); }
 .steps-block .section-head { margin-bottom: 18px; }
+.steps-block .section-head__title {
+  white-space: normal; text-wrap: balance; overflow-wrap: anywhere;
+}
 .steps {
   margin: 0 16px; padding: 0; list-style: none;
   display: grid; gap: 10px;
 }
 .step {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas: "icon num" "icon title" "icon text";
   align-items: center;
   column-gap: 12px;
@@ -3226,7 +3475,7 @@ input, textarea { font: inherit; color: inherit; }
 
 /* Слайд с фото: снимок на всю плашку, поверх — затемнение снизу, чтобы
    текст читался на любом кадре. */
-.promo-slide--photo { position: relative; }
+.promo-slide--photo { position: relative; color: white; }
 .promo-slide__photo {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; z-index: 0;
@@ -3239,6 +3488,7 @@ input, textarea { font: inherit; color: inherit; }
 .promo-slide--photo .promo-slide__eyebrow { color: rgba(255, 255, 255, 0.85); opacity: 1; }
 .promo-slide--photo .promo-slide__title,
 .promo-slide--photo .promo-slide__event-when { color: white; }
+.promo-slide--photo .promo-slide__mark { color: white; opacity: .75; }
 
 /* Ближайшее событие: весь текст собран внизу лесенкой «надзаголовок —
    название — дата», кнопка уходит вправо. */
@@ -3396,27 +3646,56 @@ input, textarea { font: inherit; color: inherit; }
    структура по образцу: заголовок + бейдж сверху, текст, кнопка на всю
    ширину снизу. */
 .plank {
-  margin: 0 16px 28px; padding: 20px 18px 18px;
-  background: linear-gradient(155deg, var(--green-700) 0%, var(--green-900) 100%);
-  border-radius: 18px; color: white;
+  position: relative; width: auto; margin: 0 16px 28px;
+  padding: 22px 19px 19px; overflow: hidden; text-align: left;
+  display: flex; flex-direction: column; align-items: flex-start;
+  background:
+    radial-gradient(circle at 94% 8%, rgba(255,255,255,.13) 0 11%, transparent 11.5%),
+    linear-gradient(145deg, #53684a 0%, #31422d 58%, #1f2b1d 100%);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 20px; color: white;
+  box-shadow: 0 20px 42px -32px rgba(22,42,29,.85);
+  transition: transform 150ms, box-shadow 150ms;
+}
+.plank:hover { box-shadow: 0 24px 48px -30px rgba(22,42,29,.9); }
+.plank:active { transform: translateY(1px); }
+.plank__content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
+.plank__eyebrow {
+  margin-bottom: 9px; color: #cbd9bd; font-size: 9.5px; font-weight: 700;
+  letter-spacing: .15em; text-transform: uppercase;
 }
 .plank__title {
-  margin: 0; font-family: var(--serif); font-size: 21px; line-height: 1.2;
-  font-weight: 400; letter-spacing: -0.01em;
+  max-width: 260px; font-family: var(--serif); font-size: 23px; line-height: 1.16;
+  font-weight: 550; letter-spacing: -0.015em;
 }
 .plank__text {
-  margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.9);
-  max-width: 40ch;
+  margin-top: 11px; max-width: 43ch; font-size: 13.5px; line-height: 1.52;
+  color: rgba(255, 255, 255, 0.79); text-wrap: pretty;
+}
+.plank__facts { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 15px; }
+.plank__facts > span {
+  display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px;
+  border-radius: 999px; background: rgba(255,255,255,.1);
+  color: rgba(255,255,255,.88); font-size: 10.5px; font-weight: 550;
+}
+.plank__art {
+  position: absolute; z-index: 1; right: 17px; top: 18px;
+  width: 62px; height: 76px; padding: 10px; border-radius: 14px;
+  display: flex; flex-wrap: wrap; align-content: space-between; gap: 5px;
+  color: #e5eddc; background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.11); transform: rotate(4deg);
+}
+.plank__art svg { width: 100%; }
+.plank__art i {
+  width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.3);
 }
 .plank__btn {
-  margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 14px; border-radius: 14px; text-decoration: none;
-  background: white; color: var(--green-800);
-  font-size: 14.5px; font-weight: 600;
-  transition: background-color 140ms, transform 100ms;
+  position: relative; z-index: 2; margin-top: 18px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 13px 15px; border-radius: 13px;
+  background: white; color: var(--green-800); font-size: 13.5px; font-weight: 700;
+  transition: gap 140ms, background-color 140ms;
 }
-.plank__btn:hover { background: var(--ivory-soft); }
-.plank__btn:active { transform: translateY(1px); }
+.plank:hover .plank__btn { gap: 12px; background: var(--ivory-soft); }
 
 .schedule-tabs {
   margin: 0 16px 8px; padding: 3px;
@@ -3614,14 +3893,16 @@ button.cal__cell:hover { background: var(--stone-100); }
   position: absolute; inset: 0 0 auto 0;
   padding: 14px 16px;
   display: flex; align-items: flex-start; justify-content: flex-end; gap: 8px;
-  background: linear-gradient(180deg, rgba(20, 24, 20, 0.4) 0%, rgba(20, 24, 20, 0) 70%);
+  background: linear-gradient(180deg, rgba(15, 20, 15, 0.42) 0%, rgba(15, 20, 15, 0) 76%);
 }
 /* Дата — внизу снимка: так она рядом с названием и не спорит с тегами. */
 .schedule-card__cover-date {
-  position: absolute; inset: auto 0 0 0;
-  padding: 16px;
+  position: absolute; left: 14px; bottom: 14px;
+  min-height: 34px; padding: 7px 11px;
   display: flex; align-items: baseline; gap: 8px;
-  background: linear-gradient(0deg, rgba(20, 24, 20, 0.6) 0%, rgba(20, 24, 20, 0) 100%);
+  border-radius: 10px; background: rgba(255,255,255,.94);
+  border: 1px solid rgba(255,255,255,.74); box-shadow: 0 8px 20px -13px rgba(0,0,0,.75);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 /* Дата: в компактной карточке — обычная тёмная строка над заголовком;
    поверх фото (в оверлее большой карточки) — крупная белая с тенью. */
@@ -3631,14 +3912,14 @@ button.cal__cell:hover { background: var(--stone-100); }
   font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
 }
 .schedule-card__cover-date .schedule-card__date {
-  font-size: 18px; color: white; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  font-size: 15px; color: var(--stone-900); text-shadow: none;
 }
 .schedule-card__weekday {
   font-family: var(--sans); font-size: 13px; font-weight: 600;
   color: var(--stone-500); white-space: nowrap;
 }
 .schedule-card__cover-date .schedule-card__weekday {
-  color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  color: var(--stone-600); text-shadow: none;
 }
 .schedule-card__full-label {
   font-family: var(--sans); font-size: 11px; font-weight: 600;
@@ -3939,15 +4220,17 @@ button.cal__cell:hover { background: var(--stone-100); }
 
   /* Абонемент — широкая плашка: текст слева, кнопка справа. */
   .plank {
-    padding: 26px 30px;
+    padding: 29px 30px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 40px;
   }
-  .plank__head { grid-column: 1; }
-  .plank__text { grid-column: 1; margin-bottom: 0; max-width: 620px; }
-  .plank__btn { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; white-space: nowrap; }
+  .plank__content { grid-column: 1; max-width: 680px; }
+  .plank__title { max-width: none; font-size: 27px; }
+  .plank__text { max-width: 620px; }
+  .plank__art { right: 248px; top: 25px; }
+  .plank__btn { grid-column: 2; grid-row: 1; width: auto; min-width: 205px; margin-top: 0; white-space: nowrap; }
 
   /* Сетки карточек живут внутри той же колонки и заполняют её целиком,
      поэтому их края совпадают с заголовками и табами над ними. */
@@ -3973,15 +4256,268 @@ button.cal__cell:hover { background: var(--stone-100); }
   /* Нижний плавающий бар с CTA-кнопкой — не растягиваем на всю ширину.
      .buy-bar исключена: там своя строка «сумма + кнопка», её колонкой ломать
      нельзя — ей достаточно выровняться по колонке страницы. */
-  .footer:not(.buy-bar) {
+  .footer:not(.buy-bar):not(.pass-buy-bar) {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  .footer:not(.buy-bar) > * { width: 100%; max-width: 420px; }
+  .footer:not(.buy-bar):not(.pass-buy-bar) > * { width: 100%; max-width: 420px; }
 
   .buy-bar {
     padding-left: max(var(--gutter, 44px), calc((100% - var(--col, 720px)) / 2));
     padding-right: max(var(--gutter, 44px), calc((100% - var(--col, 720px)) / 2));
   }
+}
+
+/* ===== Абонементы на чартерные дегустации ===== */
+.pass-page {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  overflow: hidden; background: white;
+}
+.pass-page > .page-header { flex: 0 0 auto; }
+.pass-back {
+  width: 38px; height: 38px; margin-left: -5px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--stone-600); background: var(--stone-50); border: 1px solid var(--stone-100);
+  box-shadow: 0 5px 14px -12px rgba(28, 25, 23, .55);
+  transition: color 140ms, background-color 140ms, border-color 140ms, transform 100ms;
+}
+.pass-back:hover { color: var(--green-800); background: white; border-color: var(--stone-200); }
+.pass-back:active { transform: scale(.94); }
+.pass-page__scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pass-hero {
+  position: relative; overflow: hidden; margin: 0 16px; padding: 34px 22px 26px;
+  border-radius: 0 0 24px 24px; color: white;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(255,255,255,.14) 0 12%, transparent 12.5%),
+    linear-gradient(150deg, #536649 0%, #2f3d2a 58%, #202a1d 100%);
+}
+.pass-hero::after {
+  content: ""; position: absolute; right: -54px; bottom: -78px;
+  width: 190px; height: 190px; border: 1px solid rgba(255,255,255,.13); border-radius: 50%;
+  box-shadow: 0 0 0 24px rgba(255,255,255,.035), 0 0 0 50px rgba(255,255,255,.025);
+}
+.pass-hero__eyebrow,
+.pass-section__eyebrow {
+  position: relative; z-index: 1; display: block; margin-bottom: 9px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+}
+.pass-hero__eyebrow { color: #cbd8ba; }
+.pass-hero h1 {
+  position: relative; z-index: 1; max-width: 650px; margin: 0;
+  font-family: var(--serif); font-size: 31px; line-height: 1.1; font-weight: 500; letter-spacing: -.025em;
+}
+.pass-hero > p {
+  position: relative; z-index: 1; max-width: 660px; margin: 14px 0 0;
+  font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,.82); text-wrap: pretty;
+}
+.pass-hero__facts { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.pass-hero__facts span {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px;
+  border-radius: 999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.9);
+  font-size: 11.5px; font-weight: 550;
+}
+.pass-section { margin: 32px 16px 0; }
+.pass-section__eyebrow { color: var(--green-700); }
+.pass-section > h2,
+.pass-terms > h2 {
+  margin: 0; font-family: var(--serif); font-size: 25px; line-height: 1.16;
+  font-weight: 500; letter-spacing: -.018em; color: var(--stone-900);
+}
+.pass-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 17px; }
+.pass-plan-card {
+  position: relative; min-width: 0; padding: 17px 15px 15px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  border: 1px solid var(--stone-200); border-radius: 17px; background: white;
+  transition: transform 130ms, border-color 150ms, box-shadow 150ms;
+}
+.pass-plan-card:hover { border-color: var(--sage-warm); box-shadow: 0 14px 30px -24px rgba(36,55,42,.55); }
+.pass-plan-card:active { transform: translateY(1px); }
+.pass-plan-card.is-popular { background: #f4f7ed; border-color: #d8e2c6; }
+.pass-plan-card__badge {
+  position: absolute; top: 0; right: 0; padding: 5px 9px;
+  border-radius: 0 16px 0 10px; background: var(--green-700); color: white;
+  font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.pass-plan-card__count { color: var(--stone-600); font-size: 12px; }
+.pass-plan-card__count strong { margin-right: 3px; color: var(--stone-900); font-family: var(--serif); font-size: 28px; }
+.pass-plan-card__old-price {
+  margin-top: 9px; color: var(--stone-400); font-size: 11px;
+  text-decoration: line-through; text-decoration-thickness: 1px;
+}
+.pass-plan-card__price { color: var(--stone-900); font-size: 18px; font-weight: 750; }
+.pass-plan-card__per { color: var(--stone-400); font-size: 10.5px; }
+.pass-plan-card__arrow {
+  position: absolute; right: 12px; bottom: 12px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: var(--stone-50); color: var(--stone-500);
+}
+.pass-mechanics { padding: 24px 19px; border-radius: 20px; background: var(--stone-50); border: 1px solid var(--stone-100); }
+.pass-mechanics__steps { display: grid; gap: 18px; margin-top: 20px; }
+.pass-mechanics__steps > div { display: grid; grid-template-columns: 31px 1fr; gap: 11px; align-items: start; }
+.pass-mechanics__steps i {
+  width: 31px; height: 31px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--green-100); color: var(--green-800); font-size: 12px; font-weight: 750; font-style: normal;
+}
+.pass-mechanics__steps span { color: var(--stone-500); font-size: 12.5px; line-height: 1.45; }
+.pass-mechanics__steps strong { display: block; margin-bottom: 2px; color: var(--stone-800); font-size: 13.5px; }
+.pass-examples { display: grid; gap: 9px; margin-top: 17px; }
+.pass-examples article {
+  display: grid; grid-template-columns: 62px 1fr; gap: 13px; align-items: center;
+  padding: 14px; border: 1px solid var(--stone-100); border-radius: 15px;
+}
+.pass-examples article > span {
+  min-height: 48px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: #eef3e6; color: var(--green-800);
+  font-family: var(--serif); font-size: 17px; font-weight: 650;
+}
+.pass-examples h3 { margin: 0; color: var(--stone-800); font-size: 13.5px; }
+.pass-examples p { margin: 3px 0 0; color: var(--stone-500); font-size: 11.5px; line-height: 1.4; }
+.pass-terms { margin: 32px 16px 0; padding: 20px; border-radius: 19px; background: #f5f7ed; border: 1px solid #e0e7d2; }
+.pass-terms ul { display: grid; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.pass-terms li { display: grid; grid-template-columns: 18px 1fr; gap: 9px; color: var(--stone-600); font-size: 12.5px; line-height: 1.45; }
+.pass-terms li svg { color: var(--green-700); margin-top: 1px; }
+.pass-page__spacer { height: 102px; }
+.pass-buy-bar {
+  display: flex; align-items: center; gap: 13px; padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255,255,255,.92); border-top: 1px solid var(--stone-100);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.pass-buy-bar > div { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+.pass-buy-bar > div span { color: var(--stone-400); font-size: 9px; line-height: 1; text-transform: uppercase; }
+.pass-buy-bar > div strong { color: var(--stone-900); font-size: 18px; white-space: nowrap; }
+.pass-buy-bar .btn { flex: 1; min-width: 0; padding: 14px 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 7px; }
+
+/* Выбор и итог абонемента внутри нижней шторки оформления. */
+.pass-checkout-modal { max-height: min(820px, calc(100% - 30px)); }
+.checkout-progress--three span { width: 22px; }
+.pass-plan-carousel {
+  margin: 20px -22px 0; padding: 0 22px 7px;
+  display: flex; gap: 11px; overflow-x: auto; scroll-snap-type: x mandatory;
+  scroll-padding-inline: 22px; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.pass-plan-carousel::-webkit-scrollbar { display: none; }
+.pass-plan-slide {
+  position: relative; flex: 0 0 calc(100% - 28px); min-height: 440px;
+  padding: 23px 21px 20px; overflow: hidden; scroll-snap-align: center;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  border: 1px solid #dce4cf; border-radius: 22px; color: var(--stone-900);
+  background:
+    radial-gradient(circle at 100% 0, rgba(158,180,135,.24), transparent 34%),
+    linear-gradient(150deg, #f8faf3, #eef3e5);
+  transition: border-color 160ms, box-shadow 160ms, transform 160ms;
+}
+.pass-plan-slide:nth-child(2) { background: radial-gradient(circle at 100% 0, rgba(135,165,143,.25), transparent 34%), linear-gradient(150deg, #f5f9f2, #e8f0e6); }
+.pass-plan-slide:nth-child(3) { background: radial-gradient(circle at 100% 0, rgba(180,164,123,.22), transparent 34%), linear-gradient(150deg, #faf9f2, #f1eddf); }
+.pass-plan-slide:nth-child(4) { background: radial-gradient(circle at 100% 0, rgba(109,126,101,.28), transparent 34%), linear-gradient(150deg, #f3f6ef, #e3e9dd); }
+.pass-plan-slide.is-on { border-color: var(--sage-warm); box-shadow: 0 18px 40px -28px rgba(35,55,41,.8); }
+.pass-plan-slide__badge {
+  position: absolute; top: 0; right: 0; padding: 6px 11px;
+  border-radius: 0 21px 0 11px; background: var(--green-700); color: white;
+  font-size: 8px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+}
+.pass-plan-slide__eyebrow { color: var(--green-800); font-size: 10px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+.pass-plan-slide__visits { margin-top: 8px; color: var(--stone-600); font-family: var(--serif); font-size: 18px; }
+.pass-plan-slide__visits strong { margin-right: 5px; color: var(--stone-900); font-size: 50px; line-height: 1; }
+.pass-plan-slide__tokens { display: flex; flex-wrap: wrap; gap: 5px; max-width: 190px; margin-top: 12px; }
+.pass-plan-slide__tokens i {
+  width: 25px; height: 25px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  color: var(--green-800); background: rgba(255,255,255,.68); border: 1px solid rgba(93,122,77,.12);
+}
+.pass-plan-slide__price-block {
+  width: 100%; margin-top: 16px; padding: 13px 14px; border-radius: 14px;
+  display: grid; background: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.75);
+}
+.pass-plan-slide__old { color: var(--stone-400); font-size: 12px; text-decoration: line-through; }
+.pass-plan-slide__price { color: var(--stone-900); font-size: 29px; line-height: 1.12; font-weight: 760; letter-spacing: -.015em; }
+.pass-plan-slide__per { margin-top: 2px; color: var(--stone-500); font-size: 11px; }
+.pass-plan-slide__conditions-title {
+  margin-top: 17px; color: var(--stone-700); font-size: 11px; font-weight: 750;
+  letter-spacing: .03em;
+}
+.pass-plan-slide__conditions {
+  position: relative; width: 100%; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 7px; margin-top: 8px;
+}
+.pass-plan-slide__conditions::before,
+.pass-plan-slide__conditions::after {
+  content: ""; position: absolute; z-index: 0; background: rgba(93,122,77,.15);
+}
+.pass-plan-slide__conditions::before { left: 50%; top: 22%; bottom: 22%; width: 1px; }
+.pass-plan-slide__conditions::after { left: 22%; right: 22%; top: 50%; height: 1px; }
+.pass-plan-slide__conditions > span {
+  position: relative; z-index: 1; min-height: 82px; padding: 10px 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; border-radius: 13px; background: rgba(255,255,255,.58);
+  border: 1px solid rgba(255,255,255,.72);
+}
+.pass-plan-slide__conditions i {
+  width: 29px; height: 29px; margin-bottom: 6px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-style: normal;
+  color: var(--green-800); background: #e7efde;
+}
+.pass-plan-slide__conditions b { color: var(--stone-800); font-size: 11.5px; line-height: 1.2; }
+.pass-plan-slide__conditions small { display: block; margin-top: 2px; color: var(--stone-500); font-size: 9.5px; line-height: 1.2; }
+.pass-plan-slide__restriction {
+  width: 100%; margin-top: 9px; padding: 8px 10px; border-radius: 10px;
+  display: grid; grid-template-columns: 15px 1fr; align-items: start; gap: 6px;
+  background: rgba(255,255,255,.4); color: var(--stone-500); font-size: 9.5px; line-height: 1.3;
+}
+.pass-plan-slide__restriction svg { color: var(--stone-400); margin-top: 1px; }
+.pass-plan-dots { display: flex; justify-content: center; gap: 5px; margin-top: 3px; }
+.pass-plan-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--stone-300); transition: width 150ms, background-color 150ms; }
+.pass-plan-dots i.is-on { width: 15px; border-radius: 99px; background: var(--green-700); }
+.pass-card {
+  position: relative; margin-top: 18px; padding: 17px; overflow: hidden;
+  border-radius: 19px; color: white;
+  background: linear-gradient(145deg, #637657 0%, #34442f 62%, #253121 100%);
+  box-shadow: 0 20px 36px -26px rgba(28,45,32,.8);
+}
+.pass-card::after {
+  content: ""; position: absolute; width: 150px; height: 150px; right: -65px; bottom: -80px;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 50%; box-shadow: 0 0 0 20px rgba(255,255,255,.035);
+}
+.pass-card__top,
+.pass-card__bottom { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pass-card__brand { font-family: var(--serif); font-size: 13px; }
+.pass-card__type { display: inline-flex; align-items: center; gap: 5px; color: #dce6d1; font-size: 9px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.pass-card__count { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.pass-card__count strong { font-family: var(--serif); font-size: 42px; line-height: 1; font-weight: 600; }
+.pass-card__count span { color: rgba(255,255,255,.76); font-size: 10.5px; line-height: 1.3; }
+.pass-card__dots { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 15px; }
+.pass-card__dots i {
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255,255,255,.13); color: #eaf0e4; font-size: 8px; font-style: normal;
+}
+.pass-card__bottom { margin-top: 17px; color: rgba(255,255,255,.7); font-size: 9.5px; }
+.pass-payment-total {
+  margin-top: 18px; padding: 16px; border-radius: 15px; display: flex; justify-content: space-between; gap: 16px;
+  background: var(--stone-50); border: 1px solid var(--stone-100);
+}
+.pass-payment-total span { color: var(--stone-700); font-size: 13px; font-weight: 650; }
+.pass-payment-total small { display: block; color: var(--stone-400); font-size: 10px; font-weight: 400; }
+.pass-payment-total strong { color: var(--stone-900); font-size: 19px; white-space: nowrap; }
+.pass-checkout-success { text-align: center; }
+.pass-checkout-success .pass-card { text-align: left; }
+.pass-success-note {
+  margin-top: 15px; padding: 13px 14px; border-radius: 13px; text-align: left;
+  background: var(--stone-50); color: var(--stone-500); font-size: 11.5px; line-height: 1.45;
+}
+.pass-success-note strong { display: block; margin-bottom: 3px; color: var(--stone-800); font-size: 12.5px; }
+
+@media (min-width: 700px) {
+  .pass-hero,
+  .pass-section,
+  .pass-terms,
+  .pass-page__scroll > .app-footer { max-width: 960px; margin-left: auto; margin-right: auto; }
+  .pass-hero { margin-top: 20px; border-radius: 24px; padding: 46px 42px 38px; }
+  .pass-hero h1 { font-size: 42px; }
+  .pass-section { margin-top: 50px; }
+  .pass-section > h2, .pass-terms > h2 { font-size: 30px; }
+  .pass-plans { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .pass-mechanics__steps { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .pass-examples { grid-template-columns: repeat(3, 1fr); }
+  .pass-examples article { grid-template-columns: 1fr; align-items: start; }
+  .pass-examples article > span { width: 70px; }
+  .footer.pass-buy-bar { padding-left: max(44px, calc((100% - 960px) / 2)); padding-right: max(44px, calc((100% - 960px) / 2)); }
 }

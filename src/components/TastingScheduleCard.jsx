@@ -103,7 +103,7 @@ export default function TastingScheduleCard({ tasting, past, onOpen, waitlisted,
 
   const handleClick = () => {
     if (isWaitlistCta) {
-      if (!waitlisted) onJoinWaitlist?.(tasting.id);
+      if (!waitlisted) onJoinWaitlist?.(tasting);
     } else {
       onOpen?.(tasting);
     }

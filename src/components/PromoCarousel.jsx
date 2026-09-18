@@ -75,7 +75,13 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
           </button>
         )}
 
-        <div className="promo-carousel__cell promo-slide promo-slide--chef" ref={registerSlide}>
+        <div className="promo-carousel__cell promo-slide promo-slide--chef promo-slide--photo" ref={registerSlide}>
+          <img
+            className="promo-slide__photo"
+            src="/photos/tasting-10.jpg"
+            alt="Интерьер чайной комнаты"
+            loading="lazy"
+          />
           <span className="promo-slide__eyebrow">Шеф-чаепития</span>
           <IconLeaf className="promo-slide__mark" size={26} stroke={1.3} />
           <span className="promo-slide__title">Чайные церемонии</span>
@@ -89,7 +95,13 @@ export default function PromoCarousel({ nearestTasting, onOpenNearest, onOpenChe
           </button>
         </div>
 
-        <div className="promo-carousel__cell promo-slide promo-slide--futures" ref={registerSlide}>
+        <div className="promo-carousel__cell promo-slide promo-slide--futures promo-slide--photo" ref={registerSlide}>
+          <img
+            className="promo-slide__photo"
+            src="/photos/tasting-3.jpg"
+            alt="Чай и цветы для заваривания"
+            loading="lazy"
+          />
           <span className="promo-slide__eyebrow">Пьючерсы и лучерсы</span>
           <IconTicket className="promo-slide__mark" size={26} stroke={1.3} />
           <span className="promo-slide__title">Чай на будущее</span>

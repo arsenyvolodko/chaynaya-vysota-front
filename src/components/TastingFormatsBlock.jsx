@@ -1,4 +1,4 @@
-import { IconArrowRight, IconCalendar, IconUser } from "./icons.jsx";
+import { IconArrowRight, IconCalendar, IconTicket, IconUser } from "./icons.jsx";
 import { formatPrice } from "../utils/price.js";
 
 // Блок под промо-листалкой: два формата чаепитий рядом — общий стол по
@@ -60,7 +60,7 @@ function FormatCard({ format, priceFrom, onGo }) {
   );
 }
 
-export default function TastingFormatsBlock({ onPickCharter, onPickChef, charterPriceFrom, chefPriceFrom }) {
+export default function TastingFormatsBlock({ onPickCharter, onPickChef, onOpenPass, charterPriceFrom, chefPriceFrom }) {
   const priceByKey = { charter: charterPriceFrom, chef: chefPriceFrom };
   const goByKey = { charter: onPickCharter, chef: onPickChef };
 
@@ -89,19 +89,28 @@ export default function TastingFormatsBlock({ onPickCharter, onPickChef, charter
         </div>
       </section>
 
-      <div className="plank">
-        <h3 className="plank__title">Абонемент на чаепития</h3>
-        <p className="plank__text">
-          Билет на свободную дату — без привязки к конкретному дню. Берите на
-          одно посещение или сразу на несколько: расходуется постепенно, как
-          будет удобно вам.
-        </p>
-        {/* TODO: заменить на реальную ссылку/маршрут оформления абонемента */}
-        <a className="plank__btn" href="https://t.me/" target="_blank" rel="noopener noreferrer">
-          Оформить абонемент
+      <button type="button" className="plank" onClick={onOpenPass}>
+        <span className="plank__art" aria-hidden="true">
+          <IconTicket size={25} stroke={1.45} />
+          <i /><i /><i /><i />
+        </span>
+        <span className="plank__content">
+          <span className="plank__eyebrow">Для себя и компании</span>
+          <span className="plank__title">Абонемент на дегустации</span>
+          <span className="plank__text">
+            От 4 до 10 стандартных мест на чартерные дегустации. Ходите сами,
+            приглашайте друзей и распределяйте посещения между разными датами.
+          </span>
+          <span className="plank__facts">
+            <span><IconCalendar size={13} /> 12 месяцев</span>
+            <span><IconUser size={13} /> можно делиться</span>
+          </span>
+        </span>
+        <span className="plank__btn">
+          Выбрать абонемент
           <IconArrowRight size={16} stroke={2} />
-        </a>
-      </div>
+        </span>
+      </button>
     </>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Logomark from "../components/Logomark.jsx";
 import AppFooter from "../components/AppFooter.jsx";
-import { IconPhone, IconTelegram } from "../components/icons.jsx";
+import { IconChevronLeft, IconPhone } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { formatRuPhone, isRuPhoneComplete, normalizeToE164 } from "../utils/phone.js";
 import { getTasting } from "../api/catalog.js";
@@ -14,6 +14,8 @@ export default function AuthPage() {
   // из Telegram → внешний браузер сохранял оригинальный URL.
   const rawReturn = searchParams.get("return") || "/";
   const safeReturn = rawReturn.startsWith("/") && !rawReturn.startsWith("//") ? rawReturn : "/";
+  const rawBack = searchParams.get("back");
+  const backTo = rawBack?.startsWith("/") && !rawBack.startsWith("//") ? rawBack : null;
   // Если пользователь пришёл на базовый URL без tasting в адресе — после авторизации
   // ведём в личный кабинет, а не в EntryPage, которая на пустом списке дегустаций
   // показывает заглушку.
@@ -121,6 +123,12 @@ export default function AuthPage() {
   return (
     <div className="screen">
       <form className="auth" onSubmit={onSubmit}>
+        {backTo && (
+          <button type="button" className="auth__back" onClick={() => navigate(backTo, { replace: true })}>
+            <IconChevronLeft size={18} stroke={2} />
+            <span>Назад</span>
+          </button>
+        )}
         <div style={{ marginBottom: 56 }}>
           <Logomark size="lg" label="Дегустация" />
         </div>
@@ -136,7 +144,9 @@ export default function AuthPage() {
 
         <div className="auth__form">
           <label className="field">
-            <span className="field__label">Телефон</span>
+            <span className="field__label">
+              Телефон<span className="field__required" aria-hidden="true">*</span>
+            </span>
             <div className="field__wrap">
               <span className="field__icon">
                 <IconPhone size={16} />
@@ -156,7 +166,9 @@ export default function AuthPage() {
           {isRegister && (
             <>
               <label className="field">
-                <span className="field__label">Имя*</span>
+                <span className="field__label">
+                  Имя<span className="field__required" aria-hidden="true">*</span>
+                </span>
                 <div className="field__wrap">
                   <input
                     className="field__input"
@@ -171,11 +183,8 @@ export default function AuthPage() {
               <label className="field">
                 <span className="field__label">Telegram</span>
                 <div className="field__wrap">
-                  <span className="field__icon">
-                    <IconTelegram size={16} />
-                  </span>
                   <input
-                    className="field__input field__input--with-icon"
+                    className="field__input"
                     value={telegram}
                     onChange={(e) => onTelegramChange(e.target.value)}
                     placeholder="@username"

@@ -3,9 +3,17 @@ import { useEffect, useRef, useState } from "react";
 // Лёгкое выпадающее меню, привязанное к кнопке-триггеру. Закрывается по
 // клику вне себя. `trigger` — render-prop с { open, toggle }, `children` —
 // render-prop с { close } для содержимого панели.
-export default function Dropdown({ trigger, children, align = "right" }) {
-  const [open, setOpen] = useState(false);
+export default function Dropdown({ trigger, children, align = "right", open: controlledOpen, onOpenChange }) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const ref = useRef(null);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = (nextValue) => {
+    const next = typeof nextValue === "function" ? nextValue(open) : nextValue;
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -17,7 +25,7 @@ export default function Dropdown({ trigger, children, align = "right" }) {
   }, [open]);
 
   const close = () => setOpen(false);
-  const toggle = () => setOpen((o) => !o);
+  const toggle = () => setOpen(!open);
 
   return (
     <div className="dropdown" ref={ref}>

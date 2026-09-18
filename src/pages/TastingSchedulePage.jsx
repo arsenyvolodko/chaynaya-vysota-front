@@ -10,7 +10,8 @@ import Dropdown from "../components/Dropdown.jsx";
 import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
 import TastingDetailPreviewPage from "./TastingDetailPreviewPage.jsx";
 import AuthPrompt from "../components/AuthPrompt.jsx";
-import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSearch, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
+import WaitlistSheet from "../components/WaitlistSheet.jsx";
+import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
 import { getCeremonies } from "../api/ceremony.js";
@@ -98,6 +99,8 @@ export default function TastingSchedulePage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTasting, setSelectedTasting] = useState(null);
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [waitlistTasting, setWaitlistTasting] = useState(null);
   const authGateRef = useRef(null);
 
   useEffect(() => {
@@ -160,12 +163,32 @@ export default function TastingSchedulePage() {
     else openUpcoming(tasting);
   };
 
-  const joinWaitlist = (id) => {
-    setWaitlisted((prev) => new Set(prev).add(id));
+  const openWaitlist = (tasting) => {
+    setAuthPromptOpen(false);
+    setWaitlistTasting(tasting);
+  };
+
+  const joinWaitlist = () => {
+    if (!waitlistTasting) return;
+    setWaitlisted((prev) => new Set(prev).add(waitlistTasting.id));
+    setWaitlistTasting(null);
   };
 
   const scrollToSchedule = () => {
     document.getElementById("schedule-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const openScheduleCalendar = () => {
+    scrollToSchedule();
+    setCalendarOpen(true);
+  };
+
+  const openProfile = () => {
+    if (isAuthenticated && !wasSkipped) {
+      navigate("/profile");
+      return;
+    }
+    navigate("/auth?return=%2Fprofile&back=%2Fschedule");
   };
 
   const scrollToChefTeas = () => {
@@ -178,7 +201,7 @@ export default function TastingSchedulePage() {
   // войти. Актуальные значения читаем из рефа — иначе обработчик пришлось бы
   // переподписывать на каждый рендер.
   const promptStateRef = useRef({ needsAccount: false, opened: false });
-  promptStateRef.current.needsAccount = needsAccount && !sheetOpen;
+  promptStateRef.current.needsAccount = needsAccount && !sheetOpen && !waitlistTasting;
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -315,7 +338,7 @@ export default function TastingSchedulePage() {
         past={tab === "past"}
         onOpen={openTasting}
         waitlisted={waitlisted.has(tasting.id)}
-        onJoinWaitlist={joinWaitlist}
+        onJoinWaitlist={openWaitlist}
       />
       {index === Math.min(AUTH_PROMPT_AFTER_CARDS, list.length) - 1 && (
         <div className="auth-gate-anchor" ref={authGateRef} aria-hidden="true" />
@@ -332,7 +355,7 @@ export default function TastingSchedulePage() {
             <button type="button" className="icon-btn" aria-label="Корзина">
               <IconCart size={20} stroke={1.7} />
             </button>
-            <button type="button" className="avatar" onClick={() => navigate("/profile")}>
+            <button type="button" className="avatar" onClick={openProfile} aria-label="Личный кабинет">
               {initialsOf(user?.name)}
             </button>
           </div>
@@ -348,6 +371,7 @@ export default function TastingSchedulePage() {
       <TastingFormatsBlock
         onPickCharter={scrollToSchedule}
         onPickChef={scrollToChefTeas}
+        onOpenPass={() => navigate("/passes")}
         charterPriceFrom={minPriceFrom(upcoming)}
         chefPriceFrom={minPriceFrom(ceremonies)}
       />
@@ -359,6 +383,8 @@ export default function TastingSchedulePage() {
         </div>
         <div className="schedule-section-head__actions">
           <Dropdown
+            open={calendarOpen}
+            onOpenChange={setCalendarOpen}
             trigger={({ open, toggle }) => (
               <button type="button" className={`icon-btn ${open ? "is-on" : ""}`} onClick={toggle} aria-label="Календарь">
                 <IconCalendar size={18} stroke={1.8} />
@@ -395,9 +421,6 @@ export default function TastingSchedulePage() {
               </div>
             )}
           </Dropdown>
-          <button type="button" className="icon-btn" aria-label="Поиск">
-            <IconSearch size={18} stroke={1.8} />
-          </button>
         </div>
       </div>
 
@@ -476,7 +499,7 @@ export default function TastingSchedulePage() {
         </a>
       </div>
 
-      <EveningStepsBlock onPickDate={scrollToSchedule} />
+      <EveningStepsBlock onPickDate={openScheduleCalendar} />
 
       <div className="section-head" id="chef-teas">
         <span className="section-head__eyebrow">Приватно</span>
@@ -530,10 +553,19 @@ export default function TastingSchedulePage() {
       </button>
     </div>
 
-    {authPromptOpen && !sheetOpen && (
+    {authPromptOpen && !sheetOpen && !waitlistTasting && (
       <AuthPrompt
         onClose={() => setAuthPromptOpen(false)}
-        onRegister={() => navigate(`/auth?return=${encodeURIComponent(window.location.pathname)}`)}
+      />
+    )}
+
+    {waitlistTasting && (
+      <WaitlistSheet
+        tasting={waitlistTasting}
+        initialName={user?.name || ""}
+        initialEmail={user?.email || ""}
+        onClose={() => setWaitlistTasting(null)}
+        onConfirm={joinWaitlist}
       />
     )}
 

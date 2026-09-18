@@ -3,6 +3,7 @@ import PageHeader from "../components/PageHeader.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import TicketPicker, { guestsWord, ticketTotal } from "../components/TicketPicker.jsx";
 import TicketCheckoutFlow from "../components/TicketCheckoutFlow.jsx";
+import MapChoiceSheet from "../components/MapChoiceSheet.jsx";
 import {
   IconArrowRight,
   IconCandy,
@@ -26,6 +27,8 @@ const DEMO_TASTING = {
   date: "2026-10-04T19:00:00",
   location_name: "Чайная высота / Винная глубина",
   location_address: "Тверская, 6 стр. 1",
+  yandex_maps_url: "https://yandex.ru/maps/-/CTxlUUI5",
+  two_gis_url: "https://2gis.ru/moscow/inside/4504235282757536/firm/70000001031691993",
   // Два вида билета, у каждого своя сетка тарифов: цена за гостя падает с
   // размером компании — как в «Чайной высоте», где чаепитие на двоих стоит
   // дешевле в пересчёте на человека, чем на одного, а на компанию — ещё
@@ -117,22 +120,13 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
   // Детали билетов пока демонстрационные, но основные данные и обложку берём
   // с выбранной карточки — при открытии шторки контекст события не теряется.
   const tasting = { ...DEMO_TASTING, ...(tastingOverride || {}) };
-  const [guestsByTicket, setGuestsByTicket] = useState({ hall: 2, front: 0 });
+  const [ticketId, setTicketId] = useState("hall");
+  const [guests, setGuests] = useState(2);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const setTicketGuests = (id, n) => setGuestsByTicket((prev) => ({ ...prev, [id]: n }));
-  const guests = tasting.tickets.reduce((sum, t) => sum + guestsByTicket[t.id], 0);
-  const selections = tasting.tickets
-    .filter((ticket) => guestsByTicket[ticket.id] > 0)
-    .map((ticket) => ({
-      id: ticket.id,
-      title: ticket.title,
-      guests: guestsByTicket[ticket.id],
-      total: ticketTotal(ticket.tiers, guestsByTicket[ticket.id]),
-    }));
-  const total = tasting.tickets.reduce(
-    (sum, t) => sum + ticketTotal(t.tiers, guestsByTicket[t.id]),
-    0
-  );
+  const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
+  const selectedTicket = tasting.tickets.find((ticket) => ticket.id === ticketId) || tasting.tickets[0];
+  const total = ticketTotal(selectedTicket.tiers, guests);
+  const selections = [{ id: selectedTicket.id, title: selectedTicket.title, guests, total }];
 
   return (
     <>
@@ -143,38 +137,37 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
       <TastingCoverPhoto tasting={tasting} />
 
       <div className="hero">
+        <span className="tasting-kind">Чартерная дегустация</span>
         <h1 className="hero__title hero__title--tasting">{tasting.title}</h1>
 
-        <div className="hero-meta-row">
-          <span className="hero-meta-row__icon"><IconUser size={14} stroke={1.8} /></span>
-          <span>Ведущие: {tasting.host}</span>
-        </div>
-
-        <div className="hero-meta-row hero-meta-row--date">
-          <DateBadge date={tasting.date} />
-          <div className="hero-meta-row__text">
-            <div className="hero-meta-row__main">{formatWeekdayDate(tasting.date)}</div>
-            <div className="hero-meta-row__sub">{formatTastingTime(tasting.date)}</div>
+        <div className="tasting-meta-card">
+          <div className="hero-meta-row hero-meta-row--date">
+            <DateBadge date={tasting.date} />
+            <div className="hero-meta-row__text">
+              <div className="hero-meta-row__main">{formatWeekdayDate(tasting.date)}</div>
+              <div className="hero-meta-row__sub">Начало в {formatTastingTime(tasting.date)}</div>
+            </div>
           </div>
-        </div>
-
-        <div className="hero-meta-row">
-          <span className="hero-meta-row__icon"><IconMapPin size={14} stroke={1.8} /></span>
-          <div className="hero-meta-row__text">
-            <div className="hero-meta-row__main">{tasting.location_name}</div>
-            <div className="hero-meta-row__sub">{tasting.location_address}</div>
+          <button type="button" className="hero-meta-row hero-meta-row--place" onClick={() => setMapChoiceOpen(true)}>
+            <span className="hero-meta-row__icon"><IconMapPin size={16} stroke={1.8} /></span>
+            <div className="hero-meta-row__text">
+              <div className="hero-meta-row__main">{tasting.location_name}</div>
+              <div className="hero-meta-row__sub">{tasting.location_address}</div>
+            </div>
+            <IconArrowRight className="hero-meta-row__arrow" size={16} stroke={2} />
+          </button>
+          <div className="hero-meta-row">
+            <span className="hero-meta-row__icon"><IconUser size={16} stroke={1.8} /></span>
+            <div className="hero-meta-row__text">
+              <div className="hero-meta-row__main">{tasting.host}</div>
+              <div className="hero-meta-row__sub">Ведущий дегустации</div>
+            </div>
           </div>
         </div>
 
         <p className="hero__lede">{tasting.description}</p>
 
-        <div className="hero-includes">
-          <div className="section__label">В стоимость входит</div>
-          <ul className="hero-includes__list">
-            {tasting.includes.map((item, i) => <li key={i}>{item}</li>)}
-          </ul>
-        </div>
-
+        <div className="tasting-program-title">В программе</div>
         <div className="hero-features">
           {FEATURES.map(({ icon: Icon, label }, i) => (
             <div className="hero-features__item" key={i}>
@@ -186,23 +179,24 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
 
         {/* TODO: строка [текст от Александры] — вставить перед блоком билетов, как только пришлёте текст. */}
 
-        {tasting.tickets.map((ticket) => (
-          <TicketPicker
-            key={ticket.id}
-            title={ticket.title}
-            tone={ticket.tone}
-            tiers={ticket.tiers}
-            guests={guestsByTicket[ticket.id]}
-            onChange={(n) => setTicketGuests(ticket.id, n)}
-          />
-        ))}
+        <TicketPicker
+          tickets={tasting.tickets}
+          selectedId={selectedTicket.id}
+          guests={guests}
+          onSelect={setTicketId}
+          onChange={setGuests}
+          onCheckout={() => setCheckoutOpen(true)}
+        />
 
-        <div className="tasting-about">
-          <div className="section__label">Описание</div>
-          {tasting.about.map((paragraph, i) => (
-            <p className="tasting-about__text" key={i}>{paragraph}</p>
-          ))}
-        </div>
+        <section className="tasting-about">
+          <span className="tasting-about__eyebrow">История встречи</span>
+          <h2>О дегустации</h2>
+          <div className="tasting-about__body">
+            {tasting.about.map((paragraph, i) => (
+              <p className="tasting-about__text" key={i}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
       </div>
 
       <AppFooter />
@@ -231,6 +225,15 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
         selections={selections}
         total={total}
         onClose={() => setCheckoutOpen(false)}
+      />
+    )}
+    {mapChoiceOpen && (
+      <MapChoiceSheet
+        name={tasting.location_name}
+        address={tasting.location_address}
+        yandexUrl={tasting.yandex_maps_url}
+        twoGisUrl={tasting.two_gis_url}
+        onClose={() => setMapChoiceOpen(false)}
       />
     )}
     </>

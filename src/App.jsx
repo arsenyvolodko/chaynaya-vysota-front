@@ -10,6 +10,7 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import TastingSchedulePage from "./pages/TastingSchedulePage.jsx";
 import TastingDetailPreviewPage from "./pages/TastingDetailPreviewPage.jsx";
 import PassPage from "./pages/PassPage.jsx";
+import GiftCertificatePage, { GiftRecipientPage } from "./pages/GiftCertificatePage.jsx";
 
 // Force remount of DetailPage on productId change so stale state from the
 // previous product doesn't flash above the loading state while the next fetch
@@ -31,6 +32,8 @@ export default function App() {
           <Route path="/design/tasting-preview" element={<TastingDetailPreviewPage />} />
           <Route path="/design/schedule-preview" element={<TastingSchedulePage />} />
           <Route path="/passes" element={<PassPage />} />
+          <Route path="/gift-certificates" element={<GiftCertificatePage />} />
+          <Route path="/gift/:giftId" element={<GiftRecipientPage />} />
           <Route path="/tasting/:id" element={<RequireAuth><MainPage /></RequireAuth>} />
           <Route path="/tasting/:id/product/:productId" element={<RequireAuth><KeyedDetailPage /></RequireAuth>} />
           <Route path="/tasting/:id/select-top" element={<RequireAuth><SelectTopPage /></RequireAuth>} />

@@ -11,7 +11,7 @@ import ScheduleCalendar from "../components/ScheduleCalendar.jsx";
 import TastingDetailPreviewPage from "./TastingDetailPreviewPage.jsx";
 import AuthPrompt from "../components/AuthPrompt.jsx";
 import WaitlistSheet from "../components/WaitlistSheet.jsx";
-import { IconCalendar, IconCart, IconCheck, IconChevronUp, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
+import { IconArrowRight, IconCalendar, IconCart, IconCheck, IconChevronUp, IconGift, IconSort, IconTelegram, IconX } from "../components/icons.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getTastingSchedule } from "../api/schedule.js";
 import { getCeremonies } from "../api/ceremony.js";
@@ -367,6 +367,16 @@ export default function TastingSchedulePage() {
         onOpenNearest={openUpcoming}
         onOpenChefTeas={scrollToChefTeas}
       />
+
+      <button type="button" className="gift-entry" onClick={() => navigate("/gift-certificates")}>
+        <span className="gift-entry__icon"><IconGift size={22} stroke={1.7} /></span>
+        <span className="gift-entry__body">
+          <span className="gift-entry__eyebrow">Подарочный сертификат</span>
+          <strong>Подарите время на чай</strong>
+          <small>Красивый подарок с открытой датой — от 2 посещений</small>
+        </span>
+        <span className="gift-entry__arrow"><IconArrowRight size={18} stroke={1.8} /></span>
+      </button>
 
       <TastingFormatsBlock
         onPickCharter={scrollToSchedule}

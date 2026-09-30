@@ -20,6 +20,7 @@ export default function AuthPage() {
   // ведём в личный кабинет, а не в EntryPage, которая на пустом списке дегустаций
   // показывает заглушку.
   const returnTo = safeReturn === "/" ? "/profile" : safeReturn;
+  const isGiftActivation = /^\/gift\/[^/?#]+/.test(safeReturn);
   const { loginPhone, register, loginSkip } = useAuth();
   const [phone, setPhone] = useState("");
   // 'login' — только телефон; после 404 переключаемся в 'register' и показываем
@@ -134,10 +135,14 @@ export default function AuthPage() {
         </div>
 
         <h1 className="title-xl">
-          {tastingTitle || " "}
+          {isGiftActivation ? "Активировать подарок" : (tastingTitle || " ")}
         </h1>
         <p className="auth__lede">
-          {isRegister
+          {isGiftActivation && isRegister
+            ? "Такого номера ещё нет. Укажите имя — создадим аккаунт и сразу добавим сертификат."
+            : isGiftActivation
+              ? "Введите номер телефона. Сертификат привяжется к вашему аккаунту и появится в личном кабинете."
+            : isRegister
             ? "Телефон не найден — заполните данные, чтобы зарегистрироваться и сохранять результаты."
             : "Введите телефон, чтобы сохранить результаты и вернуться к ним позже. Или продолжите как гость — оценки останутся только на этом устройстве."}
         </p>
@@ -219,7 +224,7 @@ export default function AuthPage() {
               ? (submitting ? "Регистрируем…" : "Зарегистрироваться")
               : (submitting ? "Продолжаем…" : "Продолжить")}
           </button>
-          {!isRegister && (
+          {!isRegister && !isGiftActivation && (
             <button type="button" className="btn btn--ghost" onClick={onSkip} disabled={submitting}>
               Пропустить
             </button>

@@ -8,6 +8,7 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
+  IconGift,
   IconLogout,
   IconPencil,
   IconPlus,
@@ -16,6 +17,7 @@ import {
 import { formatTastingDate } from "../utils/date.js";
 import { initialsOf } from "../utils/initials.js";
 import { formatPhone, formatPhoneInput, isValidE164, normalizeToE164 } from "../utils/phone.js";
+import { getActivatedGifts, giftBalance } from "../utils/gifts.js";
 
 function EditableName({ user, updateProfile }) {
   const [editing, setEditing] = useState(false);
@@ -310,6 +312,35 @@ function TastingCard({ tasting, onClick, pending, disabled }) {
   );
 }
 
+function GiftBalanceCard({ gift, onPickTasting }) {
+  const visits = giftBalance(gift);
+  const totalVisits = gift.visits || visits;
+  const usedVisits = Math.max(0, totalVisits - visits);
+  return (
+    <article className="profile-gift-card">
+      <div className="profile-gift-card__head">
+        <span><IconGift size={16} stroke={1.8} /> Подарочный сертификат</span>
+        <small>{visits > 0 ? "Активен" : "Использован"}</small>
+      </div>
+      <div className="profile-gift-card__balance">
+        <strong>{visits}</strong>
+        <span>посещения<br />доступно</span>
+      </div>
+      <div className="profile-gift-card__meta">
+        <span>№ {gift.id}</span><span>12 месяцев</span>
+      </div>
+      <div className="profile-gift-card__usage">
+        <span>Использовано {usedVisits} из {totalVisits}</span>
+        <i><b style={{ width: `${totalVisits ? (usedVisits / totalVisits) * 100 : 0}%` }} /></i>
+        {gift.usage?.length > 0 && <small>Последнее списание: {gift.usage.at(-1).tastingTitle}</small>}
+      </div>
+      <button type="button" className="btn btn--primary" onClick={onPickTasting} disabled={visits === 0}>
+        {visits > 0 ? "Выбрать дегустацию" : "Баланс израсходован"}
+      </button>
+    </article>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout, updateProfile } = useAuth();
@@ -319,6 +350,11 @@ export default function ProfilePage() {
   const [tastingsError, setTastingsError] = useState(null);
   // id дегустации, для которой сейчас выясняем, все ли чаи попробованы.
   const [openingId, setOpeningId] = useState(null);
+  const [activatedGifts, setActivatedGifts] = useState(() => getActivatedGifts(user?.phone));
+
+  useEffect(() => {
+    setActivatedGifts(getActivatedGifts(user?.phone));
+  }, [user?.phone]);
 
   useEffect(() => {
     let cancelled = false;
@@ -407,6 +443,17 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {activatedGifts.length > 0 && (
+        <div className="profile-section profile-gifts">
+          <div className="profile-card-head__eyebrow profile-section__heading">Мои сертификаты</div>
+          <div className="profile-gifts__list">
+            {activatedGifts.map((gift) => (
+              <GiftBalanceCard gift={gift} onPickTasting={() => navigate("/schedule")} key={gift.id} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="profile-section">
         <div className="profile-card-head__eyebrow profile-section__heading">

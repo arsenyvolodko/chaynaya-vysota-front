@@ -211,6 +211,14 @@ export const IconTicket = (p) => (
   </Icon>
 );
 
+export const IconGift = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="9" width="18" height="12" rx="2" />
+    <path d="M3 13h18M12 9v12" />
+    <path d="M12 9H8.5a2.5 2.5 0 1 1 2.2-3.7L12 9Zm0 0h3.5a2.5 2.5 0 1 0-2.2-3.7L12 9Z" />
+  </Icon>
+);
+
 export const IconMapPin = (p) => (
   <Icon {...p}>
     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />

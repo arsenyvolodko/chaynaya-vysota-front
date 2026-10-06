@@ -7,6 +7,9 @@ import {
   IconCheck,
   IconChevronLeft,
   IconMapPin,
+  IconMinus,
+  IconPlus,
+  IconShare,
   IconTicket,
   IconGift,
   IconX,
@@ -59,7 +62,16 @@ function OrderSummary({ selections, total, compact = false }) {
   );
 }
 
-function TicketCode() {
+function seatWord(count) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return "место";
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return "места";
+  return "мест";
+}
+
+// Декоративный QR: рисунок зависит от seed, чтобы у каждого билета был свой.
+function TicketCode({ seed = 0, small = false }) {
   const cells = useMemo(
     () => Array.from({ length: 81 }, (_, index) => {
       const row = Math.floor(index / 9);
@@ -69,14 +81,14 @@ function TicketCode() {
         || (row < 3 && col > 5)
         || (row > 5 && col < 3)
       );
-      const data = ((row * 7 + col * 5 + row * col) % 4) < 2;
+      const data = ((row * 7 + col * 5 + row * col + seed * (row + 3)) % 4) < 2;
       return finder || data;
     }),
-    []
+    [seed]
   );
 
   return (
-    <div className="purchased-ticket__code" aria-label="QR-код билета">
+    <div className={`purchased-ticket__code ${small ? "purchased-ticket__code--small" : ""}`} aria-label="QR-код билета">
       {cells.map((filled, index) => (
         <span className={filled ? "is-filled" : ""} key={index} />
       ))}
@@ -84,9 +96,101 @@ function TicketCode() {
   );
 }
 
-function PurchasedTicket({ tasting, selections, total, cashTotal, certificateVisits, buyer, orderId, onDone }) {
+async function shareLink(url, text) {
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "Билет в «Чайную высоту»", text, url });
+      return "shared";
+    }
+  } catch (error) {
+    if (error?.name === "AbortError") return "cancelled";
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    return "copied";
+  } catch (_) {
+    return "failed";
+  }
+}
+
+// Отделить часть мест заказа в отдельный билет со своим QR.
+function SendToFriend({ tasting, seatsLeft, orderId, index, onSent, onBack }) {
+  const [seats, setSeats] = useState(1);
+  const [status, setStatus] = useState("");
+  const maxSeats = seatsLeft - 1;
+  const ticketId = `${orderId}-${index + 1}`;
+  const url = `${window.location.origin}/ticket/${ticketId}`;
+
+  const send = async () => {
+    const result = await shareLink(url, `Билет на дегустацию «${tasting.title}» — ${seats} ${seatWord(seats)}`);
+    if (result === "cancelled") return;
+    if (result === "failed") { setStatus("Не получилось скопировать ссылку"); return; }
+    onSent({ id: ticketId, seats, url, copied: result === "copied" });
+  };
+
+  return (
+    <div className="checkout-success send-ticket">
+      <span className="checkout-success__eyebrow">Отправить другу</span>
+      <h2 className="checkout-title" id="checkout-title">Билет для друга</h2>
+      <p className="checkout-lede">У друга будет свой QR, а в вашем станет меньше мест</p>
+
+      <div className="send-ticket__card">
+        <TicketCode seed={index + 1} small />
+        <div className="send-ticket__info">
+          <span>Мест в билете</span>
+          <div className="ticket-stepper" role="group" aria-label="Места для друга">
+            <button type="button" onClick={() => setSeats(seats - 1)} disabled={seats <= 1} aria-label="Меньше мест"><IconMinus size={16} stroke={2.2} /></button>
+            <span aria-live="polite">{seats}</span>
+            <button type="button" onClick={() => setSeats(seats + 1)} disabled={seats >= maxSeats} aria-label="Больше мест"><IconPlus size={16} stroke={2.2} /></button>
+          </div>
+          <small>У вас останется {seatsLeft - seats} {seatWord(seatsLeft - seats)}</small>
+        </div>
+      </div>
+
+      {status && <div className="checkout-payment-error">{status}</div>}
+      <button type="button" className="btn btn--primary checkout-primary" onClick={send}>
+        <IconShare size={17} stroke={2} /><span>Отправить ссылку</span>
+      </button>
+      <button type="button" className="btn btn--ghost send-ticket__back" onClick={onBack}>Назад к билету</button>
+    </div>
+  );
+}
+
+function PurchasedTicket({ tasting, selections, cashTotal, certificateVisits, buyer, orderId, onDone }) {
   const guests = selections.reduce((sum, item) => sum + item.guests, 0);
   const ticketKind = tasting.ticket_kind || "dated";
+  const [sent, setSent] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [copiedId, setCopiedId] = useState("");
+  const seatsLeft = guests - sent.reduce((sum, item) => sum + item.seats, 0);
+
+  const copyAgain = async (item) => {
+    const result = await shareLink(item.url, `Билет на дегустацию «${tasting.title}»`);
+    if (result === "copied") {
+      setCopiedId(item.id);
+      window.setTimeout(() => setCopiedId(""), 1600);
+    }
+  };
+
+  if (sending) {
+    return (
+      <SendToFriend
+        tasting={tasting}
+        seatsLeft={seatsLeft}
+        orderId={orderId}
+        index={sent.length}
+        onBack={() => setSending(false)}
+        onSent={(item) => {
+          setSent((current) => [...current, item]);
+          setSending(false);
+          if (item.copied) {
+            setCopiedId(item.id);
+            window.setTimeout(() => setCopiedId(""), 1600);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="checkout-success">
@@ -124,17 +228,35 @@ function PurchasedTicket({ tasting, selections, total, cashTotal, certificateVis
           <TicketCode />
           <div className="purchased-ticket__facts">
             <span>Владелец<strong>{buyer.name}</strong></span>
-            <span>Гостей<strong>{guests}</strong></span>
+            <span>Мест<strong>{seatsLeft}{sent.length > 0 && <small> из {guests}</small>}</strong></span>
             <span>Оплата<strong>{certificateVisits > 0 && cashTotal === 0 ? "Сертификат" : `${formatPrice(cashTotal)} ₽`}</strong></span>
             <span>Заказ<strong>№ {orderId}</strong></span>
           </div>
         </div>
       </article>
 
+      {sent.length > 0 && (
+        <div className="sent-tickets">
+          {sent.map((item) => (
+            <div className="sent-tickets__row" key={item.id}>
+              <span>Другу · {item.seats} {seatWord(item.seats)}<small>№ {item.id}</small></span>
+              <button type="button" onClick={() => copyAgain(item)}>
+                {copiedId === item.id ? <><IconCheck size={14} stroke={2.4} /> Скопировано</> : "Ссылка"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {seatsLeft > 1 && (
+        <button type="button" className="btn btn-outline send-ticket__cta" onClick={() => setSending(true)}>
+          <IconShare size={17} stroke={1.9} /><span>Отправить билет другу</span>
+        </button>
+      )}
+
       <p className="checkout-success__hint">
         {certificateVisits > 0 && `С сертификата списано ${certificateVisits} ${visitWord(certificateVisits)}. `}
-        Покажите QR-код администратору. Билет также появится в личном кабинете,
-        когда подключим сохранение заказов на бэкенде.
+        Покажите QR-код на входе — {sent.length > 0 ? `он действует на ${seatsLeft} ${seatWord(seatsLeft)}` : "по нему пройдут все гости заказа"}.
       </p>
       <button type="button" className="btn btn--primary checkout-primary" onClick={onDone}>
         Готово
@@ -454,7 +576,6 @@ export default function TicketCheckoutFlow({ tasting, selections, total, onClose
             <PurchasedTicket
               tasting={tasting}
               selections={selections}
-              total={total}
               cashTotal={certificatePayment.cashTotal}
               certificateVisits={certificatePayment.visits}
               buyer={buyer}

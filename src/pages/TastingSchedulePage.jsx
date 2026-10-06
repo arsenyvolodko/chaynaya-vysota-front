@@ -381,7 +381,6 @@ export default function TastingSchedulePage() {
       <TastingFormatsBlock
         onPickCharter={scrollToSchedule}
         onPickChef={scrollToChefTeas}
-        onOpenPass={() => navigate("/passes")}
         charterPriceFrom={minPriceFrom(upcoming)}
         chefPriceFrom={minPriceFrom(ceremonies)}
       />

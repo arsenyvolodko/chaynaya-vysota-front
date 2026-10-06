@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppFooter from "../components/AppFooter.jsx";
-import TicketPicker, { guestsWord, ticketTotal } from "../components/TicketPicker.jsx";
+import TicketPicker, { TicketSheet } from "../components/TicketPicker.jsx";
 import TicketCheckoutFlow from "../components/TicketCheckoutFlow.jsx";
 import MapChoiceSheet from "../components/MapChoiceSheet.jsx";
 import {
@@ -28,34 +29,33 @@ const DEMO_TASTING = {
   location_address: "Тверская, 6 стр. 1",
   yandex_maps_url: "https://yandex.ru/maps/-/CTxlUUI5",
   two_gis_url: "https://2gis.ru/moscow/inside/4504235282757536/firm/70000001031691993",
-  // Два вида билета, у каждого своя сетка тарифов: цена за гостя падает с
-  // размером компании — как в «Чайной высоте», где чаепитие на двоих стоит
-  // дешевле в пересчёте на человека, чем на одного, а на компанию — ещё
-  // дешевле. Средний тариф зала совпадает с ценой билета «х2» на реальной
-  // странице (2750 × 2 = 5500 ₽); первый ряд дороже.
   tickets: [
     {
-      id: "hall",
-      title: "Билет в зал",
-      tiers: [
-        { min: 1, max: 1, pricePerPerson: 3200 },
-        { min: 2, max: 3, pricePerPerson: 2750 },
-        { min: 4, max: 6, pricePerPerson: 2500 },
-      ],
+      id: "standard",
+      title: "Стандарт",
+      pricePerGuest: 3200,
+      companyPricePerGuest: 2750,
+      companyFrom: 2,
     },
     {
       id: "front",
-      title: "Билет в первый ряд",
-      tone: "front",
-      tiers: [
-        { min: 1, max: 1, pricePerPerson: 4200 },
-        { min: 2, max: 3, pricePerPerson: 3700 },
-        { min: 4, max: 6, pricePerPerson: 3400 },
-      ],
+      title: "Первый ряд",
+      pricePerGuest: 4200,
+    },
+    {
+      id: "table",
+      title: "Отдельный столик",
+      price: 12000,
+      maxGuests: 4,
+      maxTables: 3,
     },
   ],
+  // Расширенная программа — доп. набор, добавляется к любому заказу.
+  kitPrice: 1500,
+  // Формально пробивается как абонемент на 1 посещение, но в интерфейсе это «билет».
+  openDateTicket: { visits: 1, price: 3200 },
   description:
-    "Годовой цикл из 72 дегустаций — на каждой гости пробуют от 5 до 8 сортов чая, у каждой встречи свой тематический вектор. Билет на двоих.",
+    "Годовой цикл из 72 дегустаций — на каждой гости пробуют от 5 до 8 сортов чая, у каждой встречи свой тематический вектор.",
   // Текст со страницы дегустации на teatix.com (product/dega_х2_namachocolate).
   about: [
     "72 — годовой план из семидесяти двух дегустаций, на каждой из которых гости попробуют от 5 до 8 сортов чая.",
@@ -119,14 +119,22 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
   // Детали билетов пока демонстрационные, но основные данные и обложку берём
   // с выбранной карточки — при открытии шторки контекст события не теряется.
   const tasting = { ...DEMO_TASTING, ...(tastingOverride || {}) };
-  const [ticketId, setTicketId] = useState("hall");
-  const [guests, setGuests] = useState(2);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const navigate = useNavigate();
+  const [order, setOrder] = useState({ mode: "dated", format: "standard", guests: 1, tables: 1, kits: 0 });
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [checkout, setCheckout] = useState(null);
   const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
-  const selectedTicket = tasting.tickets.find((ticket) => ticket.id === ticketId) || tasting.tickets[0];
   const availableSeats = tasting.guests_count == null ? null : seatsLeft(tasting.guests_count);
-  const total = ticketTotal(selectedTicket.tiers, guests);
-  const selections = [{ id: selectedTicket.id, title: selectedTicket.title, guests, total }];
+  const soldOut = availableSeats === 0;
+  const minGuestPrice = Math.min(...tasting.tickets.filter((ticket) => ticket.price == null).map((ticket) => ticket.companyPricePerGuest ?? ticket.pricePerGuest));
+  const openSheet = (patch) => {
+    setOrder((current) => {
+      const next = { ...current, ...patch };
+      // Билет на свободную дату — всегда один; при возврате к дате гостей оставляем.
+      return next.mode === "open-date" ? { ...next, guests: 1 } : next;
+    });
+    setSheetOpen(true);
+  };
 
   return (
     <>
@@ -173,12 +181,9 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
 
         <TicketPicker
           tickets={tasting.tickets}
-          selectedId={selectedTicket.id}
-          guests={guests}
-          availableSeats={availableSeats}
-          onSelect={setTicketId}
-          onChange={setGuests}
-          onCheckout={() => setCheckoutOpen(true)}
+          soldOut={soldOut}
+          onSelect={(format) => openSheet({ mode: "dated", format })}
+          onOpenDate={() => openSheet({ mode: "open-date" })}
         />
 
         <section className="tasting-about">
@@ -197,25 +202,38 @@ export default function TastingDetailPreviewPage({ tastingOverride = null }) {
 
     <div className="footer buy-bar">
       <div className="buy-bar__total">
-        <span className="buy-bar__sum tabnum">{formatPrice(total)} ₽</span>
-        <span className="buy-bar__note">{guests} {guestsWord(guests)}</span>
+        <span className="buy-bar__sum tabnum">от {formatPrice(minGuestPrice)} ₽</span>
+        <span className="buy-bar__note">за гостя</span>
       </div>
       <button
         type="button"
         className="btn btn--primary buy-bar__btn"
-        disabled={total === 0}
-        onClick={() => setCheckoutOpen(true)}
+        disabled={soldOut}
+        onClick={() => openSheet({ mode: "dated" })}
       >
-        <span>Купить билет</span>
+        <span>{soldOut ? "Мест нет" : "Купить билет"}</span>
       </button>
     </div>
 
-    {checkoutOpen && (
-      <TicketCheckoutFlow
+    {sheetOpen && (
+      <TicketSheet
         tasting={tasting}
-        selections={selections}
-        total={total}
-        onClose={() => setCheckoutOpen(false)}
+        order={order}
+        availableSeats={availableSeats}
+        onChange={setOrder}
+        onClose={() => setSheetOpen(false)}
+        onOpenGift={() => { setSheetOpen(false); navigate("/gift-certificates"); }}
+        onContinue={(selections, total) => { setSheetOpen(false); setCheckout({ selections, total }); }}
+      />
+    )}
+    {checkout && (
+      <TicketCheckoutFlow
+        tasting={order.mode === "open-date"
+          ? { ...tasting, title: "Дегустация «Чайной Высоты»", ticket_kind: "open-date", date: null }
+          : tasting}
+        selections={checkout.selections}
+        total={checkout.total}
+        onClose={() => setCheckout(null)}
       />
     )}
     {mapChoiceOpen && (

@@ -509,7 +509,8 @@ input, textarea { font: inherit; color: inherit; }
 
 /* «Что входит в дегустацию» — 4 мини-блока в ряд: иконка + короткая подпись. */
 .tasting-program-title {
-  margin-top: 23px; color: var(--stone-800); font-size: 14px; font-weight: 700;
+  margin-top: 23px; color: var(--stone-900); font-family: var(--sans); font-size: 16px;
+  line-height: 1.35; font-weight: 600; letter-spacing: -0.006em;
 }
 .hero-features { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .hero-features__item {
@@ -624,98 +625,113 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 16px; font-weight: 600; color: var(--stone-900);
 }
 
-/* Единый конфигуратор билета: тип места выбирается один раз, а количество
-   гостей и групповой тариф пересчитываются в общей панели. */
 .ticket-picker {
-  --ticket-meta: 12px;
-  --ticket-body: 14px;
-  --ticket-price: 16px;
-  --ticket-total: 20px;
-  --ticket-heading: 24px;
-  margin-top: 30px; padding: 21px 18px 18px; border-radius: 21px;
-  background: linear-gradient(155deg, #f8faf5, #f1f5eb);
-  border: 1px solid #e2e9d6; box-shadow: 0 20px 42px -36px rgba(38, 58, 42, .8);
+  margin-top: 30px;
 }
+.ticket-picker__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .ticket-picker__head h2 {
-  margin: 0; font-family: var(--serif); font-size: var(--ticket-heading);
+  margin: 0; font-family: var(--serif); font-size: 25px;
   line-height: 1.15; font-weight: 600; letter-spacing: -.015em;
 }
-.ticket-picker__head p { margin: 6px 0 0; color: var(--stone-500); font-size: var(--ticket-body); line-height: 1.45; }
-.seat-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 17px; }
-.seat-option {
-  position: relative; min-width: 0; min-height: 126px; padding: 13px 12px;
-  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-  border: 1px solid var(--stone-200); border-radius: 16px; background: rgba(255,255,255,.74);
-  transition: border-color 150ms, background-color 150ms, box-shadow 150ms, transform 100ms;
+.ticket-picker__lede { margin: 8px 0 0; color: var(--stone-500); font-size: 14px; line-height: 1.5; text-wrap: pretty; }
+/* Форматы билетов на странице: три плитки, каждая открывает шторку покупки. */
+.ticket-formats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.ticket-format {
+  min-width: 0; padding: 14px 10px 13px; border: 1px solid var(--stone-200); border-radius: 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left;
+  background: white; box-shadow: 0 9px 24px -22px rgba(20, 28, 24, .65);
+  transition: border-color 160ms, transform 100ms, box-shadow 160ms;
 }
-.seat-option:hover { border-color: var(--sage-warm); }
-.seat-option:active { transform: translateY(1px); }
-.seat-option.is-on { border-color: var(--green-600); background: white; box-shadow: 0 0 0 2px rgba(5,150,105,.08); }
-.seat-option--front { background: linear-gradient(145deg, rgba(255,249,232,.9), rgba(248,243,220,.75)); }
-.seat-option--front.is-on { border-color: var(--accent-amber); box-shadow: 0 0 0 2px rgba(184,133,21,.12); }
-.seat-option__icon {
-  width: 34px; height: 34px; margin-bottom: 11px; border-radius: 11px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--green-800); background: var(--green-50);
+.ticket-format:hover:not(:disabled) { border-color: #cbdcbd; box-shadow: 0 10px 27px -21px rgba(24, 72, 48, .7); }
+.ticket-format:active:not(:disabled) { transform: scale(.97); }
+.ticket-format:disabled { opacity: .45; }
+.ticket-format__name { color: var(--stone-600); font-size: 13px; font-weight: 600; line-height: 1.2; }
+.ticket-format__price { margin-top: 6px; color: var(--stone-900); font-size: 17px; font-weight: 700; line-height: 1.1; white-space: nowrap; letter-spacing: -.01em; }
+.ticket-format__price small { color: var(--stone-500); font-size: 12px; font-weight: 500; }
+.ticket-format__note { color: var(--stone-400); font-size: 11px; line-height: 1.2; }
+.ticket-picker__open-date {
+  width: 100%; margin-top: 12px; padding: 6px 2px;
+  display: flex; align-items: center; gap: 8px; color: var(--green-800);
+  font-size: 14px; font-weight: 600; text-align: left;
 }
-.seat-option--front .seat-option__icon { color: var(--accent-amber-hover); background: var(--accent-amber-soft); }
-.seat-option__body { display: flex; flex-direction: column; min-width: 0; }
-.seat-option__body strong { color: var(--stone-900); font-size: var(--ticket-body); line-height: 1.2; }
-.seat-option__body small { margin-top: 2px; color: var(--stone-500); font-size: var(--ticket-meta); line-height: 1.25; }
-.seat-option__price { margin-top: auto; padding-top: 9px; color: var(--stone-700); font-size: var(--ticket-price); font-weight: 700; letter-spacing: -0.005em; }
-.seat-option__check {
-  position: absolute; top: 10px; right: 10px; width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center; border-radius: 50%;
-  color: transparent; border: 1px solid var(--stone-300); background: white;
+.ticket-picker__open-date svg:last-child { margin-left: auto; color: var(--stone-400); transition: transform 160ms; }
+.ticket-picker__open-date:hover svg:last-child { transform: translateX(2px); }
+
+/* Шторка покупки: формат → гости → допы → итог. */
+.ticket-sheet__body { position: relative; overflow-y: auto; padding: 24px 22px 6px; }
+.ticket-sheet__close { position: absolute; top: 14px; right: 14px; }
+.ticket-segments {
+  margin-top: 20px; padding: 3px; border-radius: 14px; background: var(--stone-100);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px;
 }
-.seat-option.is-on .seat-option__check { color: white; background: var(--green-700); border-color: var(--green-700); }
-.seat-option--front.is-on .seat-option__check { background: var(--accent-amber); border-color: var(--accent-amber); }
-.ticket-picker__quantity {
-  margin-top: 17px; padding: 14px 0; border-top: 1px solid rgba(120,113,108,.12);
-  display: flex; align-items: center; justify-content: space-between; gap: 13px;
+.ticket-segments button {
+  min-height: 38px; padding: 0 6px; border-radius: 11px;
+  color: var(--stone-500); font-size: 14px; font-weight: 600; white-space: nowrap;
+  transition: background-color 160ms, color 160ms, box-shadow 160ms;
 }
-.ticket-picker__quantity > div:first-child { display: flex; flex-direction: column; }
-.ticket-picker__quantity > div:first-child strong { color: var(--stone-800); font-size: var(--ticket-body); }
-.ticket-picker__quantity > div:first-child span { max-width: 180px; margin-top: 2px; color: var(--stone-400); font-size: var(--ticket-meta); line-height: 1.3; }
-.ticket-stepper { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.ticket-segments button.is-on { color: var(--stone-900); background: white; box-shadow: 0 1px 4px rgba(20, 28, 24, .12); }
+.ticket-sheet__row { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ticket-sheet__label { min-width: 0; display: flex; flex-direction: column; color: var(--stone-900); font-size: 16px; font-weight: 600; line-height: 1.25; }
+.ticket-sheet__label small { margin-top: 2px; color: var(--stone-500); font-size: 13px; font-weight: 400; }
+.ticket-sheet__fixed { min-width: 40px; text-align: center; font-size: 16px; font-weight: 700; }
+.ticket-sheet__row--extra { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--stone-100); justify-content: flex-start; }
+.ticket-sheet__row--extra .ticket-sheet__label { flex: 1; font-size: 15px; }
+.ticket-sheet__row--extra .ticket-sheet__label small { font-size: 12px; }
+.ticket-sheet__extra-icon {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  color: var(--accent-amber-hover); background: var(--accent-amber-soft);
+}
+/* Ссылка на подарочный сертификат — в фирменном «подарочном» коричневом, как баннер в расписании. */
+.ticket-sheet__gift {
+  width: 100%; margin-top: 18px; padding: 11px 12px; border: 1px solid #ecdcd5; border-radius: 15px;
+  display: flex; align-items: center; gap: 12px; text-align: left; color: #813f35; background: #fbf6f3;
+  transition: border-color 160ms, transform 100ms;
+}
+.ticket-sheet__gift:hover { border-color: #d9bcb0; }
+.ticket-sheet__gift:active { transform: scale(.985); }
+.ticket-sheet__gift .ticket-sheet__label { flex: 1; font-size: 14px; }
+.ticket-sheet__gift .ticket-sheet__label small { font-size: 12px; }
+.ticket-sheet__gift-icon {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  color: #fff4e8; background: linear-gradient(135deg, #6b3b32, #813f35);
+}
+.price-ladder { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.price-ladder button {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--stone-200); border-radius: 13px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;
+  color: var(--stone-400); transition: border-color 160ms, background-color 160ms, color 160ms;
+}
+.price-ladder button span { font-size: 12px; white-space: nowrap; }
+.price-ladder button strong { white-space: nowrap; font-size: 15px; font-weight: 700; color: var(--stone-500); }
+.price-ladder button.is-on { border-color: var(--green-600); background: var(--green-50); color: var(--green-800); }
+.price-ladder button.is-on strong { color: var(--green-800); }
+.price-ladder button:disabled { opacity: .4; }
+.ticket-sheet__foot {
+  flex: 0 0 auto; padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 14px; border-top: 1px solid var(--stone-100); background: white;
+}
+.ticket-sheet__total { display: flex; flex-direction: column; flex-shrink: 0; }
+.ticket-sheet__total strong { font-size: 20px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em; white-space: nowrap; }
+.ticket-sheet__total small { color: var(--stone-500); font-size: 12px; }
+.ticket-sheet__cta { flex: 1; min-height: 50px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+.ticket-stepper {
+  padding: 3px; border: 1px solid var(--stone-200); border-radius: 999px;
+  display: flex; align-items: center; gap: 2px; flex: 0 0 auto; background: var(--stone-50);
+}
 .ticket-stepper > button {
-  width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  color: var(--stone-700); background: white; border: 1px solid var(--stone-200);
-  transition: color 140ms, border-color 140ms, transform 100ms;
+  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--green-800); background: white; box-shadow: 0 1px 3px rgba(20, 28, 24, .09);
+  transition: color 140ms, background-color 140ms, transform 100ms;
 }
-.ticket-stepper > button:hover:not(:disabled) { color: var(--green-800); border-color: var(--green-600); }
+.ticket-stepper > button:hover:not(:disabled) { color: white; background: var(--green-700); }
 .ticket-stepper > button:active:not(:disabled) { transform: scale(.93); }
-.ticket-stepper > span { min-width: 43px; display: flex; flex-direction: column; align-items: center; line-height: 1; }
-.ticket-stepper > span strong { color: var(--stone-900); font-size: var(--ticket-total); }
-.ticket-stepper > span small { margin-top: 3px; color: var(--stone-400); font-size: var(--ticket-meta); }
-.ticket-picker__tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.ticket-picker__tiers button {
-  min-width: 0; padding: 9px 4px; display: flex; flex-direction: column; align-items: center;
-  border: 1px solid transparent; border-radius: 11px; color: var(--stone-500); background: rgba(255,255,255,.46);
-  transition: border-color 140ms, background-color 140ms;
-}
-.ticket-picker__tiers button.is-on { border-color: var(--accent-green-muted); color: var(--green-800); background: white; }
-.ticket-picker__tiers span { font-size: var(--ticket-meta); white-space: nowrap; }
-.ticket-picker__tiers strong { margin-top: 2px; color: var(--stone-800); font-size: var(--ticket-body); white-space: nowrap; }
-.ticket-picker__tiers button.is-on strong { color: var(--green-800); }
-.ticket-picker__tiers small { color: var(--stone-400); font-size: var(--ticket-meta); }
-.ticket-picker__result {
-  width: 100%; margin-top: 15px; padding: 13px 14px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  background: var(--accent-green); color: white;
-  text-align: left; box-shadow: 0 12px 24px -20px rgba(27,44,31,.9);
-  transition: background-color 150ms, transform 100ms, box-shadow 150ms;
-}
-.ticket-picker__result:hover { background: var(--accent-green-hover); box-shadow: 0 15px 28px -19px rgba(27,44,31,.9); }
-.ticket-picker__result:active { transform: translateY(1px); }
-.ticket-picker__result > span { color: rgba(255,255,255,.78); font-size: var(--ticket-meta); }
-.ticket-picker__result small { display: block; margin-top: 2px; color: rgba(255,255,255,.52); font-size: var(--ticket-meta); }
-.ticket-picker__result-total { display: flex; align-items: center; gap: 9px; white-space: nowrap; }
-.ticket-picker__result-total strong { color: white; font-size: var(--ticket-total); }
-.ticket-picker__result-total i {
-  width: 27px; height: 27px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  color: var(--green-900); background: white; font-style: normal;
-}
+.ticket-stepper > button:disabled { opacity: .32; }
+.ticket-stepper > span { min-width: 22px; text-align: center; color: var(--stone-900); font-size: 16px; font-weight: 700; line-height: 1; }
+.ticket-stepper > span strong { font-size: inherit; }
+.ticket-stepper--compact { gap: 3px; }
+.ticket-stepper--compact > button { width: 30px; height: 30px; }
+.ticket-stepper--compact > span { min-width: 19px; }
 
 /* Описание дегустации под билетом. */
 .tasting-about {
@@ -745,7 +761,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .buy-bar__total { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
 .buy-bar__sum {
-  font-family: var(--sans); font-size: 20px; font-weight: 700; line-height: 1.15;
+  font-family: var(--sans); font-size: clamp(13px, 4.3vw, 20px); font-weight: 700; line-height: 1.15;
   color: var(--stone-900); letter-spacing: -0.015em; white-space: nowrap;
 }
 .buy-bar__note { font-size: 12px; color: var(--stone-500); }
@@ -3707,55 +3723,6 @@ input, textarea { font: inherit; color: inherit; }
 .format-card--chef .format-card__btn { color: var(--ivory-soft); }
 .format-card__btn:hover { gap: 11px; }
 
-/* --- акцентная плашка про абонементы (отдельная от info-block карточка) ---
-   структура по образцу: заголовок + бейдж сверху, текст, кнопка на всю
-   ширину снизу. */
-.plank {
-  position: relative; width: auto; margin: 0 16px 28px;
-  padding: 22px 19px 19px; overflow: hidden; text-align: left;
-  display: flex; flex-direction: column; align-items: flex-start;
-  background:
-    radial-gradient(circle at 94% 8%, rgba(255,255,255,.13) 0 11%, transparent 11.5%),
-    linear-gradient(145deg, #53684a 0%, #31422d 58%, #1f2b1d 100%);
-  border: 1px solid rgba(255,255,255,.08); border-radius: 20px; color: white;
-  box-shadow: 0 20px 42px -32px rgba(22,42,29,.85);
-  transition: transform 150ms, box-shadow 150ms;
-}
-.plank:hover { box-shadow: 0 24px 48px -30px rgba(22,42,29,.9); }
-.plank:active { transform: translateY(1px); }
-.plank__content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
-.plank__eyebrow {
-  margin-bottom: 9px; color: #cbd9bd; font-family: var(--sans); font-size: var(--eyebrow-size);
-  font-weight: var(--eyebrow-weight); letter-spacing: var(--eyebrow-letter-spacing); line-height: var(--eyebrow-line-height);
-}
-.plank__title {
-  max-width: 260px; font-family: var(--serif); font-size: 24px; line-height: 1.16;
-  font-weight: 550; letter-spacing: -0.015em;
-}
-.plank__text {
-  margin-top: 11px; max-width: 43ch; font-size: 14px; line-height: 1.52;
-  color: rgba(255, 255, 255, 0.79); text-wrap: pretty;
-}
-.plank__art {
-  position: absolute; z-index: 1; right: 17px; top: 18px;
-  width: 62px; height: 76px; padding: 10px; border-radius: 14px;
-  display: flex; flex-wrap: wrap; align-content: space-between; gap: 5px;
-  color: #e5eddc; background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.11); transform: rotate(4deg);
-}
-.plank__art svg { width: 100%; }
-.plank__art i {
-  width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.3);
-}
-.plank__btn {
-  position: relative; z-index: 2; margin-top: 18px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 13px 15px; border-radius: 13px;
-  background: white; color: var(--green-800); font-size: 14px; font-weight: 700;
-  transition: gap 140ms, background-color 140ms;
-}
-.plank:hover .plank__btn { gap: 12px; background: var(--ivory-soft); }
-
 .schedule-tabs {
   margin: 0 16px 8px; padding: 3px;
   display: flex; background: var(--stone-50); border: 1px solid var(--stone-100);
@@ -4128,7 +4095,6 @@ button.cal__cell:hover { background: var(--stone-100); }
   .schedule-empty,
   .schedule-section-lede,
   .info-block,
-  .plank,
   .section-head,
   .inline-cta,
   .steps,
@@ -4202,7 +4168,6 @@ button.cal__cell:hover { background: var(--stone-100); }
   .schedule-empty,
   .schedule-section-lede,
   .info-block,
-  .plank,
   .section-head,
   .inline-cta,
   .steps,
@@ -4249,7 +4214,6 @@ button.cal__cell:hover { background: var(--stone-100); }
      заставляли блоки слипаться в одну простыню. */
   .promo-carousel { margin-bottom: 56px; }
   .info-block { margin-top: 0; margin-bottom: 56px; }
-  .plank { margin-bottom: 64px; }
   .section-head { margin-bottom: 20px; }
   .section-head__title { font-size: 28px; }
   .section-head__lede { font-size: 16px; }
@@ -4297,19 +4261,6 @@ button.cal__cell:hover { background: var(--stone-100); }
   .inline-cta__title { font-size: 16px; }
   .inline-cta__text { font-size: 14px; }
 
-  /* Абонемент — широкая плашка: текст слева, кнопка справа. */
-  .plank {
-    padding: 29px 30px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 40px;
-  }
-  .plank__content { grid-column: 1; max-width: 680px; }
-  .plank__title { max-width: none; font-size: 28px; }
-  .plank__text { max-width: 620px; }
-  .plank__art { right: 248px; top: 25px; }
-  .plank__btn { grid-column: 2; grid-row: 1; width: auto; min-width: 205px; margin-top: 0; white-space: nowrap; }
 
   /* Сетки карточек живут внутри той же колонки и заполняют её целиком,
      поэтому их края совпадают с заголовками и табами над ними. */

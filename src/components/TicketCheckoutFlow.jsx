@@ -46,7 +46,7 @@ function OrderSummary({ selections, total, compact = false }) {
         <div className="checkout-summary__row" key={item.id}>
           <span>
             {item.title}
-            <small>{item.guests} {guestWord(item.guests)}</small>
+            <small>{item.quantityLabel || `${item.guests} ${guestWord(item.guests)}`}</small>
           </span>
           <strong>{formatPrice(item.total)} ₽</strong>
         </div>
@@ -108,7 +108,9 @@ function PurchasedTicket({ tasting, selections, total, cashTotal, certificateVis
         <div className="purchased-ticket__meta">
           <div>
             <IconCalendar size={17} />
-            <span>{formatWeekdayDate(tasting.date)}<small>{formatTastingTime(tasting.date)}</small></span>
+            {ticketKind === "open-date"
+              ? <span>Свободная дата<small>Выберете позже</small></span>
+              : <span>{formatWeekdayDate(tasting.date)}<small>{formatTastingTime(tasting.date)}</small></span>}
           </div>
           <div>
             <IconMapPin size={17} />
